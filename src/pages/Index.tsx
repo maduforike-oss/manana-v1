@@ -1,12 +1,52 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useEffect } from 'react';
+import { useAppStore } from '@/store/useAppStore';
+import { BottomNavigation } from '@/components/BottomNavigation';
+import { StudioPage } from '@/components/pages/StudioPage';
+import { MarketPage } from '@/components/pages/MarketPage';
+import { CommunityPage } from '@/components/pages/CommunityPage';
+import { OrdersPage } from '@/components/pages/OrdersPage';
+import { ProfilePage } from '@/components/pages/ProfilePage';
 
 const Index = () => {
+  const { activeTab, setUser } = useAppStore();
+
+  // Initialize mock user for demo
+  useEffect(() => {
+    setUser({
+      id: 'user_123',
+      email: 'demo@example.com',
+      plan: 'basic',
+      designsThisMonth: 12,
+      maxDesigns: 30,
+    });
+  }, [setUser]);
+
+  const renderPage = () => {
+    switch (activeTab) {
+      case 'market':
+        return <MarketPage />;
+      case 'community':
+        return <CommunityPage />;
+      case 'studio':
+        return <StudioPage />;
+      case 'orders':
+        return <OrdersPage />;
+      case 'profile':
+        return <ProfilePage />;
+      default:
+        return <StudioPage />;
+    }
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Main Content */}
+      <main className="flex-1 pb-20">
+        {renderPage()}
+      </main>
+      
+      {/* Bottom Navigation */}
+      <BottomNavigation />
     </div>
   );
 };
