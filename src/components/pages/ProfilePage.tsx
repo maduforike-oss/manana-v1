@@ -6,12 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useAppStore } from '@/store/useAppStore';
 import { useToast } from '@/hooks/useToast';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 
 export const ProfilePage = () => {
   const { user, logout, setActiveTab } = useAppStore();
   const { toast } = useToast();
-  const router = useRouter();
+  const navigate = useNavigate();
 
   // Mock user data
   const mockUser = {
@@ -30,19 +30,19 @@ export const ProfilePage = () => {
   const progressPercentage = (mockUser.designsThisMonth / mockUser.maxDesigns) * 100;
 
   const handleProfileSettings = () => {
-    router.push('/profile/settings');
+    toast({ title: "Profile Settings", description: "Profile settings will open here" });
   };
 
   const handleUpgradePlan = () => {
-    router.push('/profile/upgrade');
+    toast({ title: "Upgrade Plan", description: "Plan upgrade page will open here" });
   };
 
   const handleFollowers = () => {
-    router.push('/profile/followers');
+    toast({ title: "Followers", description: "Followers list will open here" });
   };
 
   const handleFollowing = () => {
-    router.push('/profile/followers');
+    toast({ title: "Following", description: "Following list will open here" });
   };
 
   const handleOrderHistory = () => {
