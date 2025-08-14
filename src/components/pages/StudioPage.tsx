@@ -37,6 +37,36 @@ export const StudioPage = () => {
     { id: 'images', icon: Image, label: 'Images' },
   ];
 
+  const handleToolClick = (toolId: string) => {
+    console.log(`Tool clicked: ${toolId}`);
+    // Tool functionality will be implemented later
+  };
+
+  const handleExport = () => {
+    console.log('Exporting design...');
+    // Export functionality will be implemented later
+  };
+
+  const handleAddText = () => {
+    console.log('Adding text...');
+    // Add text functionality will be implemented later
+  };
+
+  const handleAddShape = () => {
+    console.log('Adding shape...');
+    // Add shape functionality will be implemented later
+  };
+
+  const handleUploadImage = () => {
+    console.log('Uploading image...');
+    // Upload image functionality will be implemented later
+  };
+
+  const handleTemplates = () => {
+    console.log('Opening templates...');
+    // Templates functionality will be implemented later
+  };
+
   if (!selectedGarment) {
     return <GarmentSelector />;
   }
@@ -50,6 +80,7 @@ export const StudioPage = () => {
             key={id}
             variant="ghost"
             size="sm"
+            onClick={() => handleToolClick(id)}
             className="w-12 h-12 p-0 text-workspace-foreground hover:bg-primary/20 hover:text-primary"
             title={label}
           >
@@ -76,7 +107,7 @@ export const StudioPage = () => {
               <Settings className="w-4 h-4 mr-2" />
               Settings
             </Button>
-            <Button size="sm" className="bg-gradient-to-r from-primary to-secondary text-white">
+            <Button size="sm" onClick={handleExport} className="bg-gradient-to-r from-primary to-secondary text-white">
               <Download className="w-4 h-4 mr-2" />
               Export
             </Button>
@@ -124,15 +155,15 @@ export const StudioPage = () => {
             {/* Panel Content */}
             <div className="flex-1 p-4">
               {activePanel === 'tools' && (
-                <div className="space-y-4">
-                  <h3 className="font-medium">Design Tools</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button variant="outline" size="sm">Add Text</Button>
-                    <Button variant="outline" size="sm">Add Shape</Button>
-                    <Button variant="outline" size="sm">Upload Image</Button>
-                    <Button variant="outline" size="sm">Templates</Button>
+                  <div className="space-y-4">
+                    <h3 className="font-medium">Design Tools</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button variant="outline" size="sm" onClick={handleAddText}>Add Text</Button>
+                      <Button variant="outline" size="sm" onClick={handleAddShape}>Add Shape</Button>
+                      <Button variant="outline" size="sm" onClick={handleUploadImage}>Upload Image</Button>
+                      <Button variant="outline" size="sm" onClick={handleTemplates}>Templates</Button>
+                    </div>
                   </div>
-                </div>
               )}
               
               {activePanel === 'layers' && (

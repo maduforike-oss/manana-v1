@@ -3,8 +3,13 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/useToast';
+import { useState } from 'react';
 
 export const CommunityPage = () => {
+  const { toast } = useToast();
+  const [likedPosts, setLikedPosts] = useState<number[]>([]);
+  
   const mockPosts = [
     {
       id: 1,
@@ -41,6 +46,38 @@ export const CommunityPage = () => {
     },
   ];
 
+  const handleCreatePost = () => {
+    toast({ title: "Create Post", description: "Post creation dialog will open here" });
+  };
+
+  const handleLikePost = (postId: number) => {
+    setLikedPosts(prev => 
+      prev.includes(postId) 
+        ? prev.filter(id => id !== postId)
+        : [...prev, postId]
+    );
+    toast({ 
+      title: likedPosts.includes(postId) ? "Unliked" : "Liked", 
+      description: `Post ${likedPosts.includes(postId) ? 'unliked' : 'liked'}` 
+    });
+  };
+
+  const handleCommentPost = (postId: number) => {
+    toast({ title: "Comments", description: `Comments for post ${postId} will open here` });
+  };
+
+  const handleSharePost = (postId: number) => {
+    toast({ title: "Shared", description: "Post shared to clipboard" });
+  };
+
+  const handleLoadMore = () => {
+    toast({ title: "Loading", description: "Loading more posts..." });
+  };
+
+  const handlePostClick = (postId: number) => {
+    toast({ title: "Post Details", description: `Post ${postId} details will open here` });
+  };
+
   return (
     <div className="h-full bg-background overflow-auto">
       <div className="container mx-auto py-6 px-4 max-w-2xl">
@@ -61,6 +98,7 @@ export const CommunityPage = () => {
             <div className="flex-1">
               <Button 
                 variant="outline" 
+                onClick={handleCreatePost}
                 className="w-full justify-start text-muted-foreground h-12"
               >
                 Share your latest design or ask for feedback...
@@ -72,7 +110,7 @@ export const CommunityPage = () => {
         {/* Posts Feed */}
         <div className="space-y-6">
           {mockPosts.map((post) => (
-            <Card key={post.id} className="p-6">
+            <Card key={post.id} onClick={() => handlePostClick(post.id)} className="p-6 cursor-pointer hover:shadow-md transition-shadow">
               {/* Post Header */}
               <div className="flex items-center gap-3 mb-4">
                 <Avatar>
@@ -106,15 +144,30 @@ export const CommunityPage = () => {
 
               {/* Post Actions */}
               <div className="flex items-center gap-4 pt-4 border-t border-border">
-                <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                  <Heart className="w-4 h-4" />
-                  {post.likes}
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={(e) => { e.stopPropagation(); handleLikePost(post.id); }}
+                  className={`flex items-center gap-2 ${likedPosts.includes(post.id) ? 'text-red-500' : ''}`}
+                >
+                  <Heart className={`w-4 h-4 ${likedPosts.includes(post.id) ? 'fill-current' : ''}`} />
+                  {post.likes + (likedPosts.includes(post.id) ? 1 : 0)}
                 </Button>
-                <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={(e) => { e.stopPropagation(); handleCommentPost(post.id); }}
+                  className="flex items-center gap-2"
+                >
                   <MessageCircle className="w-4 h-4" />
                   {post.comments}
                 </Button>
-                <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={(e) => { e.stopPropagation(); handleSharePost(post.id); }}
+                  className="flex items-center gap-2"
+                >
                   <Share2 className="w-4 h-4" />
                   Share
                 </Button>
@@ -125,7 +178,7 @@ export const CommunityPage = () => {
 
         {/* Load More */}
         <div className="text-center mt-8">
-          <Button variant="outline" size="lg">
+          <Button variant="outline" size="lg" onClick={handleLoadMore}>
             Load More Posts
           </Button>
         </div>

@@ -2,8 +2,13 @@ import { Package, Truck, CheckCircle, Clock } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/useToast';
+import { useAppStore } from '@/store/useAppStore';
 
 export const OrdersPage = () => {
+  const { toast } = useToast();
+  const { setActiveTab } = useAppStore();
+  
   const mockOrders = [
     {
       id: 'ORD-001',
@@ -60,6 +65,18 @@ export const OrdersPage = () => {
     }
   };
 
+  const handleTrackOrder = (orderId: string, tracking: string) => {
+    toast({ title: "Tracking Order", description: `Tracking ${tracking} for order ${orderId}` });
+  };
+
+  const handleViewOrderDetails = (orderId: string) => {
+    toast({ title: "Order Details", description: `Details for order ${orderId} will open here` });
+  };
+
+  const handleStartDesigning = () => {
+    setActiveTab('studio');
+  };
+
   return (
     <div className="h-full bg-background overflow-auto">
       <div className="container mx-auto py-6 px-4">
@@ -107,11 +124,19 @@ export const OrdersPage = () => {
                   
                   <div className="flex gap-2">
                     {order.tracking && (
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleTrackOrder(order.id, order.tracking!)}
+                      >
                         Track Order
                       </Button>
                     )}
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleViewOrderDetails(order.id)}
+                    >
                       View Details
                     </Button>
                   </div>
@@ -166,7 +191,7 @@ export const OrdersPage = () => {
             <p className="text-muted-foreground mb-6">
               Create your first design and place an order to see it here
             </p>
-            <Button>Start Designing</Button>
+            <Button onClick={handleStartDesigning}>Start Designing</Button>
           </Card>
         )}
       </div>

@@ -41,8 +41,10 @@ interface AppState {
   createDesign: (garmentType: string) => boolean;
   saveDesign: (design: Partial<Design>) => void;
   loadDesign: (designId: string) => void;
+  deleteDesign: (designId: string) => void;
   setSelectedGarment: (garment: string) => void;
   updateCanvasState: (state: any) => void;
+  logout: () => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -124,9 +126,19 @@ export const useAppStore = create<AppState>()(
         }
       },
       
+      deleteDesign: (designId) => {
+        const state = get();
+        set({
+          designs: state.designs.filter(d => d.id !== designId),
+          currentDesign: state.currentDesign?.id === designId ? null : state.currentDesign,
+        });
+      },
+      
       setSelectedGarment: (garment) => set({ selectedGarment: garment }),
       
       updateCanvasState: (canvasState) => set({ canvasState }),
+      
+      logout: () => set({ user: null, isAuthenticated: false, designs: [], currentDesign: null }),
     }),
     {
       name: 'manana-app-store',

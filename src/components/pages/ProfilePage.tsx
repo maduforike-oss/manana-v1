@@ -5,9 +5,11 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useAppStore } from '@/store/useAppStore';
+import { useToast } from '@/hooks/useToast';
 
 export const ProfilePage = () => {
-  const { user } = useAppStore();
+  const { user, logout, setActiveTab } = useAppStore();
+  const { toast } = useToast();
 
   // Mock user data
   const mockUser = {
@@ -22,6 +24,31 @@ export const ProfilePage = () => {
   };
 
   const progressPercentage = (mockUser.designsThisMonth / mockUser.maxDesigns) * 100;
+
+  const handleProfileSettings = () => {
+    toast({ title: "Profile Settings", description: "Profile settings will open here" });
+  };
+
+  const handleUpgradePlan = () => {
+    toast({ title: "Upgrade Plan", description: "Plan upgrade page will open here" });
+  };
+
+  const handleOrderHistory = () => {
+    setActiveTab('orders');
+  };
+
+  const handleSignOut = () => {
+    logout();
+    toast({ title: "Signed Out", description: "You have been signed out successfully" });
+  };
+
+  const handleDeleteAccount = () => {
+    toast({ 
+      title: "Delete Account", 
+      description: "Account deletion confirmation will appear here",
+      variant: "destructive"
+    });
+  };
 
   return (
     <div className="h-full bg-background overflow-auto">
@@ -87,17 +114,17 @@ export const ProfilePage = () => {
           </div>
           
           <div className="p-4 space-y-2">
-            <Button variant="ghost" className="w-full justify-start">
+            <Button variant="ghost" onClick={handleProfileSettings} className="w-full justify-start">
               <Settings className="w-4 h-4 mr-2" />
               Profile Settings
             </Button>
             
-            <Button variant="ghost" className="w-full justify-start">
+            <Button variant="ghost" onClick={handleUpgradePlan} className="w-full justify-start">
               <Crown className="w-4 h-4 mr-2" />
               Upgrade Plan
             </Button>
             
-            <Button variant="ghost" className="w-full justify-start">
+            <Button variant="ghost" onClick={handleOrderHistory} className="w-full justify-start">
               <Package className="w-4 h-4 mr-2" />
               Order History
             </Button>
@@ -126,7 +153,7 @@ export const ProfilePage = () => {
               <li>• Community features</li>
             </ul>
             
-            <Button className="w-full bg-gradient-to-r from-primary to-secondary text-white">
+            <Button onClick={handleUpgradePlan} className="w-full bg-gradient-to-r from-primary to-secondary text-white">
               Upgrade to Premium
             </Button>
           </div>
@@ -139,12 +166,12 @@ export const ProfilePage = () => {
           </div>
           
           <div className="p-4 space-y-2">
-            <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive">
+            <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-destructive hover:text-destructive">
               <LogOut className="w-4 h-4 mr-2" />
               Sign Out
             </Button>
             
-            <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive">
+            <Button variant="ghost" onClick={handleDeleteAccount} className="w-full justify-start text-destructive hover:text-destructive">
               <Trash2 className="w-4 h-4 mr-2" />
               Delete Account
             </Button>
