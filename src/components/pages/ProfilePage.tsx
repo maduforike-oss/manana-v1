@@ -94,13 +94,19 @@ export const ProfilePage = () => {
 
         {/* Stats */}
         <div className="grid grid-cols-2 gap-4 mb-6">
-          <Card className="p-4 text-center">
+          <Card 
+            className="p-4 text-center cursor-pointer hover:shadow-lg transition-shadow" 
+            onClick={() => setActiveTab('studio')}
+          >
             <Palette className="w-8 h-8 text-primary mx-auto mb-2" />
             <p className="text-2xl font-bold">{mockUser.totalDesigns}</p>
             <p className="text-sm text-muted-foreground">Total Designs</p>
           </Card>
           
-          <Card className="p-4 text-center">
+          <Card 
+            className="p-4 text-center cursor-pointer hover:shadow-lg transition-shadow" 
+            onClick={() => setActiveTab('orders')}
+          >
             <Package className="w-8 h-8 text-secondary mx-auto mb-2" />
             <p className="text-2xl font-bold">{mockUser.totalOrders}</p>
             <p className="text-sm text-muted-foreground">Orders Placed</p>
