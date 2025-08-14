@@ -28,11 +28,17 @@ const tools = [
   { id: 'eraser', icon: Eraser, label: 'Eraser', shortcut: 'E' },
 ] as const;
 
-export const LeftTools = () => {
+interface LeftToolsProps {
+  collapsed?: boolean;
+}
+
+export const LeftTools = ({ collapsed = false }: LeftToolsProps) => {
   const { activeTool, setActiveTool } = useStudioStore();
 
+  if (collapsed) return null;
+
   return (
-    <div className="w-16 bg-card border-r flex flex-col items-center py-4 gap-2">
+    <div className="w-16 bg-card flex flex-col items-center py-4 gap-2">
       <TooltipProvider delayDuration={300}>
         {tools.map(({ id, icon: Icon, label, shortcut }) => (
           <Tooltip key={id}>
@@ -41,12 +47,12 @@ export const LeftTools = () => {
                 variant={activeTool === id ? "default" : "ghost"}
                 size="icon"
                 onClick={() => setActiveTool(id as Tool)}
-                className="w-12 h-12"
+                className="w-12 h-12 hover:scale-105 transition-all duration-200 hover:shadow-md"
               >
                 <Icon className="w-5 h-5" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="right">
+            <TooltipContent side="right" className="animate-in slide-in-from-left-2">
               <div className="text-center">
                 <div className="font-medium">{label}</div>
                 {shortcut && (

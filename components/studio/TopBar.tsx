@@ -81,10 +81,12 @@ export const TopBar = () => {
   };
 
   return (
-    <div className="h-14 bg-card border-b flex items-center justify-between px-4">
+    <div className="h-14 bg-card border-b flex items-center justify-between px-4 shadow-sm">
       {/* Left Section */}
       <div className="flex items-center gap-4">
-        <div className="text-lg font-semibold">Manana Studio</div>
+        <div className="text-lg font-semibold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+          Manana Studio
+        </div>
         
         {isEditingTitle ? (
           <Input
@@ -94,13 +96,13 @@ export const TopBar = () => {
             onKeyDown={(e) => {
               if (e.key === 'Enter') setIsEditingTitle(false);
             }}
-            className="w-48"
+            className="w-48 transition-all duration-200"
             autoFocus
           />
         ) : (
           <button
             onClick={() => setIsEditingTitle(true)}
-            className="text-sm font-medium hover:text-primary"
+            className="text-sm font-medium hover:text-primary transition-colors duration-200 px-2 py-1 rounded hover:bg-accent"
           >
             {doc.title}
           </button>
@@ -108,37 +110,54 @@ export const TopBar = () => {
       </div>
 
       {/* Center Section - Zoom Controls */}
-      <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm" onClick={zoomToFit}>
+      <div className="flex items-center gap-2 bg-muted/50 rounded-lg p-1">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={zoomToFit}
+          className="hover:bg-background transition-all duration-200"
+        >
           <Maximize2 className="w-4 h-4 mr-1" />
           Fit
         </Button>
         
-        <Button variant="outline" size="sm" onClick={() => setZoom(1)}>
+        <Button 
+          variant={zoom === 1 ? "secondary" : "ghost"} 
+          size="sm" 
+          onClick={() => setZoom(1)}
+          className="hover:bg-background transition-all duration-200"
+        >
           100%
         </Button>
         
-        <Button variant="outline" size="sm" onClick={zoomToFill}>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={zoomToFill}
+          className="hover:bg-background transition-all duration-200"
+        >
           Fill
         </Button>
         
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 border-l pl-2 ml-1">
           <Button 
-            variant="outline" 
+            variant="ghost" 
             size="sm"
             onClick={() => setZoom(zoom * 0.9)}
+            className="hover:bg-background transition-all duration-200 hover:scale-105"
           >
             <ZoomOut className="w-4 h-4" />
           </Button>
           
-          <span className="text-xs w-12 text-center">
+          <span className="text-xs w-12 text-center font-mono bg-background rounded px-1 py-0.5">
             {Math.round(zoom * 100)}%
           </span>
           
           <Button 
-            variant="outline" 
+            variant="ghost" 
             size="sm"
             onClick={() => setZoom(zoom * 1.1)}
+            className="hover:bg-background transition-all duration-200 hover:scale-105"
           >
             <ZoomIn className="w-4 h-4" />
           </Button>
@@ -146,91 +165,123 @@ export const TopBar = () => {
       </div>
 
       {/* Right Section */}
-      <div className="flex items-center gap-2">
-        <Button
-          variant={history.length > 1 ? "outline" : "outline"}
-          size="sm"
-          onClick={undo}
-          disabled={history.length <= 1}
-        >
-          <Undo2 className="w-4 h-4" />
-        </Button>
-        
-        <Button
-          variant={redoStack.length > 0 ? "outline" : "outline"}
-          size="sm"
-          onClick={redo}
-          disabled={redoStack.length === 0}
-        >
-          <Redo2 className="w-4 h-4" />
-        </Button>
+      <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 mr-2">
+          <Button
+            variant={history.length > 1 ? "ghost" : "ghost"}
+            size="sm"
+            onClick={undo}
+            disabled={history.length <= 1}
+            className="hover:scale-105 transition-all duration-200 disabled:opacity-50"
+          >
+            <Undo2 className="w-4 h-4" />
+          </Button>
+          
+          <Button
+            variant={redoStack.length > 0 ? "ghost" : "ghost"}
+            size="sm"
+            onClick={redo}
+            disabled={redoStack.length === 0}
+            className="hover:scale-105 transition-all duration-200 disabled:opacity-50"
+          >
+            <Redo2 className="w-4 h-4" />
+          </Button>
+        </div>
 
-        <Button
-          variant={snapEnabled ? "default" : "outline"}
-          size="sm"
-          onClick={toggleSnap}
-        >
-          Snap
-        </Button>
+        <div className="flex items-center gap-1 mr-2">
+          <Button
+            variant={snapEnabled ? "secondary" : "ghost"}
+            size="sm"
+            onClick={toggleSnap}
+            className="hover:scale-105 transition-all duration-200"
+          >
+            Snap
+          </Button>
 
-        <Button
-          variant={doc.canvas.showGrid ? "default" : "outline"}
-          size="sm"
-          onClick={toggleGrid}
-        >
-          <Grid3x3 className="w-4 h-4" />
-        </Button>
+          <Button
+            variant={doc.canvas.showGrid ? "secondary" : "ghost"}
+            size="sm"
+            onClick={toggleGrid}
+            className="hover:scale-105 transition-all duration-200"
+          >
+            <Grid3x3 className="w-4 h-4" />
+          </Button>
 
-        <Button
-          variant={doc.canvas.showRulers ? "default" : "outline"}
-          size="sm"
-          onClick={toggleRulers}
-        >
-          <Ruler className="w-4 h-4" />
-        </Button>
+          <Button
+            variant={doc.canvas.showRulers ? "secondary" : "ghost"}
+            size="sm"
+            onClick={toggleRulers}
+            className="hover:scale-105 transition-all duration-200"
+          >
+            <Ruler className="w-4 h-4" />
+          </Button>
 
-        <Button
-          variant={mockup.opacity > 0 ? "default" : "outline"}
-          size="sm"
-          onClick={() => setMockup({ opacity: mockup.opacity > 0 ? 0 : 0.8 })}
-        >
-          <Eye className="w-4 h-4" />
-          Mockup
-        </Button>
+          <Button
+            variant={mockup.opacity > 0 ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => setMockup({ opacity: mockup.opacity > 0 ? 0 : 0.8 })}
+            className="hover:scale-105 transition-all duration-200"
+          >
+            <Eye className="w-4 h-4 mr-1" />
+            Mockup
+          </Button>
+        </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button size="sm">
+            <Button 
+              size="sm" 
+              className="hover:scale-105 transition-all duration-200 shadow-sm"
+            >
               <Download className="w-4 h-4 mr-1" />
               Export
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => handleExport('png')}>
+          <DropdownMenuContent align="end" className="animate-in slide-in-from-top-2">
+            <DropdownMenuItem 
+              onClick={() => handleExport('png')}
+              className="hover:bg-accent transition-colors duration-200"
+            >
               PNG
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleExport('png-transparent')}>
+            <DropdownMenuItem 
+              onClick={() => handleExport('png-transparent')}
+              className="hover:bg-accent transition-colors duration-200"
+            >
               PNG (Transparent)
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleExport('svg')}>
+            <DropdownMenuItem 
+              onClick={() => handleExport('svg')}
+              className="hover:bg-accent transition-colors duration-200"
+            >
               SVG
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleExport('print-150')}>
+            <DropdownMenuItem 
+              onClick={() => handleExport('print-150')}
+              className="hover:bg-accent transition-colors duration-200"
+            >
               Print PNG @150 DPI
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleExport('print-300')}>
+            <DropdownMenuItem 
+              onClick={() => handleExport('print-300')}
+              className="hover:bg-accent transition-colors duration-200"
+            >
               Print PNG @300 DPI
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleExport('pdf')}>
+            <DropdownMenuItem 
+              onClick={() => handleExport('pdf')}
+              className="hover:bg-accent transition-colors duration-200 opacity-50"
+            >
               PDF (Coming Soon)
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
           onClick={() => setShowShortcuts(true)}
+          className="hover:scale-105 transition-all duration-200 ml-1"
         >
           <HelpCircle className="w-4 h-4" />
         </Button>
