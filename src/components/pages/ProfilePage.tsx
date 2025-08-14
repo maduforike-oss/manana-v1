@@ -81,15 +81,24 @@ export const ProfilePage = () => {
 
           {/* Social Metrics */}
           <div className="flex justify-center gap-8 mb-4 py-4 border-y border-border">
-            <div className="text-center">
+            <div 
+              className="text-center cursor-pointer hover:bg-muted/50 px-4 py-2 rounded-lg transition-colors"
+              onClick={() => toast({ title: "Followers", description: "Followers list will open here" })}
+            >
               <p className="text-2xl font-bold">{mockUser.followers.toLocaleString()}</p>
               <p className="text-sm text-muted-foreground">Followers</p>
             </div>
-            <div className="text-center">
+            <div 
+              className="text-center cursor-pointer hover:bg-muted/50 px-4 py-2 rounded-lg transition-colors"
+              onClick={() => toast({ title: "Following", description: "Following list will open here" })}
+            >
               <p className="text-2xl font-bold">{mockUser.following.toLocaleString()}</p>
               <p className="text-sm text-muted-foreground">Following</p>
             </div>
-            <div className="text-center">
+            <div 
+              className="text-center cursor-pointer hover:bg-muted/50 px-4 py-2 rounded-lg transition-colors"
+              onClick={() => setActiveTab('studio')}
+            >
               <p className="text-2xl font-bold">{mockUser.totalDesigns}</p>
               <p className="text-sm text-muted-foreground">Designs</p>
             </div>
