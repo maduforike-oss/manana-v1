@@ -21,6 +21,8 @@ export const ProfilePage = () => {
     maxDesigns: 30,
     totalDesigns: 47,
     totalOrders: 8,
+    followers: 1247,
+    following: 892,
   };
 
   const progressPercentage = (mockUser.designsThisMonth / mockUser.maxDesigns) * 100;
@@ -74,6 +76,22 @@ export const ProfilePage = () => {
                   Member since {new Date(mockUser.joinDate).toLocaleDateString()}
                 </span>
               </div>
+            </div>
+          </div>
+
+          {/* Social Metrics */}
+          <div className="flex justify-center gap-8 mb-4 py-4 border-y border-border">
+            <div className="text-center">
+              <p className="text-2xl font-bold">{mockUser.followers.toLocaleString()}</p>
+              <p className="text-sm text-muted-foreground">Followers</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold">{mockUser.following.toLocaleString()}</p>
+              <p className="text-sm text-muted-foreground">Following</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold">{mockUser.totalDesigns}</p>
+              <p className="text-sm text-muted-foreground">Designs</p>
             </div>
           </div>
 
