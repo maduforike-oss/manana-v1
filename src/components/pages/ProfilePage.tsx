@@ -82,32 +82,38 @@ export const ProfilePage = () => {
 
   return (
     <div className="h-full bg-background overflow-auto">
-      <div className="container mx-auto py-6 px-4 max-w-2xl">
+      <div className="container mx-auto py-4 sm:py-6 px-3 sm:px-4 max-w-2xl space-y-4 sm:space-y-6">
         {/* Profile Header */}
-        <Card className="p-6 mb-6">
-          <div className="flex items-center gap-4 mb-4">
-            <Avatar className="w-16 h-16">
-              <AvatarFallback className="bg-gradient-to-r from-primary to-secondary text-white text-xl font-bold">
-                AD
-              </AvatarFallback>
-            </Avatar>
+        <Card className="p-4 sm:p-6">
+          {/* Mobile-optimized header layout */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4 sm:mb-6">
+            <div className="flex items-center gap-4">
+              <Avatar className="w-20 h-20 sm:w-16 sm:h-16">
+                <AvatarFallback className="bg-gradient-to-r from-primary to-secondary text-white text-xl font-bold">
+                  AD
+                </AvatarFallback>
+              </Avatar>
+              
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl sm:text-2xl font-bold truncate">{mockUser.name}</h1>
+                <p className="text-muted-foreground text-sm sm:text-base truncate">{mockUser.email}</p>
+              </div>
+            </div>
             
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold">{mockUser.name}</h1>
-              <p className="text-muted-foreground">{mockUser.email}</p>
+            <div className="space-y-3">
               {mockUser.bio && (
-                <p className="text-sm text-foreground mt-2 leading-relaxed">{mockUser.bio}</p>
+                <p className="text-sm text-foreground leading-relaxed">{mockUser.bio}</p>
               )}
               
-              <div className="flex items-center gap-4 mt-3">
+              <div className="flex flex-wrap items-center gap-3 text-xs">
                 {mockUser.location && (
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1 text-muted-foreground">
                     <MapPin className="w-3 h-3" />
-                    {mockUser.location}
+                    <span className="truncate max-w-[120px]">{mockUser.location}</span>
                   </div>
                 )}
                 {mockUser.website && (
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1 text-muted-foreground">
                     <Globe className="w-3 h-3" />
                     <a href={mockUser.website} target="_blank" rel="noopener noreferrer" className="hover:text-primary">
                       Portfolio
@@ -116,8 +122,8 @@ export const ProfilePage = () => {
                 )}
               </div>
 
-              <div className="flex items-center gap-3 mt-3">
-                <Badge className="bg-gradient-to-r from-primary to-secondary text-white">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge className="bg-gradient-to-r from-primary to-secondary text-white text-xs">
                   <Crown className="w-3 h-3 mr-1" />
                   {mockUser.plan} Plan
                 </Badge>
@@ -126,124 +132,121 @@ export const ProfilePage = () => {
                 </span>
               </div>
 
-              <div className="mt-3">
+              <div className="space-y-2">
                 <ProfileTags specialties={mockUser.specialties} maxDisplay={3} />
-              </div>
-
-              <div className="mt-3">
                 <SocialLinks links={mockUser.socialLinks} />
               </div>
             </div>
           </div>
 
-          {/* Social Metrics */}
-          <div className="flex justify-center gap-8 mb-4 py-4 border-y border-border">
+          {/* Mobile-optimized social metrics with larger touch targets */}
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6 py-4 border-y border-border">
             <div 
-              className="text-center cursor-pointer hover:bg-muted/50 px-4 py-2 rounded-lg transition-colors"
+              className="text-center cursor-pointer hover:bg-muted/50 p-3 sm:px-4 sm:py-2 rounded-lg transition-colors min-h-[60px] sm:min-h-auto flex flex-col justify-center"
               onClick={handleFollowers}
             >
-              <p className="text-2xl font-bold">{mockUser.followers.toLocaleString()}</p>
-              <p className="text-sm text-muted-foreground">Followers</p>
+              <p className="text-lg sm:text-2xl font-bold">{mockUser.followers.toLocaleString()}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Followers</p>
             </div>
             <div 
-              className="text-center cursor-pointer hover:bg-muted/50 px-4 py-2 rounded-lg transition-colors"
+              className="text-center cursor-pointer hover:bg-muted/50 p-3 sm:px-4 sm:py-2 rounded-lg transition-colors min-h-[60px] sm:min-h-auto flex flex-col justify-center"
               onClick={handleFollowing}
             >
-              <p className="text-2xl font-bold">{mockUser.following.toLocaleString()}</p>
-              <p className="text-sm text-muted-foreground">Following</p>
+              <p className="text-lg sm:text-2xl font-bold">{mockUser.following.toLocaleString()}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Following</p>
             </div>
             <div 
-              className="text-center cursor-pointer hover:bg-muted/50 px-4 py-2 rounded-lg transition-colors"
+              className="text-center cursor-pointer hover:bg-muted/50 p-3 sm:px-4 sm:py-2 rounded-lg transition-colors min-h-[60px] sm:min-h-auto flex flex-col justify-center"
               onClick={() => setActiveTab('studio')}
             >
-              <p className="text-2xl font-bold">{mockUser.totalDesigns}</p>
-              <p className="text-sm text-muted-foreground">Designs</p>
+              <p className="text-lg sm:text-2xl font-bold">{mockUser.totalDesigns}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Designs</p>
             </div>
           </div>
 
-          {/* Featured Designs */}
-          <div className="bg-muted/50 p-4 rounded-lg mb-4">
+          {/* Featured Designs with mobile spacing */}
+          <div className="bg-muted/50 p-3 sm:p-4 rounded-lg mb-4">
             <FeaturedDesignsGallery designs={mockUser.featuredDesigns} maxDisplay={3} />
           </div>
 
-          {/* Design Usage */}
-          <div className="bg-muted/50 p-4 rounded-lg">
-            <div className="flex justify-between items-center mb-2">
+          {/* Design Usage with mobile optimization */}
+          <div className="bg-muted/50 p-3 sm:p-4 rounded-lg">
+            <div className="flex justify-between items-center mb-3">
               <span className="text-sm font-medium">Monthly Designs</span>
               <span className="text-sm text-muted-foreground">
                 {mockUser.designsThisMonth} / {mockUser.maxDesigns}
               </span>
             </div>
-            <Progress value={progressPercentage} className="h-2" />
-            <p className="text-xs text-muted-foreground mt-2">
+            <Progress value={progressPercentage} className="h-2 mb-2" />
+            <p className="text-xs text-muted-foreground">
               {mockUser.maxDesigns - mockUser.designsThisMonth} designs remaining this month
             </p>
           </div>
         </Card>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        {/* Mobile-optimized stats with larger touch targets */}
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
           <Card 
-            className="p-4 text-center cursor-pointer hover:shadow-lg transition-shadow" 
+            className="p-4 sm:p-6 text-center cursor-pointer hover:shadow-lg transition-shadow min-h-[100px] sm:min-h-auto flex flex-col justify-center" 
             onClick={() => setActiveTab('studio')}
           >
             <Palette className="w-8 h-8 text-primary mx-auto mb-2" />
-            <p className="text-2xl font-bold">{mockUser.totalDesigns}</p>
-            <p className="text-sm text-muted-foreground">Total Designs</p>
+            <p className="text-xl sm:text-2xl font-bold">{mockUser.totalDesigns}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">Total Designs</p>
           </Card>
           
           <Card 
-            className="p-4 text-center cursor-pointer hover:shadow-lg transition-shadow" 
+            className="p-4 sm:p-6 text-center cursor-pointer hover:shadow-lg transition-shadow min-h-[100px] sm:min-h-auto flex flex-col justify-center" 
             onClick={() => setActiveTab('orders')}
           >
             <Package className="w-8 h-8 text-secondary mx-auto mb-2" />
-            <p className="text-2xl font-bold">{mockUser.totalOrders}</p>
-            <p className="text-sm text-muted-foreground">Orders Placed</p>
+            <p className="text-xl sm:text-2xl font-bold">{mockUser.totalOrders}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">Orders Placed</p>
           </Card>
         </div>
 
-        {/* Account Settings */}
-        <Card className="mb-6">
+        {/* Account Settings with mobile touch optimization */}
+        <Card>
           <div className="p-4 border-b border-border">
             <h2 className="text-lg font-semibold">Account Settings</h2>
           </div>
           
-          <div className="p-4 space-y-2">
-            <Button variant="ghost" onClick={handleProfileSettings} className="w-full justify-between group">
+          <div className="p-3 sm:p-4 space-y-1">
+            <Button variant="ghost" onClick={handleProfileSettings} className="w-full justify-between group h-12 sm:h-10 text-left">
               <div className="flex items-center">
-                <Settings className="w-4 h-4 mr-2" />
-                Profile Settings
+                <Settings className="w-4 h-4 mr-3" />
+                <span className="text-sm sm:text-base">Profile Settings</span>
               </div>
               <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
             </Button>
             
-            <Button variant="ghost" onClick={handleUpgradePlan} className="w-full justify-between group">
+            <Button variant="ghost" onClick={handleUpgradePlan} className="w-full justify-between group h-12 sm:h-10 text-left">
               <div className="flex items-center">
-                <Crown className="w-4 h-4 mr-2" />
-                Upgrade Plan
+                <Crown className="w-4 h-4 mr-3" />
+                <span className="text-sm sm:text-base">Upgrade Plan</span>
               </div>
               <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
             </Button>
             
-            <Button variant="ghost" onClick={handleOrderHistory} className="w-full justify-between group">
+            <Button variant="ghost" onClick={handleOrderHistory} className="w-full justify-between group h-12 sm:h-10 text-left">
               <div className="flex items-center">
-                <Package className="w-4 h-4 mr-2" />
-                Order History
+                <Package className="w-4 h-4 mr-3" />
+                <span className="text-sm sm:text-base">Order History</span>
               </div>
               <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
             </Button>
           </div>
         </Card>
 
-        {/* Plan Information */}
-        <Card className="mb-6 bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20">
+        {/* Plan Information with mobile optimization */}
+        <Card className="bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20 mb-4 sm:mb-6">
           <div className="p-4 border-b border-border">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold flex items-center gap-2">
                 <CreditCard className="w-5 h-5 text-primary" />
                 Your Plan
               </h2>
-              <Badge className="bg-gradient-to-r from-primary to-secondary text-white">
+              <Badge className="bg-gradient-to-r from-primary to-secondary text-white text-xs">
                 <Crown className="w-3 h-3 mr-1" />
                 Active
               </Badge>
@@ -251,15 +254,15 @@ export const ProfilePage = () => {
           </div>
           
           <div className="p-4">
-            <div className="flex justify-between items-start mb-4">
-              <div>
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
+              <div className="flex-1">
                 <h3 className="font-semibold text-lg">Basic Plan</h3>
-                <p className="text-2xl font-bold text-primary">£10.99<span className="text-sm text-muted-foreground font-normal">/month</span></p>
+                <p className="text-xl sm:text-2xl font-bold text-primary">£10.99<span className="text-sm text-muted-foreground font-normal">/month</span></p>
                 <p className="text-sm text-muted-foreground mt-1">Renews on Feb 15, 2025</p>
               </div>
               
-              <div className="text-right">
-                <div className="bg-background rounded-lg p-3 border">
+              <div className="text-center sm:text-right">
+                <div className="bg-background rounded-lg p-3 border inline-block">
                   <p className="text-lg font-bold">12/30</p>
                   <p className="text-xs text-muted-foreground">Designs used</p>
                 </div>
@@ -277,43 +280,43 @@ export const ProfilePage = () => {
               <p className="text-xs text-muted-foreground mt-1">18 designs remaining this month</p>
             </div>
             
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="text-center">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mb-4">
+              <div className="text-center sm:text-left">
                 <p className="text-sm font-medium">✓ All garment types</p>
               </div>
-              <div className="text-center">
+              <div className="text-center sm:text-left">
                 <p className="text-sm font-medium">✓ Studio tools</p>
               </div>
-              <div className="text-center">
+              <div className="text-center sm:text-left">
                 <p className="text-sm font-medium">✓ Community access</p>
               </div>
-              <div className="text-center">
+              <div className="text-center sm:text-left">
                 <p className="text-sm font-medium">✓ Basic support</p>
               </div>
             </div>
             
-            <Button onClick={handleUpgradePlan} className="w-full bg-gradient-to-r from-primary to-secondary text-white hover:shadow-lg transition-shadow">
+            <Button onClick={handleUpgradePlan} className="w-full h-12 sm:h-10 bg-gradient-to-r from-primary to-secondary text-white hover:shadow-lg transition-shadow">
               <Crown className="w-4 h-4 mr-2" />
               Upgrade to Premium
             </Button>
           </div>
         </Card>
 
-        {/* Danger Zone */}
+        {/* Danger Zone with mobile touch optimization */}
         <Card className="border-destructive/50">
           <div className="p-4 border-b border-border">
             <h2 className="text-lg font-semibold text-destructive">Danger Zone</h2>
           </div>
           
-          <div className="p-4 space-y-2">
-            <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-destructive hover:text-destructive">
-              <LogOut className="w-4 h-4 mr-2" />
-              Sign Out
+          <div className="p-3 sm:p-4 space-y-1">
+            <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-destructive hover:text-destructive h-12 sm:h-10">
+              <LogOut className="w-4 h-4 mr-3" />
+              <span className="text-sm sm:text-base">Sign Out</span>
             </Button>
             
-            <Button variant="ghost" onClick={handleDeleteAccount} className="w-full justify-start text-destructive hover:text-destructive">
-              <Trash2 className="w-4 h-4 mr-2" />
-              Delete Account
+            <Button variant="ghost" onClick={handleDeleteAccount} className="w-full justify-start text-destructive hover:text-destructive h-12 sm:h-10">
+              <Trash2 className="w-4 h-4 mr-3" />
+              <span className="text-sm sm:text-base">Delete Account</span>
             </Button>
           </div>
         </Card>
