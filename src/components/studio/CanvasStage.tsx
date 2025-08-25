@@ -212,11 +212,11 @@ export const CanvasStage = () => {
       </Stage>
 
       {/* Enhanced Zoom Controls */}
-      <div className="absolute bottom-4 right-4 bg-card/95 border border-border/50 backdrop-blur-sm rounded-lg p-2 shadow-lg">
+      <div className="absolute bottom-4 right-4 bg-card border border-border backdrop-blur-sm rounded-lg p-2 shadow-lg">
         <div className="flex items-center gap-2 text-xs">
           <button
             onClick={() => useStudioStore.getState().setZoom(zoom / 1.2)}
-            className="w-7 h-7 rounded-md bg-background hover:bg-accent/80 text-foreground flex items-center justify-center transition-all duration-200 hover:scale-105 border border-border/30"
+            className="w-7 h-7 rounded-md bg-studio-surface hover:bg-accent text-foreground flex items-center justify-center transition-all duration-200 hover:scale-105 border border-border"
           >
             −
           </button>
@@ -225,7 +225,7 @@ export const CanvasStage = () => {
           </span>
           <button
             onClick={() => useStudioStore.getState().setZoom(zoom * 1.2)}
-            className="w-7 h-7 rounded-md bg-background hover:bg-accent/80 text-foreground flex items-center justify-center transition-all duration-200 hover:scale-105 border border-border/30"
+            className="w-7 h-7 rounded-md bg-studio-surface hover:bg-accent text-foreground flex items-center justify-center transition-all duration-200 hover:scale-105 border border-border"
           >
             +
           </button>
@@ -234,7 +234,7 @@ export const CanvasStage = () => {
               useStudioStore.getState().setZoom(1);
               useStudioStore.getState().setPanOffset({ x: 0, y: 0 });
             }}
-            className="ml-2 px-3 py-1.5 rounded-md bg-background hover:bg-accent/80 text-foreground text-xs font-medium transition-all duration-200 hover:scale-105 border border-border/30"
+            className="ml-2 px-3 py-1.5 rounded-md bg-studio-surface hover:bg-accent text-foreground text-xs font-medium transition-all duration-200 hover:scale-105 border border-border"
           >
             Reset
           </button>

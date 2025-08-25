@@ -67,12 +67,12 @@ export const CanvasStage = () => {
           }}
         >
           {/* Canvas Content - Professional Loading State */}
-          <div className="w-full h-full flex flex-col items-center justify-center text-foreground/80 font-medium">
+          <div className="w-full h-full flex flex-col items-center justify-center text-foreground font-medium">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
               <span className="text-sm tracking-wide">Canvas Ready</span>
             </div>
-            <div className="text-xs text-foreground/60 font-mono">
+            <div className="text-xs text-foreground/80 font-mono">
               {doc.canvas.width} × {doc.canvas.height}px
             </div>
           </div>
@@ -81,7 +81,7 @@ export const CanvasStage = () => {
 
       {/* Enhanced Zoom Controls */}
       <div className="absolute bottom-4 right-4 flex gap-2">
-        <div className="bg-card/95 border border-border/50 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg">
+        <div className="bg-card border border-border backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg">
           <span className="text-xs font-medium text-foreground">
             {Math.round(zoom * 100)}%
           </span>
