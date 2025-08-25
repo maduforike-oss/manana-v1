@@ -19,22 +19,22 @@ export const TopBar = () => {
 
       <div className="flex items-center gap-2">
         <Button
-          variant="ghost"
+          variant="outline"
           size="sm"
           onClick={undo}
           disabled={!canUndo}
-          className="text-xs"
+          className="text-xs hover:bg-accent hover:text-accent-foreground border-workspace-border"
         >
           <Undo className="w-4 h-4 mr-1" />
           Undo
         </Button>
         
         <Button
-          variant="ghost"
+          variant="outline"
           size="sm"
           onClick={redo}
           disabled={!canRedo}
-          className="text-xs"
+          className="text-xs hover:bg-accent hover:text-accent-foreground border-workspace-border"
         >
           <Redo className="w-4 h-4 mr-1" />
           Redo
@@ -43,27 +43,27 @@ export const TopBar = () => {
         <div className="w-px h-6 bg-workspace-border mx-2" />
 
         <Button
-          variant="ghost"
+          variant="outline"
           size="sm"
-          className="text-xs"
+          className="text-xs hover:bg-accent hover:text-accent-foreground border-workspace-border"
         >
           <Save className="w-4 h-4 mr-1" />
           Save
         </Button>
 
         <Button
-          variant="ghost"
+          variant="outline"
           size="sm"
-          className="text-xs"
+          className="text-xs hover:bg-accent hover:text-accent-foreground border-workspace-border"
         >
           <Download className="w-4 h-4 mr-1" />
           Export
         </Button>
 
         <Button
-          variant="ghost"
+          variant="outline"
           size="sm"
-          className="text-xs"
+          className="text-xs hover:bg-accent hover:text-accent-foreground border-workspace-border"
         >
           <Settings className="w-4 h-4" />
         </Button>

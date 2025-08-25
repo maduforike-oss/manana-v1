@@ -40,7 +40,7 @@ export const LeftTools = ({ collapsed = false }: LeftToolsProps) => {
 
   return (
     <TooltipProvider>
-      <div className="w-16 h-full flex flex-col items-center py-4 space-y-2">
+      <div className="w-16 h-full flex flex-col items-center py-4 space-y-2 bg-card/50 border-r border-workspace-border">
         {tools.map((tool) => {
           const Icon = tool.icon;
           const isActive = activeTool === tool.id;
@@ -49,13 +49,13 @@ export const LeftTools = ({ collapsed = false }: LeftToolsProps) => {
             <Tooltip key={tool.id}>
               <TooltipTrigger asChild>
                 <Button
-                  variant="ghost"
+                  variant={isActive ? "default" : "outline"}
                   size="sm"
                   onClick={() => setActiveTool(tool.id)}
-                  className={`w-10 h-10 p-0 transition-all duration-200 ${
+                  className={`w-10 h-10 p-0 transition-all duration-200 border-workspace-border ${
                     isActive 
-                      ? 'bg-primary text-primary-foreground shadow-lg scale-110' 
-                      : 'hover:bg-accent hover:scale-105'
+                      ? 'bg-primary text-primary-foreground shadow-lg ring-2 ring-primary/20' 
+                      : 'hover:bg-accent hover:text-accent-foreground hover:shadow-md hover:scale-105'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
