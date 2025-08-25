@@ -91,7 +91,7 @@ export const LeftTools = ({ collapsed = false }: LeftToolsProps) => {
 
   return (
     <TooltipProvider delayDuration={300}>
-      <div className="w-16 h-full flex flex-col items-center py-6 bg-gradient-to-b from-card/80 to-card/60 border-r border-border/40 backdrop-blur-sm shadow-sm">
+      <div className="w-16 h-full flex flex-col items-center py-6 bg-card border-r border-border shadow-sm">
         <div className="flex flex-col items-center gap-1.5">
           {renderToolGroup(primaryTools)}
           {renderToolGroup(drawingTools, true)}

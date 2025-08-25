@@ -2,12 +2,13 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Save, Undo, Redo, Download, Settings } from 'lucide-react';
 import { useStudioStore } from '../../lib/studio/store';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 export const TopBar = () => {
   const { doc, undo, redo, canUndo, canRedo } = useStudioStore();
 
   return (
-    <div className="h-14 bg-gradient-to-b from-card to-card/95 border-b border-border/50 backdrop-blur-sm flex items-center justify-between px-6 shadow-sm">
+    <div className="h-14 bg-card border-b border-border flex items-center justify-between px-6 shadow-sm">
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-3">
           <div className="w-2 h-2 rounded-full bg-gradient-to-br from-primary to-primary/70 shadow-sm"></div>
@@ -71,14 +72,17 @@ export const TopBar = () => {
 
         <div className="w-px h-6 bg-border/40 mx-2" />
 
-        {/* Settings */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 w-8 p-0 transition-all duration-200 hover:bg-accent/80 hover:scale-[1.05] hover:shadow-sm rounded-md"
-        >
-          <Settings className="w-4 h-4" />
-        </Button>
+        {/* Settings and Theme */}
+        <div className="flex items-center gap-1">
+          <ThemeToggle />
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0 transition-all duration-200 hover:bg-accent hover:scale-[1.05] hover:shadow-sm rounded-md"
+          >
+            <Settings className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );

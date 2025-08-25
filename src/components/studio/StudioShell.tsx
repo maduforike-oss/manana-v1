@@ -47,7 +47,7 @@ export const StudioShell = () => {
   }, []);
 
   return (
-    <div className="h-screen flex flex-col bg-workspace text-workspace-foreground">
+    <div className="h-screen flex flex-col bg-background text-foreground">
       <TopBar />
       
       <div className="flex-1 flex overflow-hidden">
