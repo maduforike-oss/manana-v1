@@ -38,17 +38,7 @@ const Index = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Main Content */}
-      <main className="flex-1 pb-20">
-        {renderPage()}
-      </main>
-      
-      {/* Bottom Navigation */}
-      <BottomNavigation />
-    </div>
-  );
+  return renderPage();
 };
 
 export default Index;
