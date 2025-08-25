@@ -46,6 +46,7 @@ interface StudioState {
   newDesign: (garmentType?: string) => void;
   setTitle: (title: string) => void;
   initializeFromGarment: (garmentType: string, garmentColor: string) => void;
+  updateGarmentColor: (colorId: string) => void;
 }
 
 const createInitialDoc = (garmentType?: string): DesignDoc => ({
@@ -278,6 +279,8 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   initializeFromGarment: (garmentType, garmentColor) => set(produce((state) => {
     state.doc = createInitialDoc(garmentType);
     state.doc.title = `New ${garmentType} Design`;
+    state.doc.canvas.garmentType = garmentType;
+    state.doc.canvas.garmentColor = garmentColor;
     state.history = [];
     state.redoStack = [];
     state.mockup = { 
@@ -286,6 +289,11 @@ export const useStudioStore = create<StudioState>((set, get) => ({
       opacity: 0.8 
     };
     get().saveSnapshot();
+  })),
+
+  updateGarmentColor: (colorId) => set(produce((state) => {
+    state.doc.canvas.garmentColor = colorId;
+    state.mockup.color = colorId === 'white' || colorId === 'light' ? 'light' : 'dark';
   })),
 }));
 

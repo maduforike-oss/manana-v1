@@ -73,6 +73,14 @@ export type CanvasConfig = {
   showGuides: boolean;
   safeAreaPct: number;
   bleedMm: number;
+  garmentType?: string;
+  garmentColor?: string;
+  printArea?: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
 };
 
 export type HistoryEntry = {
@@ -92,7 +100,9 @@ export type DesignDoc = {
 export type Tool = "select" | "hand" | "text" | "image" | "rect" | "circle" | "line" | "triangle" | "star" | "brush" | "eraser";
 
 export type MockupConfig = {
-  type: "front" | "back";
-  color: "light" | "dark";
+  type: "front" | "back" | "side" | "worn";
+  color: "light" | "dark" | "studio";
   opacity: number;
+  showGrid?: boolean;
+  showPrintArea?: boolean;
 };

@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LayersPanel } from './LayersPanel';
 import { PropertiesPanel } from './PropertiesPanel';
 import { CanvasPanel } from './CanvasPanel';
+import { GarmentMockupPreview } from './GarmentMockupPreview';
 
 interface RightPropsProps {
   collapsed?: boolean;
@@ -30,7 +31,7 @@ export const RightProps = ({
       >
         <div className="relative">
           {/* Enhanced Tab List */}
-          <TabsList className="grid w-full grid-cols-3 m-3 glass-panel neon-border bg-studio-surface/50">
+          <TabsList className="grid w-full grid-cols-4 m-3 glass-panel neon-border bg-studio-surface/50">
             <TabsTrigger 
               value="properties" 
               className="studio-tool data-[state=active]:studio-tool data-[state=active]:active"
@@ -48,6 +49,12 @@ export const RightProps = ({
               className="studio-tool data-[state=active]:studio-tool data-[state=active]:active"
             >
               Canvas
+            </TabsTrigger>
+            <TabsTrigger 
+              value="mockup"
+              className="studio-tool data-[state=active]:studio-tool data-[state=active]:active"
+            >
+              Mockup
             </TabsTrigger>
           </TabsList>
           
@@ -79,6 +86,15 @@ export const RightProps = ({
         >
           <div className="p-3">
             <CanvasPanel />
+          </div>
+        </TabsContent>
+        
+        <TabsContent 
+          value="mockup" 
+          className="flex-1 overflow-hidden animate-in fade-in-50 duration-300 slide-in-from-right-4"
+        >
+          <div className="p-3">
+            <GarmentMockupPreview />
           </div>
         </TabsContent>
       </Tabs>
