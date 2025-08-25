@@ -117,6 +117,7 @@ interface AppState {
   likedPosts: string[];
   posts: Post[];
   
+  setCurrentDesign: (design: Design | null) => void;
   // Actions
   setActiveTab: (tab: AppState['activeTab']) => void;
   setUser: (user: User | null) => void;
@@ -250,6 +251,7 @@ export const useAppStore = create<AppState>()(
       posts: [],
 
       // Actions
+      setCurrentDesign: (design) => set({ currentDesign: design }),
       setActiveTab: (tab) => set({ activeTab: tab }),
       
       setUser: (user) => set({ user, isAuthenticated: !!user }),

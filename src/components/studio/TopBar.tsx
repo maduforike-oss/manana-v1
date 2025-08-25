@@ -1,15 +1,32 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Save, Undo, Redo, Download, Settings } from 'lucide-react';
+import { Save, Undo, Redo, Download, Settings, ArrowLeft } from 'lucide-react';
+
 import { useStudioStore } from '../../lib/studio/store';
+import { useAppStore } from '../../store/useAppStore';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 export const TopBar = () => {
   const { doc, undo, redo, canUndo, canRedo } = useStudioStore();
+  const { setCurrentDesign } = useAppStore();
+
+  const handleExitStudio = () => {
+    setCurrentDesign(null);
+  };
 
   return (
     <div className="h-14 bg-card border-b border-border flex items-center justify-between px-6 shadow-sm">
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-4">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleExitStudio}
+          className="text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Hub
+        </Button>
+        <div className="h-6 w-px bg-border" />
         <div className="flex items-center gap-3">
           <div className="w-2 h-2 rounded-full bg-gradient-to-br from-primary to-primary/70 shadow-sm"></div>
           <h1 className="text-lg font-semibold text-foreground tracking-tight">
