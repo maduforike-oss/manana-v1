@@ -2,7 +2,7 @@ import { Package, Truck, CheckCircle, Clock, Calendar, ShoppingBag, Palette } fr
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/useToast';
+import { useToast } from '@/hooks/use-toast';
 import { useAppStore } from '@/store/useAppStore';
 
 export const OrdersPage = () => {
