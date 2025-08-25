@@ -51,10 +51,24 @@
     --gradient-hero: linear-gradient(180deg, hsl(var(--primary-glow) / 0.1), hsl(var(--secondary-glow) / 0.05));
     --gradient-workspace: linear-gradient(180deg, hsl(var(--workspace)), hsl(230 25% 5%));
 
-    /* Shadows */
+    /* Studio Design Tokens */
+    --studio-bg: 230 25% 8%;
+    --studio-surface: 230 20% 12%;
+    --studio-surface-elevated: 230 18% 16%;
+    --studio-border: 230 15% 18%;
+    --studio-glow: 340 82% 52%;
+    --studio-accent-cyan: 187 100% 48%;
+    --studio-accent-purple: 280 75% 60%;
+    --studio-accent-orange: 25 95% 55%;
+
+    /* Enhanced Shadows */
     --shadow-primary: 0 8px 32px hsl(var(--primary) / 0.2);
     --shadow-glow: 0 0 40px hsl(var(--primary-glow) / 0.3);
     --shadow-workspace: 0 4px 20px hsl(230 25% 5% / 0.5);
+    --shadow-studio: 0 2px 12px hsl(230 25% 5% / 0.4);
+    --shadow-neon: 0 0 20px hsl(var(--studio-glow) / 0.4);
+    --shadow-panel: 0 4px 24px hsl(230 25% 5% / 0.3);
+    --shadow-tool: 0 2px 8px hsl(230 25% 5% / 0.2);
 
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);

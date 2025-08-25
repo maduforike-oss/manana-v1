@@ -69,8 +69,11 @@ export const CanvasStage = () => {
   if (stageSize.width === 0 || stageSize.height === 0) {
     return (
       <div ref={containerRef} className="flex-1 bg-workspace overflow-hidden relative">
-        <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-          Loading canvas...
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-foreground/80">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-3 h-3 bg-primary rounded-full animate-pulse"></div>
+            <span className="text-sm font-medium">Loading canvas...</span>
+          </div>
         </div>
       </div>
     );
@@ -208,19 +211,21 @@ export const CanvasStage = () => {
         </Layer>
       </Stage>
 
-      {/* Zoom Controls */}
-      <div className="absolute bottom-4 right-4 bg-card border border-workspace-border rounded-lg p-2 shadow-lg">
+      {/* Enhanced Zoom Controls */}
+      <div className="absolute bottom-4 right-4 bg-card/95 border border-border/50 backdrop-blur-sm rounded-lg p-2 shadow-lg">
         <div className="flex items-center gap-2 text-xs">
           <button
             onClick={() => useStudioStore.getState().setZoom(zoom / 1.2)}
-            className="w-6 h-6 rounded bg-muted hover:bg-accent flex items-center justify-center"
+            className="w-7 h-7 rounded-md bg-background hover:bg-accent/80 text-foreground flex items-center justify-center transition-all duration-200 hover:scale-105 border border-border/30"
           >
             −
           </button>
-          <span className="min-w-[50px] text-center">{Math.round(zoom * 100)}%</span>
+          <span className="min-w-[50px] text-center font-medium text-foreground">
+            {Math.round(zoom * 100)}%
+          </span>
           <button
             onClick={() => useStudioStore.getState().setZoom(zoom * 1.2)}
-            className="w-6 h-6 rounded bg-muted hover:bg-accent flex items-center justify-center"
+            className="w-7 h-7 rounded-md bg-background hover:bg-accent/80 text-foreground flex items-center justify-center transition-all duration-200 hover:scale-105 border border-border/30"
           >
             +
           </button>
@@ -229,7 +234,7 @@ export const CanvasStage = () => {
               useStudioStore.getState().setZoom(1);
               useStudioStore.getState().setPanOffset({ x: 0, y: 0 });
             }}
-            className="ml-2 px-2 py-1 rounded bg-muted hover:bg-accent text-xs"
+            className="ml-2 px-3 py-1.5 rounded-md bg-background hover:bg-accent/80 text-foreground text-xs font-medium transition-all duration-200 hover:scale-105 border border-border/30"
           >
             Reset
           </button>

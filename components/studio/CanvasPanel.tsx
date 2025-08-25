@@ -13,9 +13,9 @@ export const CanvasPanel = () => {
 
   return (
     <ScrollArea className="h-full">
-      <div className="p-4 space-y-4">
-        <div>
-          <Label>Preset</Label>
+      <div className="p-4 space-y-6">
+        <div className="space-y-2">
+          <Label className="text-sm font-semibold text-foreground">Canvas Preset</Label>
           <Select 
             value="Custom" 
             onValueChange={(preset) => {
@@ -24,60 +24,69 @@ export const CanvasPanel = () => {
               }
             }}
           >
-            <SelectTrigger className="mt-1">
+            <SelectTrigger className="bg-background border-border/50 text-foreground">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-card border-border/50">
               {Object.keys(CANVAS_PRESETS).map(preset => (
-                <SelectItem key={preset} value={preset}>{preset}</SelectItem>
+                <SelectItem key={preset} value={preset} className="text-foreground hover:bg-accent/80">
+                  {preset}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <Label>Width</Label>
-            <Input
-              type="number"
-              value={doc.canvas.width}
-              onChange={(e) => updateCanvas({ width: parseInt(e.target.value) || 1200 })}
-              className="mt-1"
-            />
-          </div>
-          <div>
-            <Label>Height</Label>
-            <Input
-              type="number"
-              value={doc.canvas.height}
-              onChange={(e) => updateCanvas({ height: parseInt(e.target.value) || 1200 })}
-              className="mt-1"
-            />
+        <div className="space-y-3">
+          <Label className="text-sm font-semibold text-foreground">Dimensions</Label>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs text-foreground/70">Width (px)</Label>
+              <Input
+                type="number"
+                value={doc.canvas.width}
+                onChange={(e) => updateCanvas({ width: parseInt(e.target.value) || 1200 })}
+                className="bg-background border-border/50 text-foreground font-mono"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-foreground/70">Height (px)</Label>
+              <Input
+                type="number"
+                value={doc.canvas.height}
+                onChange={(e) => updateCanvas({ height: parseInt(e.target.value) || 1200 })}
+                className="bg-background border-border/50 text-foreground font-mono"
+              />
+            </div>
           </div>
         </div>
 
-        <div>
-          <Label>Background</Label>
+        <div className="space-y-2">
+          <Label className="text-sm font-semibold text-foreground">Background Color</Label>
           <Input
             value={doc.canvas.background}
             onChange={(e) => updateCanvas({ background: e.target.value })}
-            className="mt-1"
-            placeholder="transparent or #color"
+            className="bg-background border-border/50 text-foreground font-mono"
+            placeholder="transparent or #ffffff"
           />
         </div>
 
-        <div>
-          <Label>DPI</Label>
+        <div className="space-y-2">
+          <Label className="text-sm font-semibold text-foreground">Print Quality</Label>
           <Select 
             value={doc.canvas.dpi.toString()} 
             onValueChange={(value) => updateCanvas({ dpi: parseInt(value) as 150 | 300 })}
           >
-            <SelectTrigger className="mt-1">
+            <SelectTrigger className="bg-background border-border/50 text-foreground">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="150">150 DPI</SelectItem>
-              <SelectItem value="300">300 DPI</SelectItem>
+            <SelectContent className="bg-card border-border/50">
+              <SelectItem value="150" className="text-foreground hover:bg-accent/80">
+                150 DPI (Web)
+              </SelectItem>
+              <SelectItem value="300" className="text-foreground hover:bg-accent/80">
+                300 DPI (Print)
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>

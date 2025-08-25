@@ -143,11 +143,11 @@ export const StudioShell = () => {
           <CanvasStage />
           
           {/* Enhanced Status Bar */}
-          <div className="h-10 studio-panel border-t flex items-center justify-between px-4 text-xs">
-            <div className="flex items-center gap-4">
-              <span className="text-muted-foreground">
+          <div className="h-7 bg-card/95 border-t border-border/50 backdrop-blur-sm flex items-center justify-between px-4 text-xs shadow-sm">
+            <div className="flex items-center gap-6">
+              <span className="font-medium text-foreground">
                 {doc.selectedIds.length > 0 
-                  ? `${doc.selectedIds.length} selected` 
+                  ? `${doc.selectedIds.length} ${doc.selectedIds.length === 1 ? 'item' : 'items'} selected` 
                   : 'Ready'
                 }
               </span>
@@ -155,16 +155,19 @@ export const StudioShell = () => {
                 const node = doc.nodes.find(n => n.id === doc.selectedIds[0]);
                 if (node) {
                   return (
-                    <span className="text-muted-foreground">
-                      {Math.round(node.x)}, {Math.round(node.y)} | 
-                      {Math.round(node.width)} × {Math.round(node.height)}
+                    <span className="text-foreground/70 font-mono">
+                      X: {Math.round(node.x)}, Y: {Math.round(node.y)} | 
+                      W: {Math.round(node.width)}, H: {Math.round(node.height)}
                     </span>
                   );
                 }
               })()}
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-muted-foreground">
+              <span className="font-medium text-foreground">
+                Zoom: {Math.round(zoom * 100)}%
+              </span>
+              <span className="text-foreground/70 font-mono">
                 Canvas: {doc.canvas.width} × {doc.canvas.height}px
               </span>
             </div>

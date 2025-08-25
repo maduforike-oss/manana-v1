@@ -66,19 +66,25 @@ export const CanvasStage = () => {
             backgroundColor: doc.canvas.background === 'transparent' ? 'transparent' : doc.canvas.background
           }}
         >
-          {/* Canvas Content - Placeholder for now */}
-          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-            Canvas Ready
-            <br />
-            {doc.canvas.width} × {doc.canvas.height}px
+          {/* Canvas Content - Professional Loading State */}
+          <div className="w-full h-full flex flex-col items-center justify-center text-foreground/80 font-medium">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+              <span className="text-sm tracking-wide">Canvas Ready</span>
+            </div>
+            <div className="text-xs text-foreground/60 font-mono">
+              {doc.canvas.width} × {doc.canvas.height}px
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Zoom Controls */}
+      {/* Enhanced Zoom Controls */}
       <div className="absolute bottom-4 right-4 flex gap-2">
-        <div className="glass-panel px-3 py-1 text-xs text-foreground">
-          {Math.round(zoom * 100)}%
+        <div className="bg-card/95 border border-border/50 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg">
+          <span className="text-xs font-medium text-foreground">
+            {Math.round(zoom * 100)}%
+          </span>
         </div>
       </div>
     </div>
