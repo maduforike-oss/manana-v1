@@ -20,8 +20,8 @@ export const PropertiesPanel = () => {
 
   if (!selectedNode) {
     return (
-      <div className="p-4 text-center text-muted-foreground">
-        <p>Select an element to edit properties</p>
+      <div className="p-4 text-center text-foreground/70">
+        <p className="font-medium">Select an element to edit properties</p>
       </div>
     );
   }
@@ -34,7 +34,7 @@ export const PropertiesPanel = () => {
     <ScrollArea className="h-full">
       <div className="p-4 space-y-4">
         <div>
-          <Label>Text</Label>
+          <Label className="text-foreground/90 font-medium">Text</Label>
           <Input
             value={node.text}
             onChange={(e) => handleUpdate({ text: e.target.value })}
@@ -43,7 +43,7 @@ export const PropertiesPanel = () => {
         </div>
 
         <div>
-          <Label>Font Family</Label>
+          <Label className="text-foreground/90 font-medium">Font Family</Label>
           <Select value={node.fontFamily} onValueChange={(value) => handleUpdate({ fontFamily: value })}>
             <SelectTrigger className="mt-1">
               <SelectValue />
@@ -57,7 +57,7 @@ export const PropertiesPanel = () => {
         </div>
 
         <div>
-          <Label>Font Size: {node.fontSize}px</Label>
+          <Label className="text-foreground/90 font-medium">Font Size: {node.fontSize}px</Label>
           <Slider
             value={[node.fontSize]}
             onValueChange={([value]) => handleUpdate({ fontSize: value })}
@@ -69,7 +69,7 @@ export const PropertiesPanel = () => {
         </div>
 
         <div>
-          <Label>Font Weight</Label>
+          <Label className="text-foreground/90 font-medium">Font Weight</Label>
           <Select value={node.fontWeight.toString()} onValueChange={(value) => handleUpdate({ fontWeight: parseInt(value) })}>
             <SelectTrigger className="mt-1">
               <SelectValue />
@@ -86,7 +86,7 @@ export const PropertiesPanel = () => {
         </div>
 
         <div>
-          <Label>Text Align</Label>
+          <Label className="text-foreground/90 font-medium">Text Align</Label>
           <div className="flex gap-1 mt-1">
             <Button
               variant={node.align === 'left' ? 'default' : 'outline'}
@@ -113,7 +113,7 @@ export const PropertiesPanel = () => {
         </div>
 
         <div>
-          <Label>Color</Label>
+          <Label className="text-foreground/90 font-medium">Color</Label>
           <div className="grid grid-cols-5 gap-2 mt-2">
             {COLOR_SWATCHES.map(color => (
               <button
@@ -135,7 +135,7 @@ export const PropertiesPanel = () => {
         <Separator />
         
         <div>
-          <Label>Letter Spacing: {node.letterSpacing}px</Label>
+          <Label className="text-foreground/90 font-medium">Letter Spacing: {node.letterSpacing}px</Label>
           <Slider
             value={[node.letterSpacing]}
             onValueChange={([value]) => handleUpdate({ letterSpacing: value })}
@@ -147,7 +147,7 @@ export const PropertiesPanel = () => {
         </div>
 
         <div>
-          <Label>Line Height: {node.lineHeight}</Label>
+          <Label className="text-foreground/90 font-medium">Line Height: {node.lineHeight}</Label>
           <Slider
             value={[node.lineHeight]}
             onValueChange={([value]) => handleUpdate({ lineHeight: value })}
@@ -165,7 +165,7 @@ export const PropertiesPanel = () => {
     <ScrollArea className="h-full">
       <div className="p-4 space-y-4">
         <div>
-          <Label>Fill Color</Label>
+          <Label className="text-foreground/90 font-medium">Fill Color</Label>
           <div className="grid grid-cols-5 gap-2 mt-2">
             {COLOR_SWATCHES.map(color => (
               <button
@@ -244,11 +244,11 @@ export const PropertiesPanel = () => {
     <div className="p-4 space-y-4">
       <Separator />
       
-      <div>
-        <Label>Position & Size</Label>
+        <div>
+          <Label className="text-foreground/90 font-medium">Position & Size</Label>
         <div className="grid grid-cols-2 gap-2 mt-2">
           <div>
-            <Label className="text-xs">X</Label>
+            <Label className="text-xs text-foreground/80 font-medium">X</Label>
             <Input
               type="number"
               value={Math.round(selectedNode.x)}
@@ -256,7 +256,7 @@ export const PropertiesPanel = () => {
             />
           </div>
           <div>
-            <Label className="text-xs">Y</Label>
+            <Label className="text-xs text-foreground/80 font-medium">Y</Label>
             <Input
               type="number"
               value={Math.round(selectedNode.y)}
@@ -264,7 +264,7 @@ export const PropertiesPanel = () => {
             />
           </div>
           <div>
-            <Label className="text-xs">W</Label>
+            <Label className="text-xs text-foreground/80 font-medium">W</Label>
             <Input
               type="number"
               value={Math.round(selectedNode.width)}
@@ -272,7 +272,7 @@ export const PropertiesPanel = () => {
             />
           </div>
           <div>
-            <Label className="text-xs">H</Label>
+            <Label className="text-xs text-foreground/80 font-medium">H</Label>
             <Input
               type="number"
               value={Math.round(selectedNode.height)}

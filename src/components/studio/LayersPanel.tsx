@@ -42,7 +42,7 @@ export const LayersPanel = () => {
                 {node.locked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
               </Button>
               
-              <span className="flex-1 text-sm truncate">{node.name}</span>
+              <span className="flex-1 text-sm font-medium text-foreground/90 truncate">{node.name}</span>
               
               <Button
                 variant="ghost"
@@ -69,8 +69,8 @@ export const LayersPanel = () => {
           ))}
           
           {doc.nodes.length === 0 && (
-            <div className="text-center text-muted-foreground py-8">
-              No layers yet. Start designing!
+            <div className="text-center text-foreground/60 py-8">
+              <p className="font-medium">No layers yet. Start designing!</p>
             </div>
           )}
         </div>

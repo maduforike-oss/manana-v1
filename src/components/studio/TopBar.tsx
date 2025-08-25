@@ -11,11 +11,11 @@ export const TopBar = () => {
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-3">
           <div className="w-2 h-2 rounded-full bg-gradient-to-br from-primary to-primary/70 shadow-sm"></div>
-          <h1 className="text-lg font-semibold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent tracking-tight">
+          <h1 className="text-lg font-semibold text-foreground tracking-tight">
             Design Studio
           </h1>
         </div>
-        <div className="text-sm text-muted-foreground/80 font-medium">
+        <div className="text-sm text-foreground/90 font-medium">
           {doc.title}
         </div>
       </div>

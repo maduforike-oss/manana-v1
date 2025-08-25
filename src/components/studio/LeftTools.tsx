@@ -61,7 +61,7 @@ export const LeftTools = ({ collapsed = false }: LeftToolsProps) => {
                 className={`w-10 h-10 p-0 transition-all duration-300 rounded-lg group relative ${
                   isActive 
                     ? 'bg-primary/10 text-primary shadow-lg ring-2 ring-primary/30 scale-105' 
-                    : 'hover:bg-accent/60 hover:text-accent-foreground hover:shadow-md hover:scale-[1.02] text-muted-foreground'
+                    : 'hover:bg-accent/60 hover:text-accent-foreground hover:shadow-md hover:scale-[1.02] text-foreground/80'
                 }`}
               >
                 <Icon className={`w-4 h-4 transition-all duration-200 ${
@@ -76,9 +76,9 @@ export const LeftTools = ({ collapsed = false }: LeftToolsProps) => {
               side="right" 
               className="flex items-center gap-2 bg-popover/95 backdrop-blur-sm border border-border/50 shadow-lg"
             >
-              <span className="font-medium">{tool.label}</span>
+              <span className="font-semibold text-foreground">{tool.label}</span>
               {tool.shortcut && (
-                <kbd className="px-2 py-1 text-xs bg-muted/80 rounded border border-border/40 font-mono">
+                <kbd className="px-2 py-1 text-xs bg-primary/10 text-foreground/90 rounded border border-border/40 font-mono font-semibold">
                   {tool.shortcut}
                 </kbd>
               )}
