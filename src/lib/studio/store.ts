@@ -13,6 +13,10 @@ interface StudioState {
   snapEnabled: boolean;
   mockup: MockupConfig;
   
+  // Computed properties
+  canUndo: boolean;
+  canRedo: boolean;
+  
   // Actions
   addNode: (node: Node) => void;
   updateNode: (id: string, updates: Partial<Node>) => void;
@@ -61,6 +65,14 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   panOffset: { x: 0, y: 0 },
   snapEnabled: true,
   mockup: { type: 'front', color: 'light', opacity: 0.8 },
+  
+  get canUndo() {
+    return get().history.length > 1;
+  },
+  
+  get canRedo() {
+    return get().redoStack.length > 0;
+  },
 
   addNode: (node) => set(produce((state) => {
     state.doc.nodes.push(node);
