@@ -1,135 +1,86 @@
 "use client";
 
 import { useRef, useEffect, useState } from 'react';
-import { Stage, Layer, Rect, Circle, Text, Line } from 'react-konva';
-import Konva from 'konva';
 import { useStudioStore } from '../../lib/studio/store';
 
 export const CanvasStage = () => {
-  const stageRef = useRef<Konva.Stage>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
   const [stageSize, setStageSize] = useState({ width: 800, height: 600 });
-  
-  const { 
-    doc,
-    activeTool,
-    zoom,
-    panOffset,
-    addNode,
-    updateNode,
-    selectNode,
-    clearSelection
-  } = useStudioStore();
+  const { doc, zoom, panOffset, clearSelection } = useStudioStore();
 
-  // Handle window resize
+  // Update canvas size on window resize
   useEffect(() => {
-    const handleResize = () => {
-      if (stageRef.current) {
-        const container = stageRef.current.container();
-        if (container) {
-          const containerRect = container.getBoundingClientRect();
-          setStageSize({
-            width: containerRect.width,
-            height: containerRect.height,
-          });
-        }
+    const updateSize = () => {
+      if (canvasRef.current) {
+        const rect = canvasRef.current.getBoundingClientRect();
+        setStageSize({ width: rect.width, height: rect.height });
       }
     };
 
-    window.addEventListener('resize', handleResize);
-    handleResize();
-
-    return () => window.removeEventListener('resize', handleResize);
+    updateSize();
+    window.addEventListener('resize', updateSize);
+    return () => window.removeEventListener('resize', updateSize);
   }, []);
 
-  const handleStageClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
-    if (e.target === e.target.getStage()) {
+  const handleCanvasClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
       clearSelection();
     }
   };
 
   return (
-    <div className="flex-1 relative bg-muted/10">
-      <Stage
-        ref={stageRef}
-        width={stageSize.width}
-        height={stageSize.height}
-        scaleX={zoom}
-        scaleY={zoom}
-        x={panOffset.x}
-        y={panOffset.y}
-        onClick={handleStageClick}
-        className="bg-white"
+    <div className="flex-1 relative overflow-hidden bg-studio-background">
+      {/* Canvas Container */}
+      <div 
+        ref={canvasRef}
+        className="w-full h-full relative cursor-crosshair"
+        onClick={handleCanvasClick}
+        style={{
+          transform: `scale(${zoom}) translate(${panOffset.x}px, ${panOffset.y}px)`,
+          transformOrigin: 'center center'
+        }}
       >
-        <Layer>
-          <Rect
-            x={0}
-            y={0}
-            width={doc.canvas.width}
-            height={doc.canvas.height}
-            fill="white"
-            stroke="#ddd"
-            strokeWidth={1}
+        {/* Grid Background */}
+        {doc.canvas.showGrid && (
+          <div 
+            className="absolute inset-0 opacity-20"
+            style={{
+              backgroundImage: `
+                linear-gradient(to right, hsl(var(--primary) / 0.1) 1px, transparent 1px),
+                linear-gradient(to bottom, hsl(var(--primary) / 0.1) 1px, transparent 1px)
+              `,
+              backgroundSize: `${doc.canvas.gridSize}px ${doc.canvas.gridSize}px`
+            }}
           />
-        </Layer>
-        
-        <Layer>
-          {doc.nodes.map((node) => {
-            if (node.type === 'text') {
-              return (
-                <Text
-                  key={node.id}
-                  id={node.id}
-                  x={node.x}
-                  y={node.y}
-                  text={node.text}
-                  fontSize={node.fontSize}
-                  fontFamily={node.fontFamily}
-                  fill={node.fill}
-                  draggable
-                  onClick={() => selectNode(node.id)}
-                />
-              );
-            }
-            
-            if (node.type === 'shape' && node.shape === 'rect') {
-              return (
-                <Rect
-                  key={node.id}
-                  id={node.id}
-                  x={node.x}
-                  y={node.y}
-                  width={node.width}
-                  height={node.height}
-                  fill={node.fill}
-                  stroke={node.stroke}
-                  strokeWidth={node.strokeWidth}
-                  draggable
-                  onClick={() => selectNode(node.id)}
-                />
-              );
-            }
-            
-            if (node.type === 'shape' && node.shape === 'circle') {
-              return (
-                <Circle
-                  key={node.id}
-                  id={node.id}
-                  x={node.x + node.width / 2}
-                  y={node.y + node.height / 2}
-                  radius={Math.min(node.width, node.height) / 2}
-                  fill={node.fill}
-                  stroke={node.stroke}
-                  strokeWidth={node.strokeWidth}
-                  draggable
-                  onClick={() => selectNode(node.id)}
-                />
-              );
-            }
-            
-            return null;
-          })}
-        </Layer>
-      </Stage>
+        )}
+
+        {/* Canvas Area */}
+        <div 
+          className="absolute border-2 border-primary/30 bg-white shadow-2xl"
+          style={{
+            width: doc.canvas.width,
+            height: doc.canvas.height,
+            left: '50%',
+            top: '50%',
+            transform: 'translate(-50%, -50%)',
+            backgroundColor: doc.canvas.background === 'transparent' ? 'transparent' : doc.canvas.background
+          }}
+        >
+          {/* Canvas Content - Placeholder for now */}
+          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+            Canvas Ready
+            <br />
+            {doc.canvas.width} × {doc.canvas.height}px
+          </div>
+        </div>
+      </div>
+
+      {/* Zoom Controls */}
+      <div className="absolute bottom-4 right-4 flex gap-2">
+        <div className="glass-panel px-3 py-1 text-xs text-foreground">
+          {Math.round(zoom * 100)}%
+        </div>
+      </div>
     </div>
   );
 };

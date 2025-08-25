@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { BottomNavigation } from '@/components/BottomNavigation';
+import { StudioPage } from '@/components/pages/StudioPage';
 import { MarketPage } from '@/components/pages/MarketPage';
 import { CommunityPage } from '@/components/pages/CommunityPage';
 import { OrdersPage } from '@/components/pages/OrdersPage';
@@ -39,7 +40,7 @@ const Index = () => {
       case 'community':
         return <CommunityPage />;
       case 'studio':
-        return <div className="p-4 text-center">Studio coming soon!</div>;
+        return <StudioPage />;
       case 'orders':
         return <OrdersPage />;
       case 'profile':
