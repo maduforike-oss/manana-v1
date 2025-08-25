@@ -1,12 +1,30 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Stage, Layer, Rect, Circle, Text } from 'react-konva';
+import { Stage, Layer, Rect, Circle, Text, Image } from 'react-konva';
 import { useStudioStore } from '../../lib/studio/store';
+import { getGarmentById, getColorByGarmentAndId } from '@/lib/studio/garments';
 
 export const CanvasStage = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<any>(null);
   const [stageSize, setStageSize] = useState({ width: 800, height: 600 });
+  const [garmentImage, setGarmentImage] = useState<HTMLImageElement | null>(null);
   const { doc, zoom, panOffset, clearSelection, selectNode, activeTool } = useStudioStore();
+
+  // Load garment image
+  useEffect(() => {
+    const garmentType = doc.canvas.garmentType || 't-shirt';
+    const garmentColor = doc.canvas.garmentColor || 'white';
+    
+    const garment = getGarmentById(garmentType);
+    if (garment) {
+      const img = new window.Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        setGarmentImage(img);
+      };
+      img.src = garment.images.front;
+    }
+  }, [doc.canvas.garmentType, doc.canvas.garmentColor]);
 
   useEffect(() => {
     const updateStageSize = () => {
@@ -65,6 +83,14 @@ export const CanvasStage = () => {
     useStudioStore.getState().setPanOffset(newPos);
   };
 
+  // Calculate garment dimensions and print area
+  const garmentWidth = 400;
+  const garmentHeight = 500;
+  const printAreaX = garmentWidth * 0.25; // 25% from left
+  const printAreaY = garmentHeight * 0.3; // 30% from top
+  const printAreaWidth = garmentWidth * 0.5; // 50% of garment width
+  const printAreaHeight = garmentHeight * 0.4; // 40% of garment height
+
   // Don't render Stage until we have valid dimensions
   if (stageSize.width === 0 || stageSize.height === 0) {
     return (
@@ -72,7 +98,7 @@ export const CanvasStage = () => {
         <div className="absolute inset-0 flex flex-col items-center justify-center text-foreground/80">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-3 h-3 bg-primary rounded-full animate-pulse"></div>
-            <span className="text-sm font-medium">Loading canvas...</span>
+            <span className="text-sm font-medium">Loading design studio...</span>
           </div>
         </div>
       </div>
@@ -112,46 +138,60 @@ export const CanvasStage = () => {
         }}
       >
         <Layer>
-          {/* Canvas Background */}
+          {/* Garment Background */}
+          {garmentImage && (
+            <Image
+              image={garmentImage}
+              x={stageSize.width / 2 - garmentWidth / 2}
+              y={stageSize.height / 2 - garmentHeight / 2}
+              width={garmentWidth}
+              height={garmentHeight}
+              opacity={0.8}
+            />
+          )}
+
+          {/* Print Area Outline (subtle) */}
           <Rect
-            x={stageSize.width / 2 - (doc.canvas.width * zoom) / 2}
-            y={stageSize.height / 2 - (doc.canvas.height * zoom) / 2}
-            width={doc.canvas.width}
-            height={doc.canvas.height}
-            fill={doc.canvas.background}
-            stroke="hsl(var(--workspace-border))"
-            strokeWidth={2 / zoom}
-            shadowColor="hsl(var(--workspace-border))"
-            shadowBlur={10 / zoom}
-            shadowOffset={{ x: 0, y: 4 / zoom }}
+            x={stageSize.width / 2 - garmentWidth / 2 + printAreaX}
+            y={stageSize.height / 2 - garmentHeight / 2 + printAreaY}
+            width={printAreaWidth}
+            height={printAreaHeight}
+            fill="transparent"
+            stroke="hsl(var(--primary))"
+            strokeWidth={1 / zoom}
+            opacity={0.3}
+            dash={[5 / zoom, 5 / zoom]}
           />
 
-          {/* Render nodes */}
+          {/* Render design nodes */}
           {doc.nodes.map((node) => {
             const isSelected = doc.selectedIds.includes(node.id);
-            const baseX = stageSize.width / 2 - (doc.canvas.width * zoom) / 2;
-            const baseY = stageSize.height / 2 - (doc.canvas.height * zoom) / 2;
+            // Map design coordinates to print area
+            const printBaseX = stageSize.width / 2 - garmentWidth / 2 + printAreaX;
+            const printBaseY = stageSize.height / 2 - garmentHeight / 2 + printAreaY;
+            const scaleX = printAreaWidth / doc.canvas.width;
+            const scaleY = printAreaHeight / doc.canvas.height;
 
             if (node.type === 'shape') {
               if (node.shape === 'rect') {
                 return (
                   <Rect
                     key={node.id}
-                    x={baseX + node.x}
-                    y={baseY + node.y}
-                    width={node.width}
-                    height={node.height}
+                    x={printBaseX + node.x * scaleX}
+                    y={printBaseY + node.y * scaleY}
+                    width={node.width * scaleX}
+                    height={node.height * scaleY}
                     fill={node.fill.type === 'solid' ? node.fill.color : 'transparent'}
                     stroke={isSelected ? 'hsl(var(--primary))' : node.stroke?.color}
-                    strokeWidth={(isSelected ? 2 : node.stroke?.width || 0) / zoom}
+                    strokeWidth={(isSelected ? 3 : node.stroke?.width || 0) / zoom}
                     rotation={node.rotation}
                     opacity={node.opacity}
                     draggable={activeTool === 'select'}
                     onClick={() => selectNode(node.id)}
                     onDragEnd={(e) => {
                       useStudioStore.getState().updateNode(node.id, {
-                        x: e.target.x() - baseX,
-                        y: e.target.y() - baseY
+                        x: (e.target.x() - printBaseX) / scaleX,
+                        y: (e.target.y() - printBaseY) / scaleY
                       });
                     }}
                   />
@@ -160,19 +200,19 @@ export const CanvasStage = () => {
                 return (
                   <Circle
                     key={node.id}
-                    x={baseX + node.x + node.width / 2}
-                    y={baseY + node.y + node.height / 2}
-                    radius={Math.min(node.width, node.height) / 2}
+                    x={printBaseX + (node.x + node.width / 2) * scaleX}
+                    y={printBaseY + (node.y + node.height / 2) * scaleY}
+                    radius={Math.min(node.width * scaleX, node.height * scaleY) / 2}
                     fill={node.fill.type === 'solid' ? node.fill.color : 'transparent'}
                     stroke={isSelected ? 'hsl(var(--primary))' : node.stroke?.color}
-                    strokeWidth={(isSelected ? 2 : node.stroke?.width || 0) / zoom}
+                    strokeWidth={(isSelected ? 3 : node.stroke?.width || 0) / zoom}
                     opacity={node.opacity}
                     draggable={activeTool === 'select'}
                     onClick={() => selectNode(node.id)}
                     onDragEnd={(e) => {
                       useStudioStore.getState().updateNode(node.id, {
-                        x: e.target.x() - baseX - node.width / 2,
-                        y: e.target.y() - baseY - node.height / 2
+                        x: (e.target.x() - printBaseX) / scaleX - node.width / 2,
+                        y: (e.target.y() - printBaseY) / scaleY - node.height / 2
                       });
                     }}
                   />
@@ -182,25 +222,25 @@ export const CanvasStage = () => {
               return (
                 <Text
                   key={node.id}
-                  x={baseX + node.x}
-                  y={baseY + node.y}
+                  x={printBaseX + node.x * scaleX}
+                  y={printBaseY + node.y * scaleY}
                   text={node.text}
-                  fontSize={node.fontSize}
+                  fontSize={node.fontSize * Math.min(scaleX, scaleY)}
                   fontFamily={node.fontFamily}
                   fill={node.fill.type === 'solid' ? node.fill.color : 'black'}
-                  width={node.width}
-                  height={node.height}
+                  width={node.width * scaleX}
+                  height={node.height * scaleY}
                   align={node.align}
                   rotation={node.rotation}
                   opacity={node.opacity}
                   stroke={isSelected ? 'hsl(var(--primary))' : undefined}
-                  strokeWidth={isSelected ? 1 / zoom : 0}
+                  strokeWidth={isSelected ? 2 / zoom : 0}
                   draggable={activeTool === 'select'}
                   onClick={() => selectNode(node.id)}
                   onDragEnd={(e) => {
                     useStudioStore.getState().updateNode(node.id, {
-                      x: e.target.x() - baseX,
-                      y: e.target.y() - baseY
+                      x: (e.target.x() - printBaseX) / scaleX,
+                      y: (e.target.y() - printBaseY) / scaleY
                     });
                   }}
                 />
