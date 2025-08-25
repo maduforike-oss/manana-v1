@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { BottomNavigation } from '@/components/BottomNavigation';
-import { StudioPage } from '@/components/pages/StudioPage';
 import { MarketPage } from '@/components/pages/MarketPage';
 import { CommunityPage } from '@/components/pages/CommunityPage';
 import { OrdersPage } from '@/components/pages/OrdersPage';
@@ -9,8 +8,6 @@ import { ProfilePage } from '@/components/pages/ProfilePage';
 
 const Index = () => {
   const { activeTab, setUser } = useAppStore();
-
-  console.log('Index page rendered, activeTab:', activeTab);
 
   // Initialize mock user for demo
   useEffect(() => {
@@ -36,30 +33,30 @@ const Index = () => {
   }, [setUser]);
 
   const renderPage = () => {
-    console.log('renderPage called with activeTab:', activeTab);
     switch (activeTab) {
       case 'market':
-        console.log('Rendering MarketPage');
         return <MarketPage />;
       case 'community':
-        console.log('Rendering CommunityPage');
         return <CommunityPage />;
       case 'studio':
-        console.log('Rendering StudioPage');
-        return <StudioPage />;
+        return <div className="p-4 text-center">Studio coming soon!</div>;
       case 'orders':
-        console.log('Rendering OrdersPage');
         return <OrdersPage />;
       case 'profile':
-        console.log('Rendering ProfilePage');
         return <ProfilePage />;
       default:
-        console.log('Rendering default StudioPage');
-        return <StudioPage />;
+        return <MarketPage />;
     }
   };
 
-  return renderPage();
+  return (
+    <div className="flex flex-col h-screen">
+      <div className="flex-1 overflow-hidden">
+        {renderPage()}
+      </div>
+      <BottomNavigation />
+    </div>
+  );
 };
 
 export default Index;
