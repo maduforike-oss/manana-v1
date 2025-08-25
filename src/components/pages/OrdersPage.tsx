@@ -70,7 +70,7 @@ export const OrdersPage = () => {
   };
 
   const handleViewOrderDetails = (orderId: string) => {
-    toast({ title: "Order Details", description: `Details for order ${orderId} will open here` });
+    window.location.href = `/orders/${orderId}`;
   };
 
   const handleStartDesigning = () => {
