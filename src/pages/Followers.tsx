@@ -12,7 +12,7 @@ import { useAppStore } from '@/store/useAppStore';
 export default function FollowersPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { setActiveTab } = useAppStore();
+  const { setActiveTab, userProfiles, followedUsers, followUser, unfollowUser } = useAppStore();
   const [activeTab, setActiveTabLocal] = useState("followers");
 
   // Set initial tab from URL params and ensure profile tab is active
@@ -28,30 +28,38 @@ export default function FollowersPage() {
     setActiveTab('profile');
   }, [searchParams, setActiveTab]);
 
-  // Mock data for followers and following
+  // Get followers and following from store
+  const followers = userProfiles.filter(profile => 
+    followedUsers.includes(profile.id)
+  );
+  
+  const following = userProfiles.filter(profile => 
+    followedUsers.includes(profile.id)
+  ).map(profile => ({
+    ...profile,
+    isFollowing: true
+  }));
+
+  // Add some mock followers who follow the current user
   const mockFollowers = [
-    { id: 1, name: "Sarah Design", username: "@sarahdesign", avatar: null, isFollowing: true, designCount: 42 },
-    { id: 2, name: "Mike Creator", username: "@mikecreator", avatar: null, isFollowing: false, designCount: 38 },
-    { id: 3, name: "Emma Artist", username: "@emmaartist", avatar: null, isFollowing: true, designCount: 56 },
-    { id: 4, name: "David Style", username: "@davidstyle", avatar: null, isFollowing: true, designCount: 29 },
-    { id: 5, name: "Lisa Fashion", username: "@lisafashion", avatar: null, isFollowing: false, designCount: 73 },
+    ...userProfiles.map(profile => ({
+      ...profile,
+      isFollowing: followedUsers.includes(profile.id),
+      designCount: profile.totalDesigns
+    }))
   ];
 
-  const mockFollowing = [
-    { id: 6, name: "John Designer", username: "@johndesigner", avatar: null, isFollowing: true, designCount: 91 },
-    { id: 7, name: "Amy Creative", username: "@amycreative", avatar: null, isFollowing: true, designCount: 47 },
-    { id: 8, name: "Tom Artist", username: "@tomartist", avatar: null, isFollowing: true, designCount: 62 },
-    { id: 9, name: "Kate Style", username: "@katestyle", avatar: null, isFollowing: true, designCount: 35 },
-  ];
-
-  const handleFollow = (userId: number) => {
-    console.log(`Toggle follow for user ${userId}`);
-    // TODO: Implement follow/unfollow logic
+  const handleFollow = (userId: string) => {
+    const isFollowing = followedUsers.includes(userId);
+    if (isFollowing) {
+      unfollowUser(userId);
+    } else {
+      followUser(userId);
+    }
   };
 
-  const handleUserClick = (userId: number) => {
-    console.log(`Navigate to user ${userId} profile`);
-    // TODO: Navigate to user profile page
+  const handleUserClick = (userId: string) => {
+    navigate(`/users/${userId}`);
   };
 
   const UserCard = ({ user }: { user: any }) => (
@@ -74,7 +82,7 @@ export default function FollowersPage() {
               <p className="text-xs text-muted-foreground">{user.username}</p>
               <div className="flex items-center gap-1 mt-1">
                 <Users className="w-3 h-3 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">{user.designCount} designs</span>
+                <span className="text-xs text-muted-foreground">{user.designCount || user.totalDesigns} designs</span>
               </div>
             </div>
           </div>
@@ -117,7 +125,7 @@ export default function FollowersPage() {
           </TabsTrigger>
           <TabsTrigger value="following" className="flex items-center gap-2">
             <UserPlus className="w-4 h-4" />
-            Following ({mockFollowing.length})
+            Following ({following.length})
           </TabsTrigger>
         </TabsList>
 
@@ -128,7 +136,7 @@ export default function FollowersPage() {
         </TabsContent>
 
         <TabsContent value="following" className="space-y-3 mt-6">
-          {mockFollowing.map((user) => (
+          {following.map((user) => (
             <UserCard key={user.id} user={user} />
           ))}
         </TabsContent>

@@ -16,6 +16,7 @@ const Index = () => {
       id: 'user_123',
       email: 'demo@example.com',
       name: 'Demo User',
+      username: '@demouser',
       bio: 'Welcome to the demo!',
       location: 'Demo Location',
       website: 'https://demo.com',
@@ -25,6 +26,8 @@ const Index = () => {
       maxDesigns: 30,
       followers: 0,
       following: 0,
+      totalDesigns: 5,
+      totalOrders: 2,
       socialLinks: [],
       featuredDesigns: [],
     });
