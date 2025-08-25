@@ -344,9 +344,14 @@ export default function OrdersPage() {
                       </div>
                       
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm" className="gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="gap-2"
+                          onClick={() => window.location.href = `/orders/${order.id}`}
+                        >
                           <Eye className="w-4 h-4" />
-                          View
+                          View Details
                         </Button>
                         <Button variant="outline" size="sm">
                           <MoreHorizontal className="w-4 h-4" />
