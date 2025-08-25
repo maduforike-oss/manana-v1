@@ -22,7 +22,7 @@ export const TopBar = () => {
 
       <div className="flex items-center gap-1">
         {/* History Actions Group */}
-        <div className="flex items-center bg-background/60 rounded-md p-1 gap-0.5 border border-border/30 shadow-sm">
+        <div className="flex items-center bg-card rounded-md p-1 gap-0.5 border border-border shadow-sm">
           <Button
             variant="ghost"
             size="sm"
@@ -49,7 +49,7 @@ export const TopBar = () => {
         <div className="w-px h-6 bg-border/40 mx-2" />
 
         {/* File Actions Group */}
-        <div className="flex items-center bg-background/60 rounded-md p-1 gap-0.5 border border-border/30 shadow-sm">
+        <div className="flex items-center bg-card rounded-md p-1 gap-0.5 border border-border shadow-sm">
           <Button
             variant="ghost"
             size="sm"

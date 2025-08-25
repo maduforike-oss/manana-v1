@@ -87,7 +87,7 @@ export const TopBar = () => {
       <div className="relative z-10 flex items-center justify-between w-full">
         {/* Left Section */}
         <div className="flex items-center gap-4">
-          <div className="text-lg font-bold bg-gradient-to-r from-primary via-studio-accent-cyan to-primary bg-clip-text text-transparent animate-[float_3s_ease-in-out_infinite]">
+          <div className="text-lg font-bold text-foreground animate-[float_3s_ease-in-out_infinite]">
             Manana Studio
           </div>
         
@@ -105,7 +105,7 @@ export const TopBar = () => {
           ) : (
             <button
               onClick={() => setIsEditingTitle(true)}
-              className="text-sm font-medium hover:text-primary transition-all duration-200 px-3 py-1.5 rounded-lg glass-panel hover:neon-border"
+              className="text-sm font-medium text-foreground hover:text-primary transition-all duration-200 px-3 py-1.5 rounded-lg bg-card border border-border hover:border-primary/50"
             >
               {doc.title}
             </button>
@@ -113,7 +113,7 @@ export const TopBar = () => {
         </div>
 
         {/* Center Section - Zoom Controls */}
-        <div className="flex items-center gap-2 glass-panel rounded-lg p-1 neon-border">
+        <div className="flex items-center gap-2 bg-card border border-border rounded-lg p-1">
           <Button 
             variant="ghost" 
             size="sm" 
@@ -152,7 +152,7 @@ export const TopBar = () => {
               <ZoomOut className="w-4 h-4" />
             </Button>
             
-            <span className="text-xs w-12 text-center font-mono bg-studio-surface rounded px-1 py-0.5 border border-studio-border">
+            <span className="text-xs w-12 text-center font-mono text-foreground bg-card rounded px-1 py-0.5 border border-border">
               {Math.round(zoom * 100)}%
             </span>
             
