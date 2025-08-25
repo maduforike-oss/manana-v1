@@ -1,13 +1,13 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Save, Undo, Redo, Download, Settings, ArrowLeft } from 'lucide-react';
+import { Save, Undo, Redo, Download, Settings, ArrowLeft, Box } from 'lucide-react';
 
 import { useStudioStore } from '../../lib/studio/store';
 import { useAppStore } from '../../store/useAppStore';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 export const TopBar = () => {
-  const { doc, undo, redo, canUndo, canRedo } = useStudioStore();
+  const { doc, undo, redo, canUndo, canRedo, is3DMode, toggle3DMode } = useStudioStore();
   const { setCurrentDesign } = useAppStore();
 
   const handleExitStudio = () => {
@@ -88,6 +88,17 @@ export const TopBar = () => {
         </div>
 
         <div className="w-px h-6 bg-border/40 mx-2" />
+
+        {/* 3D Mode Toggle */}
+        <Button
+          variant={is3DMode ? "default" : "ghost"}
+          size="sm"
+          onClick={toggle3DMode}
+          className="h-8 px-3 text-xs font-medium transition-all duration-200 hover:bg-accent/80 hover:scale-[1.02]"
+        >
+          <Box className="w-3.5 h-3.5 mr-1.5" />
+          3D
+        </Button>
 
         {/* Settings and Theme */}
         <div className="flex items-center gap-1">

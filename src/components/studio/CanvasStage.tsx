@@ -2,13 +2,15 @@ import React, { useRef, useEffect, useState } from 'react';
 import { Stage, Layer, Rect, Circle, Text, Image } from 'react-konva';
 import { useStudioStore } from '../../lib/studio/store';
 import { getGarmentById, getColorByGarmentAndId } from '@/lib/studio/garments';
+import { Canvas3D } from './Canvas3D';
+import { Canvas3DControls } from './Canvas3DControls';
 
 export const CanvasStage = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<any>(null);
   const [stageSize, setStageSize] = useState({ width: 800, height: 600 });
   const [garmentImage, setGarmentImage] = useState<HTMLImageElement | null>(null);
-  const { doc, zoom, panOffset, clearSelection, selectNode, activeTool } = useStudioStore();
+  const { doc, zoom, panOffset, clearSelection, selectNode, activeTool, is3DMode } = useStudioStore();
 
   // Load garment image
   useEffect(() => {
@@ -101,6 +103,16 @@ export const CanvasStage = () => {
             <span className="text-sm font-medium">Loading design studio...</span>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  // Render 3D or 2D canvas based on mode
+  if (is3DMode) {
+    return (
+      <div className="relative w-full h-full">
+        <Canvas3D />
+        <Canvas3DControls />
       </div>
     );
   }

@@ -12,6 +12,7 @@ interface StudioState {
   panOffset: { x: number; y: number };
   snapEnabled: boolean;
   mockup: MockupConfig;
+  is3DMode: boolean;
   
   // Computed properties
   canUndo: boolean;
@@ -41,6 +42,8 @@ interface StudioState {
   alignToArtboard: (alignment: 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom') => void;
   distributeSelection: (distribution: 'horizontal' | 'vertical') => void;
   setMockup: (mockup: Partial<MockupConfig>) => void;
+  toggle3DMode: () => void;
+  set3DMode: (enabled: boolean) => void;
   saveToLocal: () => void;
   loadFromLocal: (id: string) => void;
   newDesign: (garmentType?: string) => void;
@@ -66,6 +69,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   panOffset: { x: 0, y: 0 },
   snapEnabled: true,
   mockup: { type: 'front', color: 'light', opacity: 0.8 },
+  is3DMode: false,
   
   get canUndo() {
     return get().history.length > 1;
@@ -252,6 +256,14 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   setMockup: (mockup) => set((state) => ({ 
     mockup: { ...state.mockup, ...mockup } 
   })),
+
+  toggle3DMode: () => set((state) => ({ 
+    is3DMode: !state.is3DMode 
+  })),
+
+  set3DMode: (enabled) => set({ 
+    is3DMode: enabled 
+  }),
 
   saveToLocal: () => {
     const { doc } = get();
