@@ -12,10 +12,18 @@ import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { useAppStore } from '@/store/useAppStore';
+import { useEffect } from 'react';
 
 export const ProfileSettings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { setActiveTab } = useAppStore();
+  
+  // Ensure profile tab is active
+  useEffect(() => {
+    setActiveTab('profile');
+  }, [setActiveTab]);
   
   const [formData, setFormData] = useState({
     name: "Alex Designer",
@@ -118,7 +126,7 @@ export const ProfileSettings = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+            <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <div>

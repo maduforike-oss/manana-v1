@@ -7,11 +7,19 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { useAppStore } from '@/store/useAppStore';
+import { useEffect } from 'react';
 
 export const UpgradePlan = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { setActiveTab } = useAppStore();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+
+  // Ensure profile tab is active
+  useEffect(() => {
+    setActiveTab('profile');
+  }, [setActiveTab]);
 
   const plans = [
     {
@@ -113,7 +121,7 @@ export const UpgradePlan = () => {
       <div className="container mx-auto py-6 px-4 max-w-6xl">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+          <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div>

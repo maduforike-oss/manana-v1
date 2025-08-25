@@ -1,16 +1,32 @@
 "use client"
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, UserPlus, Users } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAppStore } from '@/store/useAppStore';
 
 export default function FollowersPage() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("followers");
+  const [searchParams] = useSearchParams();
+  const { setActiveTab } = useAppStore();
+  const [activeTab, setActiveTabLocal] = useState("followers");
+
+  // Set initial tab from URL params and ensure profile tab is active
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'following') {
+      setActiveTabLocal('following');
+    } else {
+      setActiveTabLocal('followers');
+    }
+    
+    // Ensure profile tab is active in the bottom navigation
+    setActiveTab('profile');
+  }, [searchParams, setActiveTab]);
 
   // Mock data for followers and following
   const mockFollowers = [
@@ -83,7 +99,7 @@ export default function FollowersPage() {
     <div className="container mx-auto py-6 px-4 max-w-2xl">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+        <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
           <ArrowLeft className="w-4 h-4" />
         </Button>
         <div>
@@ -93,7 +109,7 @@ export default function FollowersPage() {
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTabLocal} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="followers" className="flex items-center gap-2">
             <Users className="w-4 h-4" />

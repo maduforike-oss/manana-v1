@@ -1,9 +1,13 @@
 import { Store, Users, Palette, Package, User } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useEffect } from 'react';
 
 export const BottomNavigation = () => {
   const { activeTab, setActiveTab } = useAppStore();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const tabs = [
     { id: 'market' as const, label: 'Market', icon: Store },
@@ -13,13 +17,39 @@ export const BottomNavigation = () => {
     { id: 'profile' as const, label: 'Profile', icon: User },
   ];
 
+  // Sync activeTab with current route
+  useEffect(() => {
+    const path = location.pathname;
+    if (path.startsWith('/profile')) {
+      if (activeTab !== 'profile') setActiveTab('profile');
+    } else if (path.startsWith('/orders')) {
+      if (activeTab !== 'orders') setActiveTab('orders');
+    }
+  }, [location.pathname, activeTab, setActiveTab]);
+
+  const handleTabClick = (tabId: string) => {
+    setActiveTab(tabId as any);
+    
+    // Navigate to root for each tab to ensure proper state
+    if (tabId === 'profile' && !location.pathname.startsWith('/profile/')) {
+      // Only navigate if we're not already on a profile page
+      navigate('/');
+    } else if (tabId === 'orders' && !location.pathname.startsWith('/orders/')) {
+      // Only navigate if we're not already on an orders page
+      navigate('/');
+    } else if (!location.pathname.startsWith('/profile/') && !location.pathname.startsWith('/orders/')) {
+      // For other tabs, always go to root
+      navigate('/');
+    }
+  };
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border backdrop-blur-lg">
       <div className="flex items-center justify-around py-2 px-4 max-w-md mx-auto">
         {tabs.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
-            onClick={() => setActiveTab(id)}
+            onClick={() => handleTabClick(id)}
             className={cn(
               "flex flex-col items-center gap-1 p-3 rounded-xl transition-all duration-300",
               "min-w-0 flex-1 text-xs font-medium",

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { useAppStore } from '@/store/useAppStore';
 import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress"
 import { 
@@ -31,6 +32,12 @@ import {
 export default function OrderDetails() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { setActiveTab } = useAppStore();
+
+  // Ensure orders tab is active
+  useEffect(() => {
+    setActiveTab('orders');
+  }, [setActiveTab]);
 
   // Auto-scroll to tracking section if hash is present
   useEffect(() => {
@@ -158,7 +165,7 @@ export default function OrderDetails() {
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={() => navigate(-1)}
+              onClick={() => navigate('/')}
               className="gap-2 hover:scale-105 transition-all duration-200"
             >
               <ArrowLeft className="w-4 h-4" />
