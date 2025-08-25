@@ -7,6 +7,7 @@ import { RightProps } from './RightProps';
 import { CanvasStage } from './CanvasStage';
 import { useStudioStore } from '@/lib/studio/store';
 import { ShortcutsDialog } from './ShortcutsDialog';
+import { CreativeBackground } from './CreativeBackground';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Layers, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -105,13 +106,14 @@ export const StudioShell = () => {
   }, [saveSnapshot]);
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="h-screen flex flex-col studio-canvas relative overflow-hidden">
+      <CreativeBackground />
       <TopBar />
       
       <div className="flex-1 flex overflow-hidden relative">
         {/* Left Tools Panel */}
         <div className={cn(
-          "transition-all duration-300 ease-in-out border-r bg-card",
+          "transition-all duration-300 ease-in-out studio-panel border-r",
           leftPanelCollapsed ? "w-0 overflow-hidden" : "w-16"
         )}>
           <LeftTools collapsed={leftPanelCollapsed} />
@@ -123,7 +125,7 @@ export const StudioShell = () => {
           size="sm"
           onClick={() => setLeftPanelCollapsed(!leftPanelCollapsed)}
           className={cn(
-            "absolute left-0 top-1/2 -translate-y-1/2 z-10 h-8 w-6 rounded-r-md bg-card border border-l-0 shadow-sm hover:bg-accent transition-all duration-200",
+            "absolute left-0 top-1/2 -translate-y-1/2 z-10 h-8 w-6 rounded-r-md glass-panel hover:neon-border transition-all duration-200",
             leftPanelCollapsed ? "translate-x-0" : "translate-x-16"
           )}
         >
@@ -139,7 +141,7 @@ export const StudioShell = () => {
           <CanvasStage />
           
           {/* Enhanced Status Bar */}
-          <div className="h-10 bg-card border-t flex items-center justify-between px-4 text-xs">
+          <div className="h-10 studio-panel border-t flex items-center justify-between px-4 text-xs">
             <div className="flex items-center gap-4">
               <span className="text-muted-foreground">
                 {doc.selectedIds.length > 0 
@@ -169,7 +171,7 @@ export const StudioShell = () => {
         
         {/* Right Properties Panel */}
         <div className={cn(
-          "transition-all duration-300 ease-in-out border-l bg-card",
+          "transition-all duration-300 ease-in-out studio-panel border-l",
           rightPanelCollapsed ? "w-0 overflow-hidden" : "w-80"
         )}>
           <RightProps 
@@ -185,7 +187,7 @@ export const StudioShell = () => {
           size="sm"
           onClick={() => setRightPanelCollapsed(!rightPanelCollapsed)}
           className={cn(
-            "absolute right-0 top-1/2 -translate-y-1/2 z-10 h-8 w-6 rounded-l-md bg-card border border-r-0 shadow-sm hover:bg-accent transition-all duration-200",
+            "absolute right-0 top-1/2 -translate-y-1/2 z-10 h-8 w-6 rounded-l-md glass-panel hover:neon-border transition-all duration-200",
             rightPanelCollapsed ? "translate-x-0" : "-translate-x-80"
           )}
         >

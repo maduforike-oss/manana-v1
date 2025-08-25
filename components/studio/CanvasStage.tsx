@@ -147,8 +147,8 @@ export const CanvasStage = () => {
       draggable: activeTool === 'select' && !node.locked,
       onClick: (e: Konva.KonvaEventObject<MouseEvent>) => handleNodeClick(node.id, e),
       onDragEnd: (e: Konva.KonvaEventObject<DragEvent>) => handleNodeDrag(node.id, e),
-      stroke: isSelected ? '#3B82F6' : undefined,
-      strokeWidth: isSelected ? 2 : undefined,
+      stroke: isSelected ? '#FF0080' : undefined,
+      strokeWidth: isSelected ? 3 : undefined,
     };
 
     switch (node.type) {
@@ -165,6 +165,9 @@ export const CanvasStage = () => {
             width={textNode.width}
             height={textNode.height}
             fill={textNode.fill.color}
+            shadowColor={isSelected ? '#FF0080' : undefined}
+            shadowBlur={isSelected ? 10 : undefined}
+            shadowOpacity={isSelected ? 0.5 : undefined}
           />
         );
 
@@ -179,6 +182,9 @@ export const CanvasStage = () => {
               height={shapeNode.height}
               fill={shapeNode.fill.color}
               cornerRadius={shapeNode.radius || 0}
+              shadowColor={isSelected ? '#FF0080' : undefined}
+              shadowBlur={isSelected ? 15 : undefined}
+              shadowOpacity={isSelected ? 0.4 : undefined}
             />
           );
         } else if (shapeNode.shape === 'circle') {
@@ -187,6 +193,9 @@ export const CanvasStage = () => {
               {...commonProps}
               radius={shapeNode.width / 2}
               fill={shapeNode.fill.color}
+              shadowColor={isSelected ? '#FF0080' : undefined}
+              shadowBlur={isSelected ? 15 : undefined}
+              shadowOpacity={isSelected ? 0.4 : undefined}
             />
           );
         } else if (shapeNode.shape === 'line') {
@@ -196,6 +205,9 @@ export const CanvasStage = () => {
               points={[0, 0, shapeNode.width, 0]}
               stroke={shapeNode.stroke?.color || '#000000'}
               strokeWidth={shapeNode.stroke?.width || 2}
+              shadowColor={isSelected ? '#FF0080' : undefined}
+              shadowBlur={isSelected ? 10 : undefined}
+              shadowOpacity={isSelected ? 0.6 : undefined}
             />
           );
         }
@@ -207,7 +219,28 @@ export const CanvasStage = () => {
   };
 
   return (
-    <div className="flex-1 bg-muted/20 overflow-hidden relative">
+    <div className="flex-1 studio-canvas overflow-hidden relative">
+      {/* Enhanced Canvas Effects Overlay */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-4 left-4 w-32 h-32 bg-primary/5 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-4 right-4 w-40 h-40 bg-studio-accent-cyan/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-60 h-60 bg-studio-accent-purple/3 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+      </div>
+      
+      {/* Artboard indicator overlay */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div 
+          className="absolute border-2 border-primary/20 bg-primary/5 backdrop-blur-sm"
+          style={{
+            left: `${panOffset.x + (stageSize.width - doc.canvas.width * zoom) / 2}px`,
+            top: `${panOffset.y + (stageSize.height - doc.canvas.height * zoom) / 2}px`,
+            width: `${doc.canvas.width * zoom}px`,
+            height: `${doc.canvas.height * zoom}px`,
+            transform: 'translate3d(0,0,0)'
+          }}
+        />
+      </div>
+
       <Stage
         ref={stageRef}
         width={stageSize.width}
@@ -217,7 +250,7 @@ export const CanvasStage = () => {
         x={panOffset.x}
         y={panOffset.y}
         onClick={handleStageClick}
-        className="cursor-crosshair"
+        className="cursor-crosshair relative z-10"
       >
         {/* Background layer */}
         <Layer>
@@ -244,52 +277,59 @@ export const CanvasStage = () => {
 
         {/* Artboard layer */}
         <Layer>
-          {/* Artboard background */}
+          {/* Enhanced Artboard background */}
           <Rect
             x={0}
             y={0}
             width={doc.canvas.width}
             height={doc.canvas.height}
             fill={doc.canvas.background === 'transparent' ? '#FFFFFF' : doc.canvas.background}
-            stroke="#E5E7EB"
-            strokeWidth={1}
+            stroke="#FF0080"
+            strokeWidth={2}
+            shadowColor="rgba(255,0,128,0.3)"
+            shadowBlur={10}
+            shadowOffset={{ x: 0, y: 4 }}
+            dash={[10, 5]}
           />
 
-          {/* Grid */}
+          {/* Enhanced Grid */}
           {doc.canvas.showGrid && (
             <Group>
               {Array.from({ length: Math.ceil(doc.canvas.width / doc.canvas.gridSize) }, (_, i) => (
                 <Line
                   key={`grid-v-${i}`}
                   points={[i * doc.canvas.gridSize, 0, i * doc.canvas.gridSize, doc.canvas.height]}
-                  stroke="#E5E7EB"
-                  strokeWidth={0.5}
-                  opacity={0.5}
+                  stroke={i % 5 === 0 ? "#8B5CF6" : "#E5E7EB"}
+                  strokeWidth={i % 5 === 0 ? 1 : 0.5}
+                  opacity={i % 5 === 0 ? 0.4 : 0.2}
                 />
               ))}
               {Array.from({ length: Math.ceil(doc.canvas.height / doc.canvas.gridSize) }, (_, i) => (
                 <Line
                   key={`grid-h-${i}`}
                   points={[0, i * doc.canvas.gridSize, doc.canvas.width, i * doc.canvas.gridSize]}
-                  stroke="#E5E7EB"
-                  strokeWidth={0.5}
-                  opacity={0.5}
+                  stroke={i % 5 === 0 ? "#8B5CF6" : "#E5E7EB"}
+                  strokeWidth={i % 5 === 0 ? 1 : 0.5}
+                  opacity={i % 5 === 0 ? 0.4 : 0.2}
                 />
               ))}
             </Group>
           )}
 
-          {/* Safe area */}
+          {/* Enhanced Safe area */}
           {doc.canvas.safeAreaPct > 0 && (
             <Rect
               x={doc.canvas.width * (doc.canvas.safeAreaPct / 200)}
               y={doc.canvas.height * (doc.canvas.safeAreaPct / 200)}
               width={doc.canvas.width * (1 - doc.canvas.safeAreaPct / 100)}
               height={doc.canvas.height * (1 - doc.canvas.safeAreaPct / 100)}
-              stroke="#10B981"
-              strokeWidth={1}
-              dash={[5, 5]}
+              stroke="#00D4AA"
+              strokeWidth={2}
+              dash={[8, 4]}
               fill="transparent"
+              opacity={0.7}
+              shadowColor="#00D4AA"
+              shadowBlur={5}
             />
           )}
         </Layer>

@@ -38,31 +38,56 @@ export const LeftTools = ({ collapsed = false }: LeftToolsProps) => {
   if (collapsed) return null;
 
   return (
-    <div className="w-16 bg-card flex flex-col items-center py-4 gap-2">
+    <div className="w-16 flex flex-col items-center py-4 gap-3 relative">
+      {/* Tool Categories */}
+      <div className="w-8 h-0.5 bg-gradient-to-r from-primary to-studio-accent-cyan rounded-full mb-2" />
+      
       <TooltipProvider delayDuration={300}>
-        {tools.map(({ id, icon: Icon, label, shortcut }) => (
-          <Tooltip key={id}>
-            <TooltipTrigger asChild>
-              <Button
-                variant={activeTool === id ? "default" : "ghost"}
-                size="icon"
-                onClick={() => setActiveTool(id as Tool)}
-                className="w-12 h-12 hover:scale-105 transition-all duration-200 hover:shadow-md"
-              >
-                <Icon className="w-5 h-5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="right" className="animate-in slide-in-from-left-2">
-              <div className="text-center">
-                <div className="font-medium">{label}</div>
-                {shortcut && (
-                  <div className="text-xs text-muted-foreground">({shortcut})</div>
-                )}
-              </div>
-            </TooltipContent>
-          </Tooltip>
+        {tools.map(({ id, icon: Icon, label, shortcut }, index) => (
+          <div key={id} className="relative group">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setActiveTool(id as Tool)}
+                  className={`
+                    w-12 h-12 relative z-10 transition-all duration-200
+                    ${activeTool === id 
+                      ? 'studio-tool active animate-[pulse-neon_2s_ease-in-out_infinite]' 
+                      : 'studio-tool hover:bg-primary/10'
+                    }
+                  `}
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <Icon className={`w-5 h-5 ${activeTool === id ? 'text-primary-foreground' : ''}`} />
+                  
+                  {/* Tool category indicator */}
+                  {['select', 'text', 'rect', 'brush'].includes(id) && (
+                    <div className="absolute -right-1 -top-1 w-2 h-2 bg-gradient-to-r from-primary to-studio-accent-cyan rounded-full opacity-60" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="glass-panel neon-border animate-in slide-in-from-left-2 z-50">
+                <div className="text-center">
+                  <div className="font-medium text-foreground">{label}</div>
+                  {shortcut && (
+                    <div className="text-xs text-primary mt-1 font-mono">({shortcut})</div>
+                  )}
+                </div>
+              </TooltipContent>
+            </Tooltip>
+            
+            {/* Active tool glow effect */}
+            {activeTool === id && (
+              <div className="absolute inset-0 bg-gradient-to-r from-primary to-studio-accent-cyan rounded-lg blur-sm opacity-30 animate-pulse" />
+            )}
+          </div>
         ))}
       </TooltipProvider>
+      
+      {/* Bottom accent */}
+      <div className="w-8 h-0.5 bg-gradient-to-r from-studio-accent-cyan to-primary rounded-full mt-2" />
     </div>
   );
 };
