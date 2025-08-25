@@ -3,27 +3,32 @@ import { Stage, Layer, Rect, Circle, Text } from 'react-konva';
 import { useStudioStore } from '../../lib/studio/store';
 
 export const CanvasStage = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<any>(null);
-  const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
+  const [stageSize, setStageSize] = useState({ width: 800, height: 600 });
   const { doc, zoom, panOffset, clearSelection, selectNode, activeTool } = useStudioStore();
 
   useEffect(() => {
     const updateStageSize = () => {
-      const container = stageRef.current?.getStage()?.container();
-      if (container) {
-        const parent = container.parentElement;
-        if (parent) {
+      if (containerRef.current) {
+        const { clientWidth, clientHeight } = containerRef.current;
+        if (clientWidth > 0 && clientHeight > 0) {
           setStageSize({
-            width: parent.clientWidth,
-            height: parent.clientHeight
+            width: clientWidth,
+            height: clientHeight
           });
         }
       }
     };
 
-    updateStageSize();
+    // Initial size update
+    const timer = setTimeout(updateStageSize, 0);
+    
     window.addEventListener('resize', updateStageSize);
-    return () => window.removeEventListener('resize', updateStageSize);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', updateStageSize);
+    };
   }, []);
 
   const handleStageClick = (e: any) => {
@@ -60,8 +65,19 @@ export const CanvasStage = () => {
     useStudioStore.getState().setPanOffset(newPos);
   };
 
+  // Don't render Stage until we have valid dimensions
+  if (stageSize.width === 0 || stageSize.height === 0) {
+    return (
+      <div ref={containerRef} className="flex-1 bg-workspace overflow-hidden relative">
+        <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+          Loading canvas...
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex-1 bg-workspace overflow-hidden relative">
+    <div ref={containerRef} className="flex-1 bg-workspace overflow-hidden relative">
       {/* Grid Background */}
       {doc.canvas.showGrid && (
         <div 
