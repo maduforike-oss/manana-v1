@@ -38,40 +38,66 @@ export const LeftTools = ({ collapsed = false }: LeftToolsProps) => {
 
   if (collapsed) return null;
 
-  return (
-    <TooltipProvider>
-      <div className="w-16 h-full flex flex-col items-center py-4 space-y-2 bg-card/50 border-r border-workspace-border">
-        {tools.map((tool) => {
-          const Icon = tool.icon;
-          const isActive = activeTool === tool.id;
-          
-          return (
-            <Tooltip key={tool.id}>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={isActive ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setActiveTool(tool.id)}
-                  className={`w-10 h-10 p-0 transition-all duration-200 border-workspace-border ${
-                    isActive 
-                      ? 'bg-primary text-primary-foreground shadow-lg ring-2 ring-primary/20' 
-                      : 'hover:bg-accent hover:text-accent-foreground hover:shadow-md hover:scale-105'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="flex items-center gap-2">
-                <span>{tool.label}</span>
-                {tool.shortcut && (
-                  <kbd className="px-1.5 py-0.5 text-xs bg-muted rounded">
-                    {tool.shortcut}
-                  </kbd>
+  // Group tools for better visual organization
+  const primaryTools = tools.slice(0, 2); // Select, Hand
+  const drawingTools = tools.slice(2, 4); // Text, Image
+  const shapeTools = tools.slice(4, 7); // Rect, Circle, Line
+  const advancedTools = tools.slice(7); // Triangle, Star, Brush
+
+  const renderToolGroup = (groupTools: typeof tools, withSeparator = false) => (
+    <>
+      {withSeparator && <div className="w-8 h-px bg-border/30 my-2" />}
+      {groupTools.map((tool) => {
+        const Icon = tool.icon;
+        const isActive = activeTool === tool.id;
+        
+        return (
+          <Tooltip key={tool.id}>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setActiveTool(tool.id)}
+                className={`w-10 h-10 p-0 transition-all duration-300 rounded-lg group relative ${
+                  isActive 
+                    ? 'bg-primary/10 text-primary shadow-lg ring-2 ring-primary/30 scale-105' 
+                    : 'hover:bg-accent/60 hover:text-accent-foreground hover:shadow-md hover:scale-[1.02] text-muted-foreground'
+                }`}
+              >
+                <Icon className={`w-4 h-4 transition-all duration-200 ${
+                  isActive ? 'drop-shadow-sm' : 'group-hover:scale-110'
+                }`} />
+                {isActive && (
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg" />
                 )}
-              </TooltipContent>
-            </Tooltip>
-          );
-        })}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent 
+              side="right" 
+              className="flex items-center gap-2 bg-popover/95 backdrop-blur-sm border border-border/50 shadow-lg"
+            >
+              <span className="font-medium">{tool.label}</span>
+              {tool.shortcut && (
+                <kbd className="px-2 py-1 text-xs bg-muted/80 rounded border border-border/40 font-mono">
+                  {tool.shortcut}
+                </kbd>
+              )}
+            </TooltipContent>
+          </Tooltip>
+        );
+      })}
+    </>
+  );
+
+  return (
+    <TooltipProvider delayDuration={300}>
+      <div className="w-16 h-full flex flex-col items-center py-6 bg-gradient-to-b from-card/80 to-card/60 border-r border-border/40 backdrop-blur-sm shadow-sm">
+        <div className="flex flex-col items-center gap-1.5">
+          {renderToolGroup(primaryTools)}
+          {renderToolGroup(drawingTools, true)}
+          {renderToolGroup(shapeTools, true)}
+          {renderToolGroup(advancedTools, true)}
+        </div>
       </div>
     </TooltipProvider>
   );
