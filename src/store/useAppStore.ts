@@ -457,6 +457,16 @@ export const useAppStore = create<AppState>()(
         likedPosts: state.likedPosts,
         posts: state.posts,
       }),
+      onRehydrateStorage: () => (state) => {
+        if (state?.designs) {
+          // Convert date strings back to Date objects
+          state.designs = state.designs.map(design => ({
+            ...design,
+            createdAt: new Date(design.createdAt),
+            updatedAt: new Date(design.updatedAt),
+          }));
+        }
+      },
     }
   )
 );

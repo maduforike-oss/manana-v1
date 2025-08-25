@@ -224,7 +224,7 @@ export const StudioHub = () => {
                       {design.garmentType.replace('-', ' ')}
                     </p>
                     <div className="flex items-center justify-between text-xs text-muted-foreground mb-4">
-                      <span>Updated {design.updatedAt.toLocaleDateString()}</span>
+                      <span>Updated {new Date(design.updatedAt).toLocaleDateString()}</span>
                       <div className="flex items-center gap-3">
                         <span className="flex items-center gap-1">
                           <Heart className="w-3 h-3" />
