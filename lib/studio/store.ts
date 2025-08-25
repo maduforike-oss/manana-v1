@@ -39,15 +39,16 @@ interface StudioState {
   setMockup: (mockup: Partial<MockupConfig>) => void;
   saveToLocal: () => void;
   loadFromLocal: (id: string) => void;
-  newDesign: () => void;
+  newDesign: (garmentType?: string) => void;
   setTitle: (title: string) => void;
+  initializeFromGarment: (garmentType: string, garmentColor: string) => void;
 }
 
-const createInitialDoc = (): DesignDoc => ({
+const createInitialDoc = (garmentType?: string): DesignDoc => ({
   id: `design-${Date.now()}`,
   title: 'Untitled Design',
   nodes: [],
-  canvas: { ...CANVAS_PRESETS['T-Shirt'] },
+  canvas: { ...CANVAS_PRESETS[garmentType as keyof typeof CANVAS_PRESETS] || CANVAS_PRESETS['T-Shirt'] },
   selectedIds: [],
 });
 
@@ -252,14 +253,27 @@ export const useStudioStore = create<StudioState>((set, get) => ({
     }
   },
 
-  newDesign: () => set({
-    doc: createInitialDoc(),
+  newDesign: (garmentType?) => set({
+    doc: createInitialDoc(garmentType),
     history: [],
     redoStack: [],
   }),
 
   setTitle: (title) => set(produce((state) => {
     state.doc.title = title;
+  })),
+
+  initializeFromGarment: (garmentType, garmentColor) => set(produce((state) => {
+    state.doc = createInitialDoc(garmentType);
+    state.doc.title = `New ${garmentType} Design`;
+    state.history = [];
+    state.redoStack = [];
+    state.mockup = { 
+      type: 'front', 
+      color: garmentColor === 'white' || garmentColor === 'light' ? 'light' : 'dark', 
+      opacity: 0.8 
+    };
+    get().saveSnapshot();
   })),
 }));
 

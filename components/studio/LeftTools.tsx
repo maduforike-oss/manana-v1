@@ -11,8 +11,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useStudioStore } from '@/lib/studio/store';
-import { Tool } from '@/lib/studio/types';
+import { useStudioStore } from '../../lib/studio/store';
+import { Tool } from '../../lib/studio/types';
 
 const tools = [
   { id: 'select', icon: MousePointer2, label: 'Select', shortcut: 'V' },

@@ -1,7 +1,7 @@
 "use client";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useStudioStore } from '@/lib/studio/store';
+import { useStudioStore } from '../../lib/studio/store';
 import { useState } from 'react';
 
 const shortcuts = [

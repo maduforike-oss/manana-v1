@@ -7,9 +7,9 @@ import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { useStudioStore } from '@/lib/studio/store';
-import { TextNode, ShapeNode, ImageNode } from '@/lib/studio/types';
-import { GOOGLE_FONTS, COLOR_SWATCHES } from '@/lib/studio/presets';
+import { useStudioStore } from '../../lib/studio/store';
+import { TextNode, ShapeNode, ImageNode } from '../../lib/studio/types';
+import { GOOGLE_FONTS, COLOR_SWATCHES } from '../../lib/studio/presets';
 import { AlignLeft, AlignCenter, AlignRight, FlipHorizontal, FlipVertical } from 'lucide-react';
 
 export const PropertiesPanel = () => {

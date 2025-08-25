@@ -13,8 +13,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useStudioStore } from '@/lib/studio/store';
-import { exportPNG, exportSVG, exportPDF } from '@/lib/studio/export';
+import { useStudioStore } from '../../lib/studio/store';
+import { exportPNG, exportSVG, exportPDF } from '../../lib/studio/export';
 
 export const TopBar = () => {
   const { 

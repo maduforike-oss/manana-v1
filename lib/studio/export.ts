@@ -1,7 +1,7 @@
 import { DesignDoc } from './types';
 
 export interface ExportOptions {
-  format: 'png' | 'svg' | 'pdf';
+  format?: 'png' | 'svg' | 'pdf';
   transparent?: boolean;
   dpi?: 150 | 300;
   includeBleed?: boolean;
@@ -11,7 +11,7 @@ export interface ExportOptions {
 export const exportPNG = async (
   canvas: HTMLCanvasElement, 
   doc: DesignDoc, 
-  options: ExportOptions = {}
+  options: ExportOptions = { format: 'png' }
 ): Promise<void> => {
   const {
     transparent = false,
@@ -62,7 +62,7 @@ export const exportPNG = async (
   }, 'image/png');
 };
 
-export const exportSVG = (doc: DesignDoc, options: ExportOptions = {}): void => {
+export const exportSVG = (doc: DesignDoc, options: ExportOptions = { format: 'svg' }): void => {
   const { filename = `${doc.title}-${Date.now()}` } = options;
   
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -151,7 +151,7 @@ export const exportSVG = (doc: DesignDoc, options: ExportOptions = {}): void => 
   downloadBlob(blob, `${filename}.svg`);
 };
 
-export const exportPDF = (doc: DesignDoc, options: ExportOptions = {}): void => {
+export const exportPDF = (doc: DesignDoc, options: ExportOptions = { format: 'pdf' }): void => {
   // TODO: Implement PDF export using jsPDF
   // This is a placeholder for future implementation
   console.log('PDF export not yet implemented');

@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Eye, EyeOff, Lock, Unlock, Copy, Trash2 } from 'lucide-react';
-import { useStudioStore } from '@/lib/studio/store';
+import { useStudioStore } from '../../lib/studio/store';
 
 export const LayersPanel = () => {
   const { doc, selectNode, updateNode, removeNode, duplicate, bringToFront, sendToBack } = useStudioStore();

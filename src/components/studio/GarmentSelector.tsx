@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/store/useAppStore';
+import { useStudioStore } from '../../../lib/studio/store';
 import { cn } from '@/lib/utils';
-import { GARMENT_TYPES, getGarmentsByCategory } from '@/lib/studio/garments';
+import { GARMENT_TYPES, getGarmentsByCategory, getColorByGarmentAndId } from '@/lib/studio/garments';
 import { GarmentPreview } from './GarmentPreview';
 import { Sparkles, Filter } from 'lucide-react';
 
@@ -12,7 +13,8 @@ const CATEGORIES = ['All', 'Basics', 'Outerwear', 'Bottoms', 'Accessories'];
 export const GarmentSelector = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedColors, setSelectedColors] = useState<Record<string, string>>({});
-  const { createDesign } = useAppStore();
+  const { createDesign, setActiveTab } = useAppStore();
+  const { initializeFromGarment } = useStudioStore();
 
   const filteredGarments = getGarmentsByCategory(selectedCategory);
 
@@ -21,7 +23,18 @@ export const GarmentSelector = () => {
     if (!success) {
       // Handle design limit reached
       alert('Design limit reached! Upgrade to create more designs.');
+      return;
     }
+
+    // Get selected color for this garment
+    const selectedColorId = selectedColors[garmentId] || 'white';
+    const selectedColor = getColorByGarmentAndId(garmentId, selectedColorId);
+    
+    // Initialize studio with garment-specific canvas and settings
+    initializeFromGarment(garmentId, selectedColor?.id || 'white');
+    
+    // Navigate to studio
+    setActiveTab('studio');
   };
 
   const handleColorChange = (garmentId: string, colorId: string) => {

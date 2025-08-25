@@ -3,8 +3,8 @@
 import { useRef, useEffect, useState } from 'react';
 import { Stage, Layer, Rect, Circle, Text, Line, Group } from 'react-konva';
 import Konva from 'konva';
-import { useStudioStore } from '@/lib/studio/store';
-import { Node, TextNode, ShapeNode, ImageNode } from '@/lib/studio/types';
+import { useStudioStore } from '../../lib/studio/store';
+import { Node, TextNode, ShapeNode, ImageNode } from '../../lib/studio/types';
 
 export const CanvasStage = () => {
   const stageRef = useRef<Konva.Stage>(null);

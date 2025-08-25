@@ -5,7 +5,7 @@ import { TopBar } from './TopBar';
 import { LeftTools } from './LeftTools';
 import { RightProps } from './RightProps';
 import { CanvasStage } from './CanvasStage';
-import { useStudioStore } from '@/lib/studio/store';
+import { useStudioStore } from '../../lib/studio/store';
 import { ShortcutsDialog } from './ShortcutsDialog';
 import { CreativeBackground } from './CreativeBackground';
 import { Button } from '@/components/ui/button';

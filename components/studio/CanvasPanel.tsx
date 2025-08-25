@@ -5,8 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useStudioStore } from '@/lib/studio/store';
-import { CANVAS_PRESETS } from '@/lib/studio/presets';
+import { useStudioStore } from '../../lib/studio/store';
+import { CANVAS_PRESETS } from '../../lib/studio/presets';
 
 export const CanvasPanel = () => {
   const { doc, updateCanvas } = useStudioStore();
