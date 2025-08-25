@@ -30,11 +30,11 @@ export const ProfilePage = () => {
   const progressPercentage = (mockUser.designsThisMonth / mockUser.maxDesigns) * 100;
 
   const handleProfileSettings = () => {
-    toast({ title: "Profile Settings", description: "Profile settings will open here" });
+    navigate('/profile/settings');
   };
 
   const handleUpgradePlan = () => {
-    toast({ title: "Upgrade Plan", description: "Plan upgrade page will open here" });
+    navigate('/profile/upgrade');
   };
 
   const handleFollowers = () => {
