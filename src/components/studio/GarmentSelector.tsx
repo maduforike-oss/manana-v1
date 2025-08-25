@@ -16,6 +16,10 @@ export const GarmentSelector = () => {
   const { createDesign, setActiveTab } = useAppStore();
   const { initializeFromGarment } = useStudioStore();
 
+  console.log('GarmentSelector rendered');
+  console.log('createDesign:', typeof createDesign);
+  console.log('initializeFromGarment:', typeof initializeFromGarment);
+
   const filteredGarments = getGarmentsByCategory(selectedCategory);
 
   const handleSelectGarment = (garmentId: string) => {

@@ -1,7 +1,6 @@
-// DEPRECATED: This file is replaced by the StudioShell component
-// Redirect to StudioShell for proper studio experience
-import { StudioShell } from '../../../components/studio/StudioShell';
+import { StudioShell } from '../studio/StudioShell';
 
 export const StudioPage = () => {
+  console.log('StudioPage component rendered');
   return <StudioShell />;
 };

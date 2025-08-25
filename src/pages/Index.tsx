@@ -10,6 +10,8 @@ import { ProfilePage } from '@/components/pages/ProfilePage';
 const Index = () => {
   const { activeTab, setUser } = useAppStore();
 
+  console.log('Index page rendered, activeTab:', activeTab);
+
   // Initialize mock user for demo
   useEffect(() => {
     setUser({
@@ -34,18 +36,25 @@ const Index = () => {
   }, [setUser]);
 
   const renderPage = () => {
+    console.log('renderPage called with activeTab:', activeTab);
     switch (activeTab) {
       case 'market':
+        console.log('Rendering MarketPage');
         return <MarketPage />;
       case 'community':
+        console.log('Rendering CommunityPage');
         return <CommunityPage />;
       case 'studio':
+        console.log('Rendering StudioPage');
         return <StudioPage />;
       case 'orders':
+        console.log('Rendering OrdersPage');
         return <OrdersPage />;
       case 'profile':
+        console.log('Rendering ProfilePage');
         return <ProfilePage />;
       default:
+        console.log('Rendering default StudioPage');
         return <StudioPage />;
     }
   };
