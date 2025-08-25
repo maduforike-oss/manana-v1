@@ -15,9 +15,18 @@ const Index = () => {
     setUser({
       id: 'user_123',
       email: 'demo@example.com',
+      name: 'Demo User',
+      bio: 'Welcome to the demo!',
+      location: 'Demo Location',
+      website: 'https://demo.com',
+      specialties: ['Demo Design'],
       plan: 'basic',
       designsThisMonth: 12,
       maxDesigns: 30,
+      followers: 0,
+      following: 0,
+      socialLinks: [],
+      featuredDesigns: [],
     });
   }, [setUser]);
 

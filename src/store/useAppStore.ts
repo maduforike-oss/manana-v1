@@ -14,9 +14,28 @@ export interface Design {
 interface User {
   id: string;
   email: string;
+  name: string;
+  bio?: string;
+  location?: string;
+  website?: string;
+  specialties: string[];
   plan: 'basic' | 'premium';
   designsThisMonth: number;
   maxDesigns: number;
+  followers: number;
+  following: number;
+  socialLinks: Array<{
+    platform: 'website' | 'instagram' | 'twitter' | 'linkedin';
+    url: string;
+  }>;
+  featuredDesigns: Array<{
+    id: string;
+    name: string;
+    thumbnail: string;
+    garmentType: string;
+    likes: number;
+    views: number;
+  }>;
 }
 
 interface AppState {

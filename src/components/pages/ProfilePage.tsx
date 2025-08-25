@@ -1,4 +1,4 @@
-import { Settings, Palette, Package, Crown, LogOut, Trash2, Users, CreditCard, ArrowRight } from 'lucide-react';
+import { Settings, Palette, Package, Crown, LogOut, Trash2, Users, CreditCard, ArrowRight, MapPin, Globe } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -7,6 +7,9 @@ import { Progress } from '@/components/ui/progress';
 import { useAppStore } from '@/store/useAppStore';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { FeaturedDesignsGallery } from '@/components/FeaturedDesignsGallery';
+import { ProfileTags } from '@/components/ProfileTags';
+import { SocialLinks } from '@/components/SocialLinks';
 
 export const ProfilePage = () => {
   const { user, logout, setActiveTab } = useAppStore();
@@ -17,6 +20,10 @@ export const ProfilePage = () => {
   const mockUser = {
     name: 'Alex Designer',
     email: 'alex@example.com',
+    bio: 'Passionate designer creating unique streetwear and minimalist graphics. Available for custom work.',
+    location: 'London, UK',
+    website: 'https://alexdesigner.com',
+    specialties: ['Streetwear', 'Typography', 'Minimalist', 'Vintage', 'Custom Logos'],
     joinDate: '2024-01-01',
     plan: 'Basic',
     designsThisMonth: 12,
@@ -25,6 +32,17 @@ export const ProfilePage = () => {
     totalOrders: 8,
     followers: 1247,
     following: 892,
+    socialLinks: [
+      { platform: 'website' as const, url: 'https://alexdesigner.com' },
+      { platform: 'instagram' as const, url: 'https://instagram.com/alexdesigner' },
+      { platform: 'twitter' as const, url: 'https://twitter.com/alexdesigner' },
+    ],
+    featuredDesigns: [
+      { id: '1', name: 'Street Art Tee', thumbnail: '', garmentType: 'T-Shirt', likes: 234, views: 1024 },
+      { id: '2', name: 'Minimal Logo Hoodie', thumbnail: '', garmentType: 'Hoodie', likes: 189, views: 876 },
+      { id: '3', name: 'Vintage Band Tee', thumbnail: '', garmentType: 'T-Shirt', likes: 156, views: 642 },
+      { id: '4', name: 'Custom Typography', thumbnail: '', garmentType: 'Tank Top', likes: 98, views: 432 },
+    ],
   };
 
   const progressPercentage = (mockUser.designsThisMonth / mockUser.maxDesigns) * 100;
@@ -38,11 +56,11 @@ export const ProfilePage = () => {
   };
 
   const handleFollowers = () => {
-    toast({ title: "Followers", description: "Followers list will open here" });
+    navigate('/profile/followers?tab=followers');
   };
 
   const handleFollowing = () => {
-    toast({ title: "Following", description: "Following list will open here" });
+    navigate('/profile/followers?tab=following');
   };
 
   const handleOrderHistory = () => {
@@ -77,14 +95,43 @@ export const ProfilePage = () => {
             <div className="flex-1">
               <h1 className="text-2xl font-bold">{mockUser.name}</h1>
               <p className="text-muted-foreground">{mockUser.email}</p>
-              <div className="flex items-center gap-2 mt-2">
+              {mockUser.bio && (
+                <p className="text-sm text-foreground mt-2 leading-relaxed">{mockUser.bio}</p>
+              )}
+              
+              <div className="flex items-center gap-4 mt-3">
+                {mockUser.location && (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <MapPin className="w-3 h-3" />
+                    {mockUser.location}
+                  </div>
+                )}
+                {mockUser.website && (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Globe className="w-3 h-3" />
+                    <a href={mockUser.website} target="_blank" rel="noopener noreferrer" className="hover:text-primary">
+                      Portfolio
+                    </a>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center gap-3 mt-3">
                 <Badge className="bg-gradient-to-r from-primary to-secondary text-white">
                   <Crown className="w-3 h-3 mr-1" />
                   {mockUser.plan} Plan
                 </Badge>
-                <span className="text-sm text-muted-foreground">
+                <span className="text-xs text-muted-foreground">
                   Member since {new Date(mockUser.joinDate).toLocaleDateString()}
                 </span>
+              </div>
+
+              <div className="mt-3">
+                <ProfileTags specialties={mockUser.specialties} maxDisplay={3} />
+              </div>
+
+              <div className="mt-3">
+                <SocialLinks links={mockUser.socialLinks} />
               </div>
             </div>
           </div>
@@ -112,6 +159,11 @@ export const ProfilePage = () => {
               <p className="text-2xl font-bold">{mockUser.totalDesigns}</p>
               <p className="text-sm text-muted-foreground">Designs</p>
             </div>
+          </div>
+
+          {/* Featured Designs */}
+          <div className="bg-muted/50 p-4 rounded-lg mb-4">
+            <FeaturedDesignsGallery designs={mockUser.featuredDesigns} maxDisplay={3} />
           </div>
 
           {/* Design Usage */}
