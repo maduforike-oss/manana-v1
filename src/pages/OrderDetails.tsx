@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -31,6 +31,18 @@ import {
 export default function OrderDetails() {
   const { id } = useParams()
   const navigate = useNavigate()
+
+  // Auto-scroll to tracking section if hash is present
+  useEffect(() => {
+    if (window.location.hash === '#tracking') {
+      setTimeout(() => {
+        const trackingElement = document.getElementById('tracking-section')
+        if (trackingElement) {
+          trackingElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 100)
+    }
+  }, [])
 
   // Mock order data - in real app this would come from API
   const orderDetails = {
@@ -211,7 +223,7 @@ export default function OrderDetails() {
 
       <div className="px-6 py-8 space-y-8 max-w-7xl mx-auto">
         {/* Enhanced Order Progress */}
-        <Card className="border-0 shadow-xl bg-gradient-to-br from-card/50 to-card hover:shadow-2xl transition-all duration-300">
+        <Card id="tracking-section" className="border-0 shadow-xl bg-gradient-to-br from-card/50 to-card hover:shadow-2xl transition-all duration-300">
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-3 text-xl">
               <div className="p-2 bg-primary/10 rounded-lg">
