@@ -6,6 +6,22 @@ import hoodieCharcoalFront from '@/assets/garments/hoodie-charcoal-front.jpg';
 import crewneckHeatherFront from '@/assets/garments/crewneck-heather-front.jpg';
 import toteCanvasFront from '@/assets/garments/tote-canvas-front.jpg';
 import capBlackFront from '@/assets/garments/cap-black-front.jpg';
+import poloNavyFront from '@/assets/garments/polo-navy-front.jpg';
+import vneckWhiteFront from '@/assets/garments/vneck-white-front.jpg';
+import zipHoodieCharcoalFront from '@/assets/garments/zip-hoodie-charcoal-front.jpg';
+import pulloverBlackFront from '@/assets/garments/pullover-black-front.jpg';
+import buttonShirtWhiteFront from '@/assets/garments/button-shirt-white-front.jpg';
+import denimJacketBlueFront from '@/assets/garments/denim-jacket-blue-front.jpg';
+import bomberBlackFront from '@/assets/garments/bomber-black-front.jpg';
+import beanieBlackFront from '@/assets/garments/beanie-black-front.jpg';
+import snapbackNavyFront from '@/assets/garments/snapback-navy-front.jpg';
+import truckerBlackFront from '@/assets/garments/trucker-black-front.jpg';
+import apronWhiteFront from '@/assets/garments/apron-white-front.jpg';
+import onesieWhiteFront from '@/assets/garments/onesie-white-front.jpg';
+import womensTeePinkFront from '@/assets/garments/womens-tee-pink-front.jpg';
+import womensTankWhiteFront from '@/assets/garments/womens-tank-white-front.jpg';
+import performanceBlackFront from '@/assets/garments/performance-black-front.jpg';
+import longsleeveHeatherFront from '@/assets/garments/longsleeve-heather-front.jpg';
 
 export interface GarmentColor {
   id: string;
@@ -166,7 +182,47 @@ export const GARMENT_TYPES: GarmentType[] = [
       printMethods: ['Embroidery', 'Heat Transfer', 'Screen Print'],
     },
   },
-  // Extended garment types with placeholder images for now
+  // Polo Shirts
+  {
+    id: 'polo',
+    name: 'Polo Shirt',
+    category: 'Basics',
+    popular: true,
+    description: 'Classic polo shirt with collar and button placket',
+    printAreas: ['Front Center', 'Back Center', 'Left Chest'],
+    basePrice: 24.99,
+    colors: PROFESSIONAL_COLORS.filter(c => 
+      ['navy', 'black', 'white', 'charcoal', 'royal-blue', 'forest-green', 'burgundy'].includes(c.id)
+    ),
+    images: {
+      front: poloNavyFront,
+    },
+    specs: {
+      material: '100% Pique Cotton',
+      weight: '6.1 oz',
+      sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'],
+      printMethods: ['Screen Print', 'DTG', 'Heat Transfer', 'Embroidery'],
+    },
+  },
+  {
+    id: 'vneck',
+    name: 'V-Neck T-Shirt',
+    category: 'Basics',
+    popular: true,
+    description: 'Classic v-neck t-shirt with flattering neckline',
+    printAreas: ['Front Center', 'Back Center', 'Left Chest'],
+    basePrice: 17.99,
+    colors: PROFESSIONAL_COLORS,
+    images: {
+      front: vneckWhiteFront,
+    },
+    specs: {
+      material: '100% Ring-Spun Cotton',
+      weight: '4.3 oz',
+      sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+      printMethods: ['Screen Print', 'DTG', 'Heat Transfer'],
+    },
+  },
   {
     id: 'long-sleeve-tee',
     name: 'Long Sleeve Tee',
@@ -177,7 +233,7 @@ export const GARMENT_TYPES: GarmentType[] = [
     basePrice: 21.99,
     colors: PROFESSIONAL_COLORS,
     images: {
-      front: tshirtBlackFront, // Using t-shirt as placeholder
+      front: longsleeveHeatherFront,
     },
     specs: {
       material: '100% Ring-Spun Cotton',
@@ -196,13 +252,268 @@ export const GARMENT_TYPES: GarmentType[] = [
     basePrice: 13.99,
     colors: PROFESSIONAL_COLORS,
     images: {
-      front: tshirtWhiteFront, // Using t-shirt as placeholder
+      front: womensTankWhiteFront,
     },
     specs: {
       material: '100% Combed Ring-Spun Cotton',
       weight: '4.2 oz',
       sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
       printMethods: ['Screen Print', 'DTG', 'Heat Transfer'],
+    },
+  },
+  // Outerwear
+  {
+    id: 'zip-hoodie',
+    name: 'Zip-Up Hoodie',
+    category: 'Outerwear',
+    popular: true,
+    description: 'Full-zip hoodie with drawstring hood and kangaroo pocket',
+    printAreas: ['Front Center', 'Back Center', 'Left Chest', 'Hood'],
+    basePrice: 42.99,
+    colors: PROFESSIONAL_COLORS.filter(c => 
+      ['black', 'charcoal', 'heather-gray', 'navy', 'forest-green', 'burgundy'].includes(c.id)
+    ),
+    images: {
+      front: zipHoodieCharcoalFront,
+    },
+    specs: {
+      material: '80% Cotton, 20% Polyester Fleece',
+      weight: '8.5 oz',
+      sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'],
+      printMethods: ['Screen Print', 'DTG', 'Heat Transfer', 'Embroidery'],
+    },
+  },
+  {
+    id: 'pullover',
+    name: 'Pullover Sweatshirt',
+    category: 'Outerwear',
+    popular: false,
+    description: 'Classic pullover sweatshirt with ribbed cuffs',
+    printAreas: ['Front Center', 'Back Center', 'Left Chest'],
+    basePrice: 32.99,
+    colors: PROFESSIONAL_COLORS.filter(c => 
+      ['black', 'charcoal', 'heather-gray', 'navy', 'white', 'burgundy'].includes(c.id)
+    ),
+    images: {
+      front: pulloverBlackFront,
+    },
+    specs: {
+      material: '50% Cotton, 50% Polyester',
+      weight: '8.0 oz',
+      sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+      printMethods: ['Screen Print', 'DTG', 'Heat Transfer', 'Embroidery'],
+    },
+  },
+  {
+    id: 'button-shirt',
+    name: 'Button-Up Shirt',
+    category: 'Professional',
+    popular: false,
+    description: 'Professional dress shirt with button-down collar',
+    printAreas: ['Left Chest', 'Back Center'],
+    basePrice: 39.99,
+    colors: PROFESSIONAL_COLORS.filter(c => 
+      ['white', 'light-blue', 'charcoal', 'navy'].includes(c.id)
+    ),
+    images: {
+      front: buttonShirtWhiteFront,
+    },
+    specs: {
+      material: '60% Cotton, 40% Polyester',
+      weight: '4.5 oz',
+      sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+      printMethods: ['Embroidery', 'Heat Transfer'],
+    },
+  },
+  {
+    id: 'denim-jacket',
+    name: 'Denim Jacket',
+    category: 'Outerwear',
+    popular: false,
+    description: 'Classic denim jacket with button front and chest pockets',
+    printAreas: ['Back Center', 'Left Chest'],
+    basePrice: 49.99,
+    colors: [
+      { id: 'light-wash', name: 'Light Wash', hex: '#B0C4DE' },
+      { id: 'dark-wash', name: 'Dark Wash', hex: '#2F4F4F' },
+      { id: 'black-denim', name: 'Black Denim', hex: '#1C1C1C' },
+    ],
+    images: {
+      front: denimJacketBlueFront,
+    },
+    specs: {
+      material: '100% Cotton Denim',
+      weight: '12 oz',
+      sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+      printMethods: ['Screen Print', 'Heat Transfer', 'Embroidery'],
+    },
+  },
+  {
+    id: 'bomber-jacket',
+    name: 'Bomber Jacket',
+    category: 'Outerwear',
+    popular: false,
+    description: 'Modern bomber jacket with ribbed cuffs and hem',
+    printAreas: ['Back Center', 'Left Chest', 'Sleeve'],
+    basePrice: 54.99,
+    colors: PROFESSIONAL_COLORS.filter(c => 
+      ['black', 'charcoal', 'navy', 'olive', 'burgundy'].includes(c.id)
+    ),
+    images: {
+      front: bomberBlackFront,
+    },
+    specs: {
+      material: '100% Polyester',
+      weight: '6.5 oz',
+      sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+      printMethods: ['Screen Print', 'Heat Transfer', 'Embroidery'],
+    },
+  },
+  // Headwear
+  {
+    id: 'beanie',
+    name: 'Beanie',
+    category: 'Accessories',
+    popular: true,
+    description: 'Warm knit beanie hat perfect for cold weather',
+    printAreas: ['Front Panel'],
+    basePrice: 14.99,
+    colors: PROFESSIONAL_COLORS.filter(c => 
+      ['black', 'charcoal', 'navy', 'heather-gray', 'burgundy', 'forest-green'].includes(c.id)
+    ),
+    images: {
+      front: beanieBlackFront,
+    },
+    specs: {
+      material: '100% Acrylic Knit',
+      weight: 'One Size',
+      sizes: ['One Size Fits Most'],
+      printMethods: ['Embroidery', 'Heat Transfer'],
+    },
+  },
+  {
+    id: 'snapback',
+    name: 'Snapback Cap',
+    category: 'Accessories',
+    popular: true,
+    description: 'Flat-brimmed snapback cap with adjustable closure',
+    printAreas: ['Front Panel', 'Back Panel', 'Side Panel'],
+    basePrice: 22.99,
+    colors: PROFESSIONAL_COLORS.filter(c => 
+      ['black', 'white', 'navy', 'charcoal', 'royal-blue', 'red'].includes(c.id)
+    ),
+    images: {
+      front: snapbackNavyFront,
+    },
+    specs: {
+      material: '100% Cotton Twill',
+      weight: 'Structured Crown',
+      sizes: ['One Size Fits Most'],
+      printMethods: ['Embroidery', 'Heat Transfer', 'Screen Print'],
+    },
+  },
+  {
+    id: 'trucker-hat',
+    name: 'Trucker Hat',
+    category: 'Accessories',
+    popular: false,
+    description: 'Classic trucker hat with mesh back and foam front',
+    printAreas: ['Front Panel', 'Back Panel'],
+    basePrice: 19.99,
+    colors: PROFESSIONAL_COLORS.filter(c => 
+      ['black', 'white', 'navy', 'red', 'royal-blue'].includes(c.id)
+    ),
+    images: {
+      front: truckerBlackFront,
+    },
+    specs: {
+      material: 'Foam Front, Mesh Back',
+      weight: 'Mid-Profile',
+      sizes: ['One Size Fits Most'],
+      printMethods: ['Embroidery', 'Heat Transfer', 'Screen Print'],
+    },
+  },
+  // Specialty Items
+  {
+    id: 'apron',
+    name: 'Kitchen Apron',
+    category: 'Specialty',
+    popular: false,
+    description: 'Professional kitchen apron with adjustable neck and waist ties',
+    printAreas: ['Front Center', 'Chest Area'],
+    basePrice: 16.99,
+    colors: PROFESSIONAL_COLORS.filter(c => 
+      ['white', 'black', 'navy', 'burgundy', 'forest-green'].includes(c.id)
+    ),
+    images: {
+      front: apronWhiteFront,
+    },
+    specs: {
+      material: '65% Polyester, 35% Cotton',
+      weight: '7.5 oz',
+      sizes: ['One Size'],
+      printMethods: ['Screen Print', 'Heat Transfer', 'Embroidery'],
+    },
+  },
+  {
+    id: 'onesie',
+    name: 'Baby Onesie',
+    category: 'Baby & Kids',
+    popular: false,
+    description: 'Soft baby onesie with lap shoulder design',
+    printAreas: ['Front Center', 'Back Center'],
+    basePrice: 11.99,
+    colors: PROFESSIONAL_COLORS.filter(c => 
+      ['white', 'pink', 'light-blue', 'yellow', 'mint'].includes(c.id)
+    ),
+    images: {
+      front: onesieWhiteFront,
+    },
+    specs: {
+      material: '100% Combed Ring-Spun Cotton',
+      weight: '4.5 oz',
+      sizes: ['Newborn', '6M', '12M', '18M', '24M'],
+      printMethods: ['DTG', 'Heat Transfer'],
+    },
+  },
+  {
+    id: 'womens-fitted-tee',
+    name: "Women's Fitted Tee",
+    category: "Women's",
+    popular: true,
+    description: 'Fitted women\'s t-shirt with flattering silhouette',
+    printAreas: ['Front Center', 'Back Center', 'Left Chest'],
+    basePrice: 17.99,
+    colors: PROFESSIONAL_COLORS,
+    images: {
+      front: womensTeePinkFront,
+    },
+    specs: {
+      material: '100% Ring-Spun Cotton',
+      weight: '4.2 oz',
+      sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+      printMethods: ['Screen Print', 'DTG', 'Heat Transfer'],
+    },
+  },
+  {
+    id: 'performance-shirt',
+    name: 'Performance Shirt',
+    category: 'Athletic',
+    popular: false,
+    description: 'Moisture-wicking athletic performance shirt',
+    printAreas: ['Front Center', 'Back Center', 'Left Chest'],
+    basePrice: 26.99,
+    colors: PROFESSIONAL_COLORS.filter(c => 
+      ['black', 'white', 'navy', 'royal-blue', 'red', 'forest-green'].includes(c.id)
+    ),
+    images: {
+      front: performanceBlackFront,
+    },
+    specs: {
+      material: '100% Polyester Performance',
+      weight: '3.8 oz',
+      sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'],
+      printMethods: ['DTG', 'Heat Transfer', 'Sublimation'],
     },
   },
 ];

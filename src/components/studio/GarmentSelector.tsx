@@ -8,7 +8,7 @@ import { GARMENT_TYPES, getGarmentsByCategory, getColorByGarmentAndId } from '@/
 import { GarmentPreview } from './GarmentPreview';
 import { Sparkles, Filter } from 'lucide-react';
 
-const CATEGORIES = ['All', 'Basics', 'Outerwear', 'Bottoms', 'Accessories'];
+const CATEGORIES = ['All', 'Basics', 'Outerwear', 'Accessories', 'Professional', 'Athletic', "Women's", 'Baby & Kids', 'Specialty'];
 
 export const GarmentSelector = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
