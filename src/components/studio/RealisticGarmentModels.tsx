@@ -963,6 +963,10 @@ export const RealisticGarmentModel: React.FC<RealisticGarmentModelProps> = ({
     );
   }, [garmentType]);
 
+  // Pre-generate all special geometry types to avoid conditional hooks
+  const capGroup = useMemo(() => createSnapbackGeometry(), []);
+  const toteGroup = useMemo(() => createToteGeometry(), []);
+
   // Subtle animation
   useFrame((state) => {
     if (meshRef.current) {
@@ -970,12 +974,14 @@ export const RealisticGarmentModel: React.FC<RealisticGarmentModelProps> = ({
     }
   });
 
+  // Determine garment type for rendering
+  const garmentTypeLower = garmentType.toLowerCase();
+  
   // Handle special garment types with professional models
-  if (garmentType.toLowerCase().includes('cap') || 
-      garmentType.toLowerCase().includes('hat') || 
-      garmentType.toLowerCase().includes('snapback') ||
-      garmentType.toLowerCase().includes('trucker')) {
-    const capGroup = useMemo(() => createSnapbackGeometry(), []);
+  if (garmentTypeLower.includes('cap') || 
+      garmentTypeLower.includes('hat') || 
+      garmentTypeLower.includes('snapback') ||
+      garmentTypeLower.includes('trucker')) {
     return (
       <group position={anchorPosition}>
         <primitive object={capGroup} material={material} />
@@ -983,20 +989,19 @@ export const RealisticGarmentModel: React.FC<RealisticGarmentModelProps> = ({
     );
   }
 
-  if (garmentType.toLowerCase().includes('beanie')) {
+  if (garmentTypeLower.includes('beanie')) {
     return (
       <group position={anchorPosition}>
-      <SimpleLODRenderer
-        garmentType={garmentType}
-        geometry={lodGeometry}
-        material={material}
-      />
+        <SimpleLODRenderer
+          garmentType={garmentType}
+          geometry={lodGeometry}
+          material={material}
+        />
       </group>
     );
   }
 
-  if (garmentType.toLowerCase().includes('tote') || garmentType.toLowerCase().includes('bag')) {
-    const toteGroup = useMemo(() => createToteGeometry(), []);
+  if (garmentTypeLower.includes('tote') || garmentTypeLower.includes('bag')) {
     return (
       <group position={anchorPosition}>
         <primitive object={toteGroup} material={material} />
@@ -1006,11 +1011,11 @@ export const RealisticGarmentModel: React.FC<RealisticGarmentModelProps> = ({
 
   return (
     <group position={anchorPosition}>
-    <SimpleLODRenderer
-      garmentType={garmentType}
-      geometry={lodGeometry}
-      material={material}
-    />
+      <SimpleLODRenderer
+        garmentType={garmentType}
+        geometry={lodGeometry}
+        material={material}
+      />
     </group>
   );
 };
