@@ -6,7 +6,7 @@ import { ViewportManager, GARMENT_SCALE_STANDARDS } from '../../lib/studio/garme
 import { getFabricType } from '../../lib/studio/fabricTypes';
 import { GeometryCache, MaterialOptimizer as LegacyMaterialOptimizer } from './GarmentOptimization';
 import { MaterialOptimizer } from './MaterialOptimizer';
-import { EnhancedLODRenderer, SmartGeometryGenerator } from './EnhancedLODSystem';
+import { SimpleLODRenderer, SimpleGeometryGenerator } from './SimpleLODSystem';
 
 interface RealisticGarmentModelProps {
   garmentType: string;
@@ -868,25 +868,16 @@ export const RealisticGarmentModel: React.FC<RealisticGarmentModelProps> = ({
     });
   }, [garmentColor, garmentType, designTexture]);
 
-  // Enhanced LOD geometry with proper scaling
+  // Enhanced LOD geometry with simplified approach
   const lodGeometry = useMemo(() => {
     const scale = ViewportManager.getCurrentScale(garmentType);
     
-    return SmartGeometryGenerator.generateLODGeometry(
+    return SimpleGeometryGenerator.generateSimpleLODGeometry(
       garmentType,
       () => {
         const baseGeometry = createGarmentGeometry(garmentType);
         baseGeometry.scale(scale, scale, scale);
         return baseGeometry;
-      },
-      {
-        enableLOD: true,
-        autoQuality: true,
-        maxTriangles: {
-          high: ViewportManager.getDeviceType() === 'mobile' ? 5000 : 10000,
-          medium: ViewportManager.getDeviceType() === 'mobile' ? 2500 : 5000,
-          low: ViewportManager.getDeviceType() === 'mobile' ? 1000 : 2000
-        }
       }
     );
   }, [garmentType]);
@@ -995,15 +986,11 @@ export const RealisticGarmentModel: React.FC<RealisticGarmentModelProps> = ({
   if (garmentType.toLowerCase().includes('beanie')) {
     return (
       <group position={anchorPosition}>
-        <EnhancedLODRenderer
-          garmentType={garmentType}
-          geometry={lodGeometry}
-          material={material}
-          config={{
-            enableLOD: true,
-            autoQuality: true
-          }}
-        />
+      <SimpleLODRenderer
+        garmentType={garmentType}
+        geometry={lodGeometry}
+        material={material}
+      />
       </group>
     );
   }
@@ -1019,15 +1006,11 @@ export const RealisticGarmentModel: React.FC<RealisticGarmentModelProps> = ({
 
   return (
     <group position={anchorPosition}>
-      <EnhancedLODRenderer
-        garmentType={garmentType}
-        geometry={lodGeometry}
-        material={material}
-        config={{
-          enableLOD: true,
-          autoQuality: true
-        }}
-      />
+    <SimpleLODRenderer
+      garmentType={garmentType}
+      geometry={lodGeometry}
+      material={material}
+    />
     </group>
   );
 };

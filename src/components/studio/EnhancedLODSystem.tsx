@@ -196,7 +196,7 @@ export class SmartGeometryGenerator {
       ...config
     };
 
-    const cacheKey = `${garmentType}-lod-${JSON.stringify(lodConfig)}`;
+    const cacheKey = `${garmentType}-lod-v2`;
     
     return GeometryCache.getLODGeometry(cacheKey, garmentType, {
       high: () => this.generateHighDetail(baseGenerator, lodConfig),
@@ -254,49 +254,69 @@ export class SmartGeometryGenerator {
     geometry: THREE.BufferGeometry, 
     targetTriangles: number
   ): THREE.BufferGeometry {
-    // Simple decimation by removing every nth triangle
+    // Safety check for valid geometry
+    if (!geometry || !geometry.attributes.position) {
+      console.warn('Invalid geometry provided to simplifyGeometry');
+      return geometry.clone();
+    }
+
+    // Calculate triangle count safely
     const originalTriangles = geometry.index 
-      ? geometry.index.count / 3 
-      : geometry.attributes.position.count / 3;
+      ? Math.floor(geometry.index.count / 3)
+      : Math.floor(geometry.attributes.position.count / 3);
 
     if (originalTriangles <= targetTriangles) {
       return geometry.clone();
     }
 
-    const decimationRatio = targetTriangles / originalTriangles;
+    const decimationRatio = Math.min(1, targetTriangles / originalTriangles);
     
-    if (geometry.index) {
-      // Indexed geometry decimation
-      const indices = geometry.index.array;
-      const newIndices = [];
-      
-      for (let i = 0; i < indices.length; i += 3) {
-        if (Math.random() < decimationRatio) {
-          newIndices.push(indices[i], indices[i + 1], indices[i + 2]);
-        }
-      }
-      
-      const newGeometry = geometry.clone();
-      newGeometry.setIndex(newIndices);
-      newGeometry.computeVertexNormals();
-      return newGeometry;
-    } else {
-      // Non-indexed geometry decimation
-      const positions = geometry.attributes.position.array;
-      const newPositions = [];
-      
-      for (let i = 0; i < positions.length; i += 9) {
-        if (Math.random() < decimationRatio) {
-          for (let j = 0; j < 9; j++) {
-            newPositions.push(positions[i + j]);
+    try {
+      if (geometry.index && geometry.index.array) {
+        // Indexed geometry decimation
+        const indices = Array.from(geometry.index.array);
+        const newIndices: number[] = [];
+        
+        for (let triangleIndex = 0; triangleIndex < indices.length; triangleIndex += 3) {
+          if (Math.random() < decimationRatio) {
+            const i1 = indices[triangleIndex];
+            const i2 = indices[triangleIndex + 1];
+            const i3 = indices[triangleIndex + 2];
+            
+            if (i1 !== undefined && i2 !== undefined && i3 !== undefined) {
+              newIndices.push(i1, i2, i3);
+            }
           }
         }
+        
+        const newGeometry = geometry.clone();
+        newGeometry.setIndex(newIndices);
+        newGeometry.computeVertexNormals();
+        return newGeometry;
+      } else {
+        // Non-indexed geometry decimation
+        const positions = Array.from(geometry.attributes.position.array);
+        const newPositions: number[] = [];
+        
+        for (let vertexIndex = 0; vertexIndex < positions.length; vertexIndex += 9) {
+          if (Math.random() < decimationRatio) {
+            for (let component = 0; component < 9; component++) {
+              const value = positions[vertexIndex + component];
+              if (value !== undefined) {
+                newPositions.push(value);
+              }
+            }
+          }
+        }
+        
+        const newGeometry = new THREE.BufferGeometry();
+        newGeometry.setAttribute('position', new THREE.Float32BufferAttribute(newPositions, 3));
+        newGeometry.computeVertexNormals();
+        return newGeometry;
       }
-      
-      const newGeometry = new THREE.BufferGeometry();
-      newGeometry.setAttribute('position', new THREE.Float32BufferAttribute(newPositions, 3));
-      newGeometry.computeVertexNormals();
-      return newGeometry;
+    } catch (error) {
+      console.warn('Error in geometry simplification, returning original:', error);
+      return geometry.clone();
     }
   }
 }
