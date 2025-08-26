@@ -21,6 +21,8 @@ export type BaseNode = {
   locked?: boolean;
   hidden?: boolean;
   selected?: boolean;
+  surfaceId?: string; // Which print surface this node belongs to
+  colorCount?: number; // Number of colors used (for pricing)
 };
 
 export type TextNode = BaseNode & {
@@ -61,6 +63,21 @@ export type PathNode = BaseNode & {
 
 export type Node = TextNode | ImageNode | ShapeNode | PathNode;
 
+export type PrintSurface = {
+  id: string;
+  name: string;
+  area: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+  enabled: boolean;
+  maxColors?: number;
+  printMethod?: string;
+  nodes: string[]; // Node IDs assigned to this surface
+};
+
 export type CanvasConfig = {
   unit: "px" | "mm";
   width: number;
@@ -75,6 +92,9 @@ export type CanvasConfig = {
   bleedMm: number;
   garmentType?: string;
   garmentColor?: string;
+  activeSurface?: string;
+  printSurfaces?: PrintSurface[];
+  // Legacy support - remove after migration
   printArea?: {
     x: number;
     y: number;
@@ -105,4 +125,40 @@ export type MockupConfig = {
   opacity: number;
   showGrid?: boolean;
   showPrintArea?: boolean;
+};
+
+export type MaterialConfig = {
+  id: string;
+  name: string;
+  type: 'cotton' | 'polyester' | 'fleece' | 'blend' | 'performance' | 'denim';
+  printMethods: string[];
+  basePrice: number;
+  colorMultiplier: number;
+  properties: {
+    roughness: number;
+    metalness: number;
+    thickness: number;
+    texture: string;
+  };
+};
+
+export type PricingConfig = {
+  basePrice: number;
+  materialMultiplier: number;
+  colorPricing: {
+    '1': number;
+    '2': number;
+    '3': number;
+    '4+': number;
+  };
+  surfacePricing: {
+    front: number;
+    back: number;
+    sleeve: number;
+    additional: number;
+  };
+  quantityBreaks: {
+    qty: number;
+    discount: number;
+  }[];
 };

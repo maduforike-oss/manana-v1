@@ -5,6 +5,10 @@ import { LayersPanel } from './LayersPanel';
 import { PropertiesPanel } from './PropertiesPanel';
 import { CanvasPanel } from './CanvasPanel';
 import { GarmentMockupPreview } from './GarmentMockupPreview';
+import { PrintSurfaceManager } from './PrintSurfaceManager';
+import { ExportPanel } from './ExportPanel';
+import { PricingEngine } from './PricingEngine';
+import { MaterialSelector } from './MaterialSelector';
 
 interface RightPropsProps {
   collapsed?: boolean;
@@ -31,7 +35,7 @@ export const RightProps = ({
       >
         <div className="relative">
           {/* Enhanced Tab List */}
-          <TabsList className="grid w-full grid-cols-4 m-3 glass-panel neon-border bg-studio-surface/50">
+          <TabsList className="grid w-full grid-cols-7 m-3 glass-panel neon-border bg-studio-surface/50 text-xs">
             <TabsTrigger 
               value="properties" 
               className="studio-tool data-[state=active]:studio-tool data-[state=active]:active"
@@ -45,16 +49,34 @@ export const RightProps = ({
               Layers
             </TabsTrigger>
             <TabsTrigger 
-              value="canvas"
+              value="surfaces"
               className="studio-tool data-[state=active]:studio-tool data-[state=active]:active"
             >
-              Canvas
+              Surfaces
+            </TabsTrigger>
+            <TabsTrigger 
+              value="material"
+              className="studio-tool data-[state=active]:studio-tool data-[state=active]:active"
+            >
+              Material
+            </TabsTrigger>
+            <TabsTrigger 
+              value="pricing"
+              className="studio-tool data-[state=active]:studio-tool data-[state=active]:active"
+            >
+              Pricing
+            </TabsTrigger>
+            <TabsTrigger 
+              value="export"
+              className="studio-tool data-[state=active]:studio-tool data-[state=active]:active"
+            >
+              Export
             </TabsTrigger>
             <TabsTrigger 
               value="mockup"
               className="studio-tool data-[state=active]:studio-tool data-[state=active]:active"
             >
-              Mockup
+              3D
             </TabsTrigger>
           </TabsList>
           
@@ -95,6 +117,42 @@ export const RightProps = ({
         >
           <div className="p-3">
             <GarmentMockupPreview />
+          </div>
+        </TabsContent>
+        
+        <TabsContent 
+          value="surfaces" 
+          className="flex-1 overflow-hidden animate-in fade-in-50 duration-300 slide-in-from-right-4"
+        >
+          <div className="p-3">
+            <PrintSurfaceManager />
+          </div>
+        </TabsContent>
+        
+        <TabsContent 
+          value="export" 
+          className="flex-1 overflow-hidden animate-in fade-in-50 duration-300 slide-in-from-right-4"
+        >
+          <div className="p-3">
+            <ExportPanel />
+          </div>
+        </TabsContent>
+        
+        <TabsContent 
+          value="pricing" 
+          className="flex-1 overflow-hidden animate-in fade-in-50 duration-300 slide-in-from-right-4"
+        >
+          <div className="p-3">
+            <PricingEngine />
+          </div>
+        </TabsContent>
+        
+        <TabsContent 
+          value="material" 
+          className="flex-1 overflow-hidden animate-in fade-in-50 duration-300 slide-in-from-right-4"
+        >
+          <div className="p-3">
+            <MaterialSelector />
           </div>
         </TabsContent>
       </Tabs>

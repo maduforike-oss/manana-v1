@@ -1,11 +1,14 @@
 import { DesignDoc } from './types';
 
 export interface ExportOptions {
-  format?: 'png' | 'svg' | 'pdf';
+  format?: 'png' | 'svg' | 'pdf' | 'print-ready';
   transparent?: boolean;
   dpi?: 150 | 300;
   includeBleed?: boolean;
   filename?: string;
+  separateSurfaces?: boolean;
+  printReady?: boolean;
+  colorProfile?: 'RGB' | 'CMYK';
 }
 
 export const exportPNG = async (
@@ -149,6 +152,117 @@ export const exportSVG = (doc: DesignDoc, options: ExportOptions = { format: 'sv
   const svgData = new XMLSerializer().serializeToString(svg);
   const blob = new Blob([svgData], { type: 'image/svg+xml' });
   downloadBlob(blob, `${filename}.svg`);
+};
+
+export const exportPrintReady = async (
+  canvas: HTMLCanvasElement, 
+  doc: DesignDoc, 
+  options: ExportOptions = { format: 'print-ready' }
+): Promise<void> => {
+  const {
+    dpi = 300,
+    includeBleed = true,
+    separateSurfaces = false,
+    filename = `${doc.title}-print-ready`
+  } = options;
+
+  if (separateSurfaces && doc.canvas.printSurfaces) {
+    // Export each surface separately
+    for (const surface of doc.canvas.printSurfaces) {
+      if (!surface.enabled) continue;
+      
+      const surfaceDoc = {
+        ...doc,
+        nodes: doc.nodes.filter(node => node.surfaceId === surface.id)
+      };
+      
+      await exportPNG(canvas, surfaceDoc, {
+        ...options,
+        filename: `${filename}-${surface.name}`,
+        dpi,
+        includeBleed
+      });
+    }
+  } else {
+    // Export combined design
+    await exportPNG(canvas, doc, {
+      ...options,
+      filename: `${filename}-combined`,
+      dpi,
+      includeBleed
+    });
+  }
+
+  // Generate print specifications
+  generatePrintSpecs(doc, filename);
+};
+
+const generatePrintSpecs = (doc: DesignDoc, filename: string): void => {
+  const surfaces = doc.canvas.printSurfaces || [];
+  const activeSurfaces = surfaces.filter(s => s.enabled);
+  
+  // Calculate colors used
+  const allColors = new Set<string>();
+  activeSurfaces.forEach(surface => {
+    const surfaceNodes = doc.nodes.filter(node => node.surfaceId === surface.id);
+    surfaceNodes.forEach(node => {
+      if (node.type === 'text' && node.fill?.color) allColors.add(node.fill.color);
+      if (node.type === 'shape' && node.fill?.color) allColors.add(node.fill.color);
+    });
+  });
+
+  const specs = {
+    designTitle: doc.title,
+    garmentType: doc.canvas.garmentType,
+    garmentColor: doc.canvas.garmentColor,
+    canvasDimensions: `${doc.canvas.width}×${doc.canvas.height}px`,
+    resolution: `${doc.canvas.dpi} DPI`,
+    bleedArea: `${doc.canvas.bleedMm}mm`,
+    printSurfaces: activeSurfaces.map(surface => ({
+      name: surface.name,
+      area: `${surface.area.width}×${surface.area.height}px`,
+      elements: doc.nodes.filter(node => node.surfaceId === surface.id).length
+    })),
+    colorCount: allColors.size,
+    colorsUsed: Array.from(allColors),
+    printRecommendations: generatePrintRecommendations(doc, activeSurfaces, allColors.size),
+    generatedAt: new Date().toISOString()
+  };
+
+  const specsBlob = new Blob([JSON.stringify(specs, null, 2)], { 
+    type: 'application/json' 
+  });
+  downloadBlob(specsBlob, `${filename}-specifications.json`);
+};
+
+const generatePrintRecommendations = (
+  doc: DesignDoc, 
+  surfaces: any[], 
+  colorCount: number
+): string[] => {
+  const recommendations: string[] = [];
+  
+  if (colorCount <= 3) {
+    recommendations.push("Screen printing recommended for cost-effectiveness");
+  } else if (colorCount <= 6) {
+    recommendations.push("DTG printing recommended for multiple colors");
+  } else {
+    recommendations.push("Consider reducing colors or using DTG/sublimation");
+  }
+  
+  if (surfaces.length > 2) {
+    recommendations.push("Multi-surface design requires careful registration");
+  }
+  
+  const hasSmallText = doc.nodes.some(node => 
+    node.type === 'text' && node.fontSize < 12
+  );
+  
+  if (hasSmallText) {
+    recommendations.push("Verify small text legibility at production size");
+  }
+  
+  return recommendations;
 };
 
 export const exportPDF = (doc: DesignDoc, options: ExportOptions = { format: 'pdf' }): void => {

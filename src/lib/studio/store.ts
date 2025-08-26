@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { produce } from 'immer';
-import { DesignDoc, Node, CanvasConfig, HistoryEntry, Tool, MockupConfig } from './types';
+import { DesignDoc, Node, CanvasConfig, HistoryEntry, Tool, MockupConfig, PrintSurface, MaterialConfig } from './types';
 import { CANVAS_PRESETS } from './presets';
 
 interface StudioState {
@@ -50,6 +50,14 @@ interface StudioState {
   setTitle: (title: string) => void;
   initializeFromGarment: (garmentType: string, garmentColor: string) => void;
   updateGarmentColor: (colorId: string) => void;
+  // Phase 1 additions
+  switchPrintSurface: (surfaceId: string) => void;
+  toggleSurfaceVisibility: (surfaceId: string) => void;
+  getPrintSurfaces: () => PrintSurface[];
+  getPrintSurfaceNodes: (surfaceId: string) => Node[];
+  activePrintSurface: string;
+  updateMaterialConfig?: (material: MaterialConfig) => void;
+  getCanvasElement: () => HTMLCanvasElement | null;
 }
 
 const createInitialDoc = (garmentType?: string): DesignDoc => ({
@@ -307,6 +315,48 @@ export const useStudioStore = create<StudioState>((set, get) => ({
     state.doc.canvas.garmentColor = colorId;
     state.mockup.color = colorId === 'white' || colorId === 'light' ? 'light' : 'dark';
   })),
+
+  // Phase 1 Implementation
+  activePrintSurface: 'front',
+
+  switchPrintSurface: (surfaceId) => set(produce((state) => {
+    state.doc.canvas.activeSurface = surfaceId;
+  })),
+
+  toggleSurfaceVisibility: (surfaceId) => set(produce((state) => {
+    const surfaces = state.doc.canvas.printSurfaces || [];
+    const surface = surfaces.find(s => s.id === surfaceId);
+    if (surface) {
+      surface.enabled = !surface.enabled;
+    }
+  })),
+
+  getPrintSurfaces: () => {
+    const { doc } = get();
+    return doc.canvas.printSurfaces || [
+      {
+        id: 'front',
+        name: 'Front',
+        area: { x: 50, y: 100, width: 300, height: 400 },
+        enabled: true,
+        nodes: []
+      }
+    ];
+  },
+
+  getPrintSurfaceNodes: (surfaceId) => {
+    const { doc } = get();
+    return doc.nodes.filter(node => node.surfaceId === surfaceId || (!node.surfaceId && surfaceId === 'front'));
+  },
+
+  updateMaterialConfig: (material) => {
+    // Store material config in local state or send to backend
+    console.log('Material updated:', material);
+  },
+
+  getCanvasElement: () => {
+    return document.querySelector('canvas') as HTMLCanvasElement;
+  },
 }));
 
 // Autosave every 3 seconds

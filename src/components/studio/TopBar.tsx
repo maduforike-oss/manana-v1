@@ -5,13 +5,49 @@ import { Save, Undo, Redo, Download, Settings, ArrowLeft, Box } from 'lucide-rea
 import { useStudioStore } from '../../lib/studio/store';
 import { useAppStore } from '../../store/useAppStore';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { exportPNG, exportSVG, exportPrintReady } from '@/lib/studio/export';
+import { useToast } from '@/hooks/use-toast';
 
 export const TopBar = () => {
-  const { doc, undo, redo, canUndo, canRedo, is3DMode, toggle3DMode } = useStudioStore();
+  const { doc, undo, redo, canUndo, canRedo, is3DMode, toggle3DMode, getCanvasElement } = useStudioStore();
   const { setCurrentDesign } = useAppStore();
+  const { toast } = useToast();
 
   const handleExitStudio = () => {
     setCurrentDesign(null);
+  };
+
+  const handleExport = async () => {
+    const canvas = getCanvasElement();
+    if (!canvas) {
+      toast({
+        title: "Export Error",
+        description: "Canvas not found. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await exportPrintReady(canvas, doc, {
+        format: 'print-ready',
+        dpi: 300,
+        includeBleed: true,
+        separateSurfaces: true,
+        filename: doc.title || 'design'
+      });
+      
+      toast({
+        title: "Export Complete",
+        description: "Your print-ready files have been downloaded.",
+      });
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "There was an error exporting your design.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -80,6 +116,7 @@ export const TopBar = () => {
           <Button
             variant="ghost"
             size="sm"
+            onClick={handleExport}
             className="h-8 px-3 text-xs font-medium transition-all duration-200 hover:bg-accent/80 hover:scale-[1.02] hover:shadow-sm"
           >
             <Download className="w-3.5 h-3.5 mr-1.5" />

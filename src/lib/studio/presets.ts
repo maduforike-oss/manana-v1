@@ -15,12 +15,12 @@ export const CANVAS_PRESETS: Record<string, CanvasConfig> = {
     safeAreaPct: 8,
     bleedMm: 3,
     garmentType: "t-shirt",
-    printArea: {
-      x: 1125,
-      y: 900,
-      width: 2250,
-      height: 2700,
-    },
+    activeSurface: "front",
+    printSurfaces: [
+      { id: 'front', name: 'Front', area: { x: 1125, y: 900, width: 2250, height: 2700 }, enabled: true, maxColors: 6, printMethod: 'screen-print', nodes: [] },
+      { id: 'back', name: 'Back', area: { x: 1125, y: 900, width: 2250, height: 2700 }, enabled: false, maxColors: 6, printMethod: 'screen-print', nodes: [] }
+    ],
+    printArea: { x: 1125, y: 900, width: 2250, height: 2700 },
   },
   "hoodie": {
     unit: "px",
