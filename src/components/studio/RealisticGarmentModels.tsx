@@ -868,20 +868,6 @@ export const RealisticGarmentModel: React.FC<RealisticGarmentModelProps> = ({
     });
   }, [garmentColor, garmentType, designTexture]);
 
-  // Enhanced LOD geometry with simplified approach
-  const lodGeometry = useMemo(() => {
-    const scale = ViewportManager.getCurrentScale(garmentType);
-    
-    return SimpleGeometryGenerator.generateSimpleLODGeometry(
-      garmentType,
-      () => {
-        const baseGeometry = createGarmentGeometry(garmentType);
-        baseGeometry.scale(scale, scale, scale);
-        return baseGeometry;
-      }
-    );
-  }, [garmentType]);
-
   // Helper function to create geometry based on garment type
   const createGarmentGeometry = (type: string): THREE.BufferGeometry => {
     const normalizedType = type.toLowerCase().replace(/[^a-z-]/g, '');
@@ -962,6 +948,20 @@ export const RealisticGarmentModel: React.FC<RealisticGarmentModelProps> = ({
         return createTShirtGeometry('M');
     }
   };
+
+  // Enhanced LOD geometry with simplified approach
+  const lodGeometry = useMemo(() => {
+    const scale = ViewportManager.getCurrentScale(garmentType);
+    
+    return SimpleGeometryGenerator.generateSimpleLODGeometry(
+      garmentType,
+      () => {
+        const baseGeometry = createGarmentGeometry(garmentType);
+        baseGeometry.scale(scale, scale, scale);
+        return baseGeometry;
+      }
+    );
+  }, [garmentType]);
 
   // Subtle animation
   useFrame((state) => {
