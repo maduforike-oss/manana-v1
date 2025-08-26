@@ -10,6 +10,7 @@ import {
   createJacketGeometry,
   DesignOverlay 
 } from './Enhanced3DModels';
+import { RealisticGarmentModel } from './RealisticGarmentModels';
 import { DynamicFabricProperties } from './AdvancedFabricSimulation';
 import { Professional3DLighting } from './Professional3DLighting';
 import { Controls3DView } from './3DViewControls';
@@ -298,33 +299,17 @@ export const Canvas3D = () => {
   const garmentType = doc.canvas.garmentType || 't-shirt';
   const garmentColor = doc.canvas.garmentColor || '#ffffff';
 
-  // Render appropriate professional 3D model based on garment type
+  // Render realistic garment model with professional accuracy
   const renderGarmentModel = () => {
-    if (['cap', 'snapback', 'trucker-hat', 'beanie'].includes(garmentType)) {
-      return (
-        <ProfessionalCapModel 
-          garmentType={garmentType}
-          garmentColor={garmentColor} 
-          designTexture={designTexture} 
-        />
-      );
-    } else if (garmentType === 'tote') {
-      return (
-        <ProfessionalToteModel 
-          garmentColor={garmentColor} 
-          designTexture={designTexture} 
-        />
-      );
-    } else {
-      // All apparel items (shirts, hoodies, jackets, etc.)
-      return (
-        <ProfessionalGarmentModel 
-          garmentType={garmentType} 
-          garmentColor={garmentColor} 
-          designTexture={designTexture} 
-        />
-      );
-    }
+    console.log('Rendering garment model:', { garmentType, garmentColor });
+    
+    return (
+      <RealisticGarmentModel
+        garmentType={garmentType}
+        garmentColor={garmentColor}
+        designTexture={designTexture}
+      />
+    );
   };
 
   return (
