@@ -7,6 +7,7 @@ import { getFabricType } from '../../lib/studio/fabricTypes';
 import { GeometryCache, MaterialOptimizer as LegacyMaterialOptimizer } from './GarmentOptimization';
 import { MaterialOptimizer } from './MaterialOptimizer';
 import { SimpleLODRenderer, SimpleGeometryGenerator } from './SimpleLODSystem';
+import { CADGeometryGenerator, createCADFabricMaterial } from './CADGarmentModels';
 
 interface RealisticGarmentModelProps {
   garmentType: string;
@@ -855,8 +856,13 @@ export const RealisticGarmentModel: React.FC<RealisticGarmentModelProps> = ({
     [garmentType]
   );
 
-  // Enhanced optimized material with fabric simulation
+  // CAD-level material with precise fabric simulation
   const material = useMemo(() => {
+    // Try CAD fabric material first
+    const cadMaterial = createCADFabricMaterial(garmentType, garmentColor, designTexture);
+    if (cadMaterial) return cadMaterial;
+    
+    // Fallback to existing material optimizer
     return MaterialOptimizer.getOptimizedMaterial({
       baseColor: garmentColor,
       garmentType,
@@ -949,10 +955,25 @@ export const RealisticGarmentModel: React.FC<RealisticGarmentModelProps> = ({
     }
   };
 
-  // Enhanced LOD geometry with simplified approach
+  // CAD-level LOD geometry with enhanced precision
   const lodGeometry = useMemo(() => {
-    const scale = ViewportManager.getCurrentScale(garmentType);
+    const generator = new SimpleGeometryGenerator();
+    const cadGenerator = CADGeometryGenerator[garmentType.toLowerCase() as keyof typeof CADGeometryGenerator];
     
+    if (cadGenerator) {
+      const baseGeometry = cadGenerator();
+      
+      // Handle THREE.Group returns (like tote bag)
+      if (baseGeometry instanceof THREE.Group) {
+        const mainMesh = baseGeometry.children.find(child => child instanceof THREE.Mesh) as THREE.Mesh;
+        return SimpleGeometryGenerator.generateSimpleLODGeometry(garmentType, () => mainMesh?.geometry || createGarmentGeometry(garmentType));
+      }
+      
+      return SimpleGeometryGenerator.generateSimpleLODGeometry(garmentType, () => baseGeometry as THREE.BufferGeometry);
+    }
+    
+    // Fallback to existing geometry system
+    const scale = ViewportManager.getCurrentScale(garmentType);
     return SimpleGeometryGenerator.generateSimpleLODGeometry(
       garmentType,
       () => {
