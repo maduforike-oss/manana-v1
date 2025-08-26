@@ -74,7 +74,7 @@ export const CanvasPanel = () => {
         <div className="space-y-2">
           <Label className="text-sm font-semibold text-foreground">Print Quality</Label>
           <Select 
-            value={doc.canvas.dpi.toString()} 
+            value={(doc.canvas.dpi || 300).toString()} 
             onValueChange={(value) => updateCanvas({ dpi: parseInt(value) as 150 | 300 })}
           >
             <SelectTrigger className="bg-background border-border/50 text-foreground">
