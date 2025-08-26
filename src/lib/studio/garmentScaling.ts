@@ -206,7 +206,7 @@ export class ViewportManager {
   }
 }
 
-// Bounding Box Utility
+// Enhanced Bounding Box Utility Class
 export class BoundingBoxManager {
   // Create visible bounding box for alignment assistance
   static createBoundingBox(bounds: GarmentBounds, color: string = '#00ff00'): THREE.LineSegments {
@@ -217,54 +217,125 @@ export class BoundingBoxManager {
     const material = new THREE.LineBasicMaterial({
       color: new THREE.Color(color),
       transparent: true,
-      opacity: 0.3,
+      opacity: 0.6,
       linewidth: 2
     });
     
     return new THREE.LineSegments(geometry, material);
   }
 
-  // Create snap-to-grid overlay
+  // Create enhanced snap-to-grid overlay
   static createSnapGrid(bounds: GarmentBounds, gridSize: number = 1): THREE.GridHelper {
-    const size = Math.max(bounds.width, bounds.height) * 1.5;
+    const size = Math.max(bounds.width, bounds.depth) * 1.5;
     const divisions = Math.floor(size / gridSize);
     
     const grid = new THREE.GridHelper(size, divisions, 0x888888, 0xcccccc);
     grid.material.transparent = true;
-    grid.material.opacity = 0.2;
+    grid.material.opacity = 0.3;
+    grid.position.y = -bounds.height / 2; // Position at garment base
     
     return grid;
   }
 
-  // Create measurement rulers
+  // Create enhanced measurement rulers with tick marks
   static createRulers(bounds: GarmentBounds): THREE.Group {
     const group = new THREE.Group();
     
-    // Horizontal ruler
+    // Horizontal ruler with tick marks
     const hRulerGeometry = new THREE.BufferGeometry();
-    const hRulerPoints = [
-      new THREE.Vector3(-bounds.width / 2, -bounds.height / 2 - 1, 0),
-      new THREE.Vector3(bounds.width / 2, -bounds.height / 2 - 1, 0)
-    ];
+    const hRulerPoints: THREE.Vector3[] = [];
+    
+    // Main horizontal line
+    hRulerPoints.push(new THREE.Vector3(-bounds.width / 2, -bounds.height / 2 - 1.5, 0));
+    hRulerPoints.push(new THREE.Vector3(bounds.width / 2, -bounds.height / 2 - 1.5, 0));
+    
+    // Tick marks for width
+    for (let x = -bounds.width / 2; x <= bounds.width / 2; x += 2) {
+      hRulerPoints.push(new THREE.Vector3(x, -bounds.height / 2 - 1.5, 0));
+      hRulerPoints.push(new THREE.Vector3(x, -bounds.height / 2 - 1, 0));
+    }
+    
     hRulerGeometry.setFromPoints(hRulerPoints);
     
-    // Vertical ruler
+    // Vertical ruler with tick marks
     const vRulerGeometry = new THREE.BufferGeometry();
-    const vRulerPoints = [
-      new THREE.Vector3(-bounds.width / 2 - 1, -bounds.height / 2, 0),
-      new THREE.Vector3(-bounds.width / 2 - 1, bounds.height / 2, 0)
-    ];
+    const vRulerPoints: THREE.Vector3[] = [];
+    
+    // Main vertical line
+    vRulerPoints.push(new THREE.Vector3(-bounds.width / 2 - 1.5, -bounds.height / 2, 0));
+    vRulerPoints.push(new THREE.Vector3(-bounds.width / 2 - 1.5, bounds.height / 2, 0));
+    
+    // Tick marks for height
+    for (let y = -bounds.height / 2; y <= bounds.height / 2; y += 2) {
+      vRulerPoints.push(new THREE.Vector3(-bounds.width / 2 - 1.5, y, 0));
+      vRulerPoints.push(new THREE.Vector3(-bounds.width / 2 - 1, y, 0));
+    }
+    
     vRulerGeometry.setFromPoints(vRulerPoints);
     
     const rulerMaterial = new THREE.LineBasicMaterial({
       color: 0xff6600,
       transparent: true,
-      opacity: 0.7
+      opacity: 0.8
     });
     
-    group.add(new THREE.Line(hRulerGeometry, rulerMaterial));
-    group.add(new THREE.Line(vRulerGeometry, rulerMaterial));
+    group.add(new THREE.LineSegments(hRulerGeometry, rulerMaterial));
+    group.add(new THREE.LineSegments(vRulerGeometry, rulerMaterial));
     
+    return group;
+  }
+
+  // Snap position to grid
+  static snapToGrid(position: THREE.Vector3, gridSize: number): THREE.Vector3 {
+    return new THREE.Vector3(
+      Math.round(position.x / gridSize) * gridSize,
+      Math.round(position.y / gridSize) * gridSize,
+      Math.round(position.z / gridSize) * gridSize
+    );
+  }
+
+  // Check if point is within garment bounds
+  static isWithinBounds(position: THREE.Vector3, bounds: GarmentBounds): boolean {
+    return Math.abs(position.x) <= bounds.width / 2 &&
+           Math.abs(position.y) <= bounds.height / 2 &&
+           Math.abs(position.z) <= bounds.depth / 2;
+  }
+
+  // Clamp position to stay within bounds
+  static clampToBounds(position: THREE.Vector3, bounds: GarmentBounds): THREE.Vector3 {
+    return new THREE.Vector3(
+      Math.max(-bounds.width / 2, Math.min(bounds.width / 2, position.x)),
+      Math.max(-bounds.height / 2, Math.min(bounds.height / 2, position.y)),
+      Math.max(-bounds.depth / 2, Math.min(bounds.depth / 2, position.z))
+    );
+  }
+
+  // Create corner markers for precise positioning
+  static createCornerMarkers(bounds: GarmentBounds): THREE.Group {
+    const group = new THREE.Group();
+    const markerSize = 0.5;
+    const markerGeometry = new THREE.SphereGeometry(markerSize, 8, 8);
+    const markerMaterial = new THREE.MeshBasicMaterial({
+      color: 0xff0000,
+      transparent: true,
+      opacity: 0.7
+    });
+
+    // Create markers at key positions
+    const positions = [
+      [-bounds.width / 2, -bounds.height / 2, 0], // Bottom left
+      [bounds.width / 2, -bounds.height / 2, 0],  // Bottom right
+      [-bounds.width / 2, bounds.height / 2, 0],  // Top left
+      [bounds.width / 2, bounds.height / 2, 0],   // Top right
+      [0, 0, 0]                                   // Center
+    ];
+
+    positions.forEach(pos => {
+      const marker = new THREE.Mesh(markerGeometry, markerMaterial);
+      marker.position.set(pos[0], pos[1], pos[2]);
+      group.add(marker);
+    });
+
     return group;
   }
 }

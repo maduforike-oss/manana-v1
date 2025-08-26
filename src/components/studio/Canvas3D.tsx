@@ -10,6 +10,9 @@ import { ProfessionalGarmentDetails } from './ProfessionalGarmentDetails';
 import { SimplePerformanceMonitor } from './SimpleLODSystem';
 import { MaterialOptimizer } from './MaterialOptimizer';
 import { ViewportManager } from '../../lib/studio/garmentScaling';
+import { ViewportHelpers } from './ViewportHelpers';
+import { AdvancedViewportControls } from './AdvancedViewportControls';
+import { useViewportState } from '../../hooks/useViewportState';
 
 // Design Texture Generator
 const useDesignTexture = () => {
@@ -124,6 +127,12 @@ export const Canvas3D = () => {
   const [lightingPreset, setLightingPreset] = React.useState<'studio' | 'outdoor' | 'product' | 'dramatic'>('studio');
   const [showWireframe, setShowWireframe] = React.useState(false);
   
+  // Advanced viewport state
+  const viewportState = useViewportState({
+    showGrid: true,
+    snapToGrid: true
+  });
+  
   // Get garment info from canvas config
   const garmentType = doc.canvas.garmentType || 't-shirt';
   const garmentColor = doc.canvas.garmentColor || '#ffffff';
@@ -184,6 +193,15 @@ export const Canvas3D = () => {
             designTexture={designTexture}
           />
           
+          {/* Advanced Viewport Helpers */}
+          <ViewportHelpers
+            garmentType={garmentType}
+            showBoundingBox={viewportState.showBoundingBox}
+            showGrid={viewportState.showGrid}
+            showRulers={viewportState.showRulers}
+            gridSize={viewportState.gridSize}
+          />
+          
           {/* Simple Performance monitoring */}
           <SimplePerformanceMonitor />
           
@@ -220,6 +238,18 @@ export const Canvas3D = () => {
         onLightingChange={setLightingPreset}
         showWireframe={showWireframe}
         onWireframeToggle={() => setShowWireframe(!showWireframe)}
+      />
+      
+      {/* Advanced Viewport Controls */}
+      <AdvancedViewportControls
+        showBoundingBox={viewportState.showBoundingBox}
+        onBoundingBoxToggle={viewportState.toggleBoundingBox}
+        showGrid={viewportState.showGrid}
+        onGridToggle={viewportState.toggleGrid}
+        showRulers={viewportState.showRulers}
+        onRulersToggle={viewportState.toggleRulers}
+        snapToGrid={viewportState.snapToGrid}
+        onSnapToggle={viewportState.toggleSnap}
       />
       
       {/* Development Stats */}
