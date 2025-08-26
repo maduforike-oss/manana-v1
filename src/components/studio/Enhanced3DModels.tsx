@@ -3,62 +3,140 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { MeshStandardMaterial, DoubleSide } from 'three';
 
-// Professional Fabric Material System
+// Advanced fabric material system with micro-textures and realistic properties
 export const createFabricMaterial = (
   garmentType: string, 
   color: string, 
-  designTexture?: THREE.Texture
-) => {
-  const material = new MeshStandardMaterial({
-    color: color,
+  designTexture?: THREE.Texture,
+  fabricVariant: 'regular' | 'heather' | 'vintage' = 'regular'
+): THREE.MeshStandardMaterial => {
+  const material = new THREE.MeshStandardMaterial({
+    color: new THREE.Color(color),
+    map: designTexture,
+    transparent: !!designTexture,
     side: DoubleSide,
   });
 
-  // Fabric-specific material properties
+  // Create fabric-specific micro-textures
+  const createFabricTexture = (type: string): THREE.DataTexture => {
+    const size = 64;
+    const data = new Uint8Array(size * size * 3);
+    
+    for (let i = 0; i < size * size; i++) {
+      const x = i % size;
+      const y = Math.floor(i / size);
+      let intensity = 128;
+      
+      switch (type) {
+        case 'cotton':
+          // Cotton weave pattern
+          intensity = 128 + Math.sin(x * 0.5) * Math.cos(y * 0.5) * 20;
+          if (fabricVariant === 'heather') {
+            intensity += (Math.random() - 0.5) * 40;
+          }
+          break;
+        case 'fleece':
+          // Fleece texture
+          intensity = 128 + (Math.random() - 0.5) * 60;
+          break;
+        case 'pique':
+          // Pique knit pattern
+          intensity = 128 + Math.sin(x * 0.3) * Math.sin(y * 0.3) * 30;
+          break;
+        case 'denim':
+          // Denim twill pattern
+          intensity = 128 + Math.sin((x + y) * 0.4) * 25;
+          break;
+        case 'performance':
+          // Smooth athletic fabric
+          intensity = 128 + Math.sin(x * 0.8) * Math.cos(y * 0.8) * 10;
+          break;
+      }
+      
+      intensity = Math.max(0, Math.min(255, intensity));
+      data[i * 3] = intensity;
+      data[i * 3 + 1] = intensity;
+      data[i * 3 + 2] = intensity;
+    }
+    
+    const texture = new THREE.DataTexture(data, size, size, THREE.RGBFormat);
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(8, 8);
+    texture.needsUpdate = true;
+    return texture;
+  };
+
+  // Apply fabric-specific properties
   switch (garmentType) {
+    case 'tshirt':
+    case 'tank':
+    case 'vneck':
+    case 'womens-tee':
+    case 'womens-tank':
+      // Cotton jersey properties
+      material.roughness = fabricVariant === 'vintage' ? 0.9 : 0.8;
+      material.metalness = 0.0;
+      material.normalMap = createFabricTexture('cotton');
+      material.normalScale = new THREE.Vector2(0.3, 0.3);
+      if (fabricVariant === 'heather') {
+        material.roughness = 0.85;
+      }
+      break;
+      
     case 'hoodie':
+    case 'crewneck':
     case 'zip-hoodie':
     case 'pullover':
-      // Fleece/Cotton blend properties
-      material.roughness = 0.95;
+      // Fleece/cotton blend properties
+      material.roughness = 0.9;
       material.metalness = 0.0;
-      material.normalScale = new THREE.Vector2(0.3, 0.3);
+      material.normalMap = createFabricTexture('fleece');
+      material.normalScale = new THREE.Vector2(0.5, 0.5);
       break;
       
     case 'polo':
-    case 'button-shirt':
-      // Cotton pique/poplin properties
-      material.roughness = 0.75;
-      material.metalness = 0.05;
-      material.normalScale = new THREE.Vector2(0.2, 0.2);
+      // Pique cotton properties
+      material.roughness = 0.7;
+      material.metalness = 0.0;
+      material.normalMap = createFabricTexture('pique');
+      material.normalScale = new THREE.Vector2(0.4, 0.4);
       break;
       
-    case 'performance-shirt':
-      // Athletic/synthetic blend
-      material.roughness = 0.4;
-      material.metalness = 0.15;
-      // material.clearcoat = 0.1; // Available in Three.js r144+
+    case 'performance':
+      // Performance fabric properties
+      material.roughness = 0.5;
+      material.metalness = 0.1;
+      material.normalMap = createFabricTexture('performance');
+      material.normalScale = new THREE.Vector2(0.2, 0.2);
       break;
       
     case 'denim-jacket':
       // Denim properties
-      material.roughness = 0.85;
+      material.roughness = 0.8;
       material.metalness = 0.0;
-      material.normalScale = new THREE.Vector2(0.5, 0.5);
+      material.normalMap = createFabricTexture('denim');
+      material.normalScale = new THREE.Vector2(0.6, 0.6);
       break;
       
     case 'bomber':
       // Nylon/polyester properties
       material.roughness = 0.3;
       material.metalness = 0.2;
-      // material.clearcoat = 0.3; // Available in Three.js r144+
+      material.normalScale = new THREE.Vector2(0.1, 0.1);
+      break;
+      
+    case 'button-shirt':
+      // Cotton poplin/oxford properties
+      material.roughness = 0.6;
+      material.metalness = 0.0;
+      material.normalMap = createFabricTexture('cotton');
+      material.normalScale = new THREE.Vector2(0.2, 0.2);
       break;
       
     default:
-      // Standard cotton t-shirt
-      material.roughness = 0.8;
-      material.metalness = 0.02;
-      material.normalScale = new THREE.Vector2(0.25, 0.25);
+      material.roughness = 0.7;
+      material.metalness = 0.0;
+      material.normalMap = createFabricTexture('cotton');
   }
 
   return material;

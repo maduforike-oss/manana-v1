@@ -12,6 +12,8 @@ import {
 } from './Enhanced3DModels';
 import { Professional3DLighting } from './Professional3DLighting';
 import { Controls3DView } from './3DViewControls';
+import { createGarmentDetails, createGarmentLabels } from './GarmentDetails';
+import { AdvancedDesignMapping } from './AdvancedDesignMapping';
 
 // Professional Enhanced Garment Component
 const ProfessionalGarmentModel = ({ 
