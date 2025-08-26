@@ -1,282 +1,209 @@
 import React, { Suspense, useRef, useMemo } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera, Environment } from '@react-three/drei';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { OrbitControls, PerspectiveCamera, Environment, useTexture, ContactShadows } from '@react-three/drei';
 import * as THREE from 'three';
 import { useStudioStore } from '../../lib/studio/store';
+import { 
+  createFabricMaterial, 
+  createTShirtGeometry, 
+  createCapGeometry, 
+  createJacketGeometry,
+  DesignOverlay 
+} from './Enhanced3DModels';
+import { Professional3DLighting } from './Professional3DLighting';
+import { Controls3DView } from './3DViewControls';
 
-// Enhanced Garment 3D Components
-const GarmentModel = ({ garmentType, garmentColor = '#ffffff', designTexture }: { 
+// Professional Enhanced Garment Component
+const ProfessionalGarmentModel = ({ 
+  garmentType, 
+  garmentColor = '#ffffff', 
+  designTexture 
+}: { 
   garmentType?: string; 
   garmentColor?: string; 
   designTexture?: THREE.Texture 
 }) => {
   const meshRef = useRef<THREE.Mesh>(null);
-
-  // Create garment-specific geometry
+  
+  // Create professional garment geometry
   const garmentGeometry = useMemo(() => {
-    const shape = new THREE.Shape();
-    
-    switch (garmentType) {
-      case 'hoodie':
-      case 'zip-hoodie':
-      case 'pullover':
-        // Hoodie/Sweatshirt shape with hood
-        shape.moveTo(-1.4, -1.6);
-        shape.lineTo(-1.4, 0.6);
-        shape.lineTo(-1.6, 0.8);
-        shape.lineTo(-1.6, 1.4);
-        shape.lineTo(-0.9, 1.4);
-        shape.lineTo(-0.9, 1.8); // Hood extension
-        shape.lineTo(0.9, 1.8);
-        shape.lineTo(0.9, 1.4);
-        shape.lineTo(1.6, 1.4);
-        shape.lineTo(1.6, 0.8);
-        shape.lineTo(1.4, 0.6);
-        shape.lineTo(1.4, -1.6);
-        shape.lineTo(-1.4, -1.6);
-        break;
-        
-      case 'tank':
-        // Tank top shape - narrower sleeves
-        shape.moveTo(-1.0, -1.5);
-        shape.lineTo(-1.0, 0.8);
-        shape.lineTo(-1.1, 1.0);
-        shape.lineTo(-1.1, 1.3);
-        shape.lineTo(-0.6, 1.3);
-        shape.lineTo(-0.6, 1.5);
-        shape.lineTo(0.6, 1.5);
-        shape.lineTo(0.6, 1.3);
-        shape.lineTo(1.1, 1.3);
-        shape.lineTo(1.1, 1.0);
-        shape.lineTo(1.0, 0.8);
-        shape.lineTo(1.0, -1.5);
-        shape.lineTo(-1.0, -1.5);
-        break;
-        
-      case 'polo':
-      case 'button-shirt':
-        // Polo/Dress shirt with collar
-        shape.moveTo(-1.2, -1.5);
-        shape.lineTo(-1.2, 0.8);
-        shape.lineTo(-1.5, 1.0);
-        shape.lineTo(-1.5, 1.2);
-        shape.lineTo(-0.8, 1.2);
-        shape.lineTo(-0.8, 1.6); // Collar extension
-        shape.lineTo(0.8, 1.6);
-        shape.lineTo(0.8, 1.2);
-        shape.lineTo(1.5, 1.2);
-        shape.lineTo(1.5, 1.0);
-        shape.lineTo(1.2, 0.8);
-        shape.lineTo(1.2, -1.5);
-        shape.lineTo(-1.2, -1.5);
-        break;
-        
-      case 'long-sleeve-tee':
-        // Long sleeve with extended arms
-        shape.moveTo(-1.2, -1.5);
-        shape.lineTo(-1.2, 0.8);
-        shape.lineTo(-1.8, 1.0); // Extended sleeve
-        shape.lineTo(-1.8, 1.3);
-        shape.lineTo(-0.8, 1.3);
-        shape.lineTo(-0.8, 1.5);
-        shape.lineTo(0.8, 1.5);
-        shape.lineTo(0.8, 1.3);
-        shape.lineTo(1.8, 1.3);
-        shape.lineTo(1.8, 1.0);
-        shape.lineTo(1.2, 0.8);
-        shape.lineTo(1.2, -1.5);
-        shape.lineTo(-1.2, -1.5);
-        break;
-        
-      default:
-        // Default t-shirt shape
-        shape.moveTo(-1.2, -1.5);
-        shape.lineTo(-1.2, 0.8);
-        shape.lineTo(-1.5, 1.0);
-        shape.lineTo(-1.5, 1.2);
-        shape.lineTo(-0.8, 1.2);
-        shape.lineTo(-0.8, 1.5);
-        shape.lineTo(0.8, 1.5);
-        shape.lineTo(0.8, 1.2);
-        shape.lineTo(1.5, 1.2);
-        shape.lineTo(1.5, 1.0);
-        shape.lineTo(1.2, 0.8);
-        shape.lineTo(1.2, -1.5);
-        shape.lineTo(-1.2, -1.5);
+    // Use jacket geometry for outerwear
+    if (['denim-jacket', 'bomber'].includes(garmentType || '')) {
+      return createJacketGeometry(garmentType!);
     }
-
-    const extrudeSettings = {
-      depth: 0.12,
-      bevelEnabled: true,
-      bevelSegments: 3,
-      steps: 3,
-      bevelSize: 0.03,
-      bevelThickness: 0.02,
-    };
-
-    return new THREE.ExtrudeGeometry(shape, extrudeSettings);
+    // Use standard enhanced geometry for apparel
+    return createTShirtGeometry(garmentType || 't-shirt');
   }, [garmentType]);
 
-  // Create realistic fabric material
+  // Create professional fabric material
   const fabricMaterial = useMemo(() => {
-    const material = new THREE.MeshStandardMaterial({
-      color: garmentColor,
-      roughness: 0.85,
-      metalness: 0.05,
-    });
-    
-    // Add fabric-specific properties
-    if (garmentType?.includes('hoodie') || garmentType === 'pullover') {
-      material.roughness = 0.9; // Fleece texture
-    } else if (garmentType === 'polo' || garmentType === 'button-shirt') {
-      material.roughness = 0.7; // Smoother cotton
-    } else if (garmentType === 'performance-shirt') {
-      material.roughness = 0.3; // Synthetic performance material
-      material.metalness = 0.1;
-    }
-    
-    return material;
-  }, [garmentColor, garmentType]);
+    return createFabricMaterial(garmentType || 't-shirt', garmentColor, designTexture);
+  }, [garmentColor, garmentType, designTexture]);
 
-  // Enhanced design material with better mapping
-  const designMaterial = useMemo(() => {
-    if (!designTexture) return null;
-    
-    return new THREE.MeshStandardMaterial({
-      map: designTexture,
-      transparent: true,
-      alphaTest: 0.1,
-      roughness: 0.8,
-      metalness: 0.0,
-    });
-  }, [designTexture]);
-
-  // Calculate design overlay size based on garment type
-  const getDesignSize = (): [number, number] => {
-    switch (garmentType) {
-      case 'tank':
-        return [1.2, 1.2];
-      case 'hoodie':
-      case 'zip-hoodie':
-      case 'pullover':
-        return [1.6, 1.6];
-      case 'long-sleeve-tee':
-        return [1.4, 1.4];
-      default:
-        return [1.5, 1.5];
+  // Subtle animation for realism
+  useFrame((state) => {
+    if (meshRef.current) {
+      meshRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.2) * 0.02;
     }
-  };
+  });
 
   return (
     <group rotation={[0, 0, 0]}>
-      {/* Main garment body */}
-      <mesh ref={meshRef} geometry={garmentGeometry} material={fabricMaterial} />
+      {/* Main garment body with enhanced geometry */}
+      <mesh 
+        ref={meshRef} 
+        geometry={garmentGeometry} 
+        material={fabricMaterial}
+        castShadow
+        receiveShadow
+      />
       
-      {/* Design overlay on front */}
-      {designTexture && designMaterial && (
-        <mesh position={[0, 0, 0.061]}>
-          <planeGeometry args={getDesignSize()} />
-          <primitive object={designMaterial} />
+      {/* Professional design overlay */}
+      {designTexture && (
+        <DesignOverlay
+          designTexture={designTexture}
+          garmentType={garmentType || 't-shirt'}
+          position={[0, 0, 0.076]}
+        />
+      )}
+      
+      {/* Subtle fabric details */}
+      {garmentType === 'hoodie' && (
+        <mesh position={[0, -0.5, 0.08]}>
+          <planeGeometry args={[0.8, 0.3]} />
+          <meshStandardMaterial 
+            color={garmentColor} 
+            transparent 
+            opacity={0.8}
+            roughness={0.95}
+          />
         </mesh>
       )}
     </group>
   );
 };
 
-// Hat/Cap 3D Component
-const CapModel = ({ garmentColor = '#000000', designTexture }: { garmentColor?: string; designTexture?: THREE.Texture }) => {
+// Professional Hat/Cap Component
+const ProfessionalCapModel = ({ 
+  garmentType = 'cap',
+  garmentColor = '#000000', 
+  designTexture 
+}: { 
+  garmentType?: string;
+  garmentColor?: string; 
+  designTexture?: THREE.Texture 
+}) => {
+  const meshRef = useRef<THREE.Group>(null);
+  
   const capGeometry = useMemo(() => {
-    const geometry = new THREE.CylinderGeometry(0.8, 0.9, 0.3, 16);
-    return geometry;
-  }, []);
-
-  const billGeometry = useMemo(() => {
-    const geometry = new THREE.CylinderGeometry(0.3, 0.4, 0.05, 16);
-    return geometry;
-  }, []);
+    if (garmentType === 'beanie') {
+      const crown = new THREE.SphereGeometry(0.9, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.7);
+      return { crown, bill: null };
+    }
+    return createCapGeometry(garmentType);
+  }, [garmentType]);
 
   const fabricMaterial = useMemo(() => {
-    return new THREE.MeshStandardMaterial({
-      color: garmentColor,
-      roughness: 0.8,
-      metalness: 0.1,
-    });
-  }, [garmentColor]);
+    return createFabricMaterial(garmentType, garmentColor, designTexture);
+  }, [garmentColor, garmentType, designTexture]);
 
-  const designMaterial = useMemo(() => {
-    if (!designTexture) return null;
-    
-    return new THREE.MeshStandardMaterial({
-      map: designTexture,
-      transparent: true,
-      alphaTest: 0.1,
-    });
-  }, [designTexture]);
+  // Subtle rotation animation
+  useFrame((state) => {
+    if (meshRef.current) {
+      meshRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.15) * 0.03;
+    }
+  });
 
   return (
-    <group position={[0, 0.5, 0]}>
+    <group ref={meshRef} position={[0, 0.5, 0]}>
       {/* Cap crown */}
-      <mesh geometry={capGeometry} material={fabricMaterial} />
+      <mesh geometry={capGeometry.crown} material={fabricMaterial} castShadow receiveShadow />
       
-      {/* Cap bill */}
-      <mesh geometry={billGeometry} material={fabricMaterial} position={[0, -0.2, 0.5]} rotation={[-Math.PI / 6, 0, 0]} />
+      {/* Cap bill (if not beanie) */}
+      {capGeometry.bill && (
+        <mesh 
+          geometry={capGeometry.bill} 
+          material={fabricMaterial} 
+          position={[0, -0.2, 0.5]} 
+          rotation={[-Math.PI / 6, 0, 0]}
+          castShadow
+          receiveShadow
+        />
+      )}
       
-      {/* Design on front */}
-      {designTexture && designMaterial && (
-        <mesh position={[0, 0, 0.81]}>
-          <planeGeometry args={[0.6, 0.4]} />
-          <primitive object={designMaterial} />
-        </mesh>
+      {/* Professional design overlay */}
+      {designTexture && (
+        <DesignOverlay
+          designTexture={designTexture}
+          garmentType={garmentType}
+          position={garmentType === 'beanie' ? [0, 0.2, 0.81] : [0, 0, 0.81]}
+        />
       )}
     </group>
   );
 };
 
-// Tote Bag 3D Component  
-const ToteModel = ({ garmentColor = '#ffffff', designTexture }: { garmentColor?: string; designTexture?: THREE.Texture }) => {
+// Professional Tote Bag Component
+const ProfessionalToteModel = ({ 
+  garmentColor = '#ffffff', 
+  designTexture 
+}: { 
+  garmentColor?: string; 
+  designTexture?: THREE.Texture 
+}) => {
+  const meshRef = useRef<THREE.Group>(null);
+  
   const bagGeometry = useMemo(() => {
+    // More realistic bag shape with slight taper
     const geometry = new THREE.BoxGeometry(1.4, 1.6, 0.2);
+    geometry.scale(1, 1, 1);
     return geometry;
   }, []);
 
   const handleGeometry = useMemo(() => {
-    const geometry = new THREE.CylinderGeometry(0.02, 0.02, 1.2, 8);
+    const geometry = new THREE.TorusGeometry(0.6, 0.02, 6, 16, Math.PI);
     return geometry;
   }, []);
 
   const fabricMaterial = useMemo(() => {
-    return new THREE.MeshStandardMaterial({
-      color: garmentColor,
-      roughness: 0.9,
-      metalness: 0.0,
-    });
-  }, [garmentColor]);
+    return createFabricMaterial('tote', garmentColor, designTexture);
+  }, [garmentColor, designTexture]);
 
-  const designMaterial = useMemo(() => {
-    if (!designTexture) return null;
-    
-    return new THREE.MeshStandardMaterial({
-      map: designTexture,
-      transparent: true,
-      alphaTest: 0.1,
-    });
-  }, [designTexture]);
+  // Gentle swaying animation
+  useFrame((state) => {
+    if (meshRef.current) {
+      meshRef.current.rotation.z = Math.sin(state.clock.elapsedTime * 0.3) * 0.01;
+    }
+  });
 
   return (
-    <group>
-      {/* Bag body */}
-      <mesh geometry={bagGeometry} material={fabricMaterial} />
+    <group ref={meshRef}>
+      {/* Bag body with realistic proportions */}
+      <mesh geometry={bagGeometry} material={fabricMaterial} castShadow receiveShadow />
       
-      {/* Handles */}
-      <mesh geometry={handleGeometry} material={fabricMaterial} position={[-0.4, 1.0, 0]} rotation={[0, 0, Math.PI / 2]} />
-      <mesh geometry={handleGeometry} material={fabricMaterial} position={[0.4, 1.0, 0]} rotation={[0, 0, Math.PI / 2]} />
+      {/* Professional handles */}
+      <mesh 
+        geometry={handleGeometry} 
+        material={fabricMaterial} 
+        position={[-0.4, 1.0, 0]} 
+        rotation={[Math.PI / 2, 0, 0]}
+        castShadow
+      />
+      <mesh 
+        geometry={handleGeometry} 
+        material={fabricMaterial} 
+        position={[0.4, 1.0, 0]} 
+        rotation={[Math.PI / 2, 0, 0]}
+        castShadow
+      />
       
-      {/* Design on front */}
-      {designTexture && designMaterial && (
-        <mesh position={[0, 0, 0.11]}>
-          <planeGeometry args={[1.2, 1.2]} />
-          <primitive object={designMaterial} />
-        </mesh>
+      {/* Professional design overlay */}
+      {designTexture && (
+        <DesignOverlay
+          designTexture={designTexture}
+          garmentType="tote"
+          position={[0, 0, 0.11]}
+        />
       )}
     </group>
   );
@@ -346,68 +273,113 @@ const useDesignTexture = () => {
 export const Canvas3D = () => {
   const { doc } = useStudioStore();
   const designTexture = useDesignTexture();
+  const [lightingPreset, setLightingPreset] = React.useState<'studio' | 'outdoor' | 'product' | 'dramatic'>('studio');
+  const [showWireframe, setShowWireframe] = React.useState(false);
   
   // Get garment info from canvas config
   const garmentType = doc.canvas.garmentType || 't-shirt';
   const garmentColor = doc.canvas.garmentColor || '#ffffff';
 
-  // Render appropriate 3D model based on garment type
+  // Render appropriate professional 3D model based on garment type
   const renderGarmentModel = () => {
     if (['cap', 'snapback', 'trucker-hat', 'beanie'].includes(garmentType)) {
-      return <CapModel garmentColor={garmentColor} designTexture={designTexture} />;
+      return (
+        <ProfessionalCapModel 
+          garmentType={garmentType}
+          garmentColor={garmentColor} 
+          designTexture={designTexture} 
+        />
+      );
     } else if (garmentType === 'tote') {
-      return <ToteModel garmentColor={garmentColor} designTexture={designTexture} />;
+      return (
+        <ProfessionalToteModel 
+          garmentColor={garmentColor} 
+          designTexture={designTexture} 
+        />
+      );
     } else {
-      // All apparel items (shirts, hoodies, etc.)
-      return <GarmentModel garmentType={garmentType} garmentColor={garmentColor} designTexture={designTexture} />;
+      // All apparel items (shirts, hoodies, jackets, etc.)
+      return (
+        <ProfessionalGarmentModel 
+          garmentType={garmentType} 
+          garmentColor={garmentColor} 
+          designTexture={designTexture} 
+        />
+      );
     }
   };
 
   return (
-    <div className="w-full h-full bg-gradient-to-b from-background to-muted">
-      <Canvas shadows>
+    <div className="w-full h-full bg-gradient-to-b from-background to-muted/20">
+      <Canvas 
+        shadows={{ 
+          type: THREE.PCFSoftShadowMap,
+          enabled: true 
+        }}
+        gl={{ 
+          antialias: true,
+          alpha: true,
+          powerPreference: "high-performance"
+        }}
+      >
         <Suspense fallback={null}>
-          {/* Camera with better positioning */}
-          <PerspectiveCamera makeDefault position={[0, 0, 4]} />
+          {/* Professional Camera Setup */}
+          <PerspectiveCamera 
+            makeDefault 
+            position={[0, 0, 5]} 
+            fov={45}
+            near={0.1}
+            far={1000}
+          />
           
-          {/* Enhanced Controls */}
+          {/* Enhanced Professional Controls */}
           <OrbitControls
             enablePan={true}
             enableZoom={true}
             enableRotate={true}
-            minDistance={1.5}
-            maxDistance={10}
+            minDistance={2}
+            maxDistance={12}
+            maxPolarAngle={Math.PI * 0.8}
+            minPolarAngle={Math.PI * 0.1}
             target={[0, 0, 0]}
             autoRotate={false}
             enableDamping={true}
-            dampingFactor={0.05}
+            dampingFactor={0.03}
+            rotateSpeed={0.5}
+            zoomSpeed={0.8}
           />
           
-          {/* Professional Lighting Setup */}
-          <ambientLight intensity={0.3} />
-          <directionalLight 
-            position={[5, 8, 5]} 
-            intensity={1.2} 
-            castShadow 
-            shadow-mapSize-width={2048}
-            shadow-mapSize-height={2048}
-          />
-          <directionalLight position={[-5, 5, 5]} intensity={0.6} />
-          <directionalLight position={[0, -5, 2]} intensity={0.4} />
+          {/* Professional Lighting System */}
+          <Professional3DLighting preset={lightingPreset} intensity={1.0} />
           
-          {/* Studio Environment */}
-          <Environment preset="studio" />
-          
-          {/* Render appropriate garment model */}
+          {/* Render appropriate professional garment model */}
           {renderGarmentModel()}
           
-          {/* Ground plane for shadows */}
-          <mesh receiveShadow position={[0, -2, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-            <planeGeometry args={[10, 10]} />
-            <meshStandardMaterial color="#f0f0f0" transparent opacity={0.5} />
+          {/* Professional ground setup */}
+          <mesh 
+            receiveShadow 
+            position={[0, -2.5, 0]} 
+            rotation={[-Math.PI / 2, 0, 0]}
+          >
+            <planeGeometry args={[20, 20]} />
+            <meshStandardMaterial 
+              color="#f8f8f8" 
+              roughness={0.8}
+              metalness={0.1}
+              transparent 
+              opacity={0.6} 
+            />
           </mesh>
         </Suspense>
       </Canvas>
+      
+      {/* Professional 3D Controls */}
+      <Controls3DView
+        lightingPreset={lightingPreset}
+        onLightingChange={setLightingPreset}
+        showWireframe={showWireframe}
+        onWireframeToggle={() => setShowWireframe(!showWireframe)}
+      />
     </div>
   );
 };
