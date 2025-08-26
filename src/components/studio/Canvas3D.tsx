@@ -7,7 +7,8 @@ import { RealisticGarmentModel } from './RealisticGarmentModels';
 import { Professional3DLighting } from './Professional3DLighting';
 import { Controls3DView } from './3DViewControls';
 import { ProfessionalGarmentDetails } from './ProfessionalGarmentDetails';
-import { PerformanceMonitor } from './GarmentOptimization';
+import { EnhancedLODRenderer, LODPerformanceMonitor, SmartGeometryGenerator } from './EnhancedLODSystem';
+import { MaterialOptimizer } from './MaterialOptimizer';
 import { ViewportManager } from '../../lib/studio/garmentScaling';
 
 // Design Texture Generator
@@ -183,8 +184,8 @@ export const Canvas3D = () => {
             designTexture={designTexture}
           />
           
-          {/* Performance monitoring */}
-          <PerformanceMonitor />
+          {/* Enhanced Performance monitoring with LOD */}
+          <LODPerformanceMonitor enabled={process.env.NODE_ENV === 'development'} />
           
           {/* Professional ground setup */}
           <mesh 

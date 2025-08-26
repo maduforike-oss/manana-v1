@@ -1,12 +1,33 @@
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo, useRef, useCallback } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { ViewportManager } from '../../lib/studio/garmentScaling';
 
-// Level of Detail (LOD) System for Performance Optimization
+// Enhanced Level of Detail (LOD) System with Distance-Based Quality
 export interface LODGeometry {
   high: THREE.BufferGeometry;
   medium: THREE.BufferGeometry;
   low: THREE.BufferGeometry;
+  distances: {
+    high: number;
+    medium: number;
+    low: number;
+  };
+}
+
+export interface LODConfig {
+  enableLOD: boolean;
+  autoQuality: boolean;
+  maxTriangles: {
+    high: number;
+    medium: number;
+    low: number;
+  };
+  distances: {
+    high: number;
+    medium: number;
+    far: number;
+  };
 }
 
 // Performance-optimized garment renderer with LOD
@@ -56,36 +77,145 @@ export const OptimizedGarmentRenderer: React.FC<{
   );
 };
 
-// Geometry cache for instant garment switching
+// Enhanced Geometry Cache with Memory Management
 export class GeometryCache {
   private static cache = new Map<string, THREE.BufferGeometry>();
   private static lodCache = new Map<string, LODGeometry>();
-  
+  private static materialCache = new Map<string, THREE.Material>();
+  private static lastAccess = new Map<string, number>();
+  private static readonly MAX_CACHE_SIZE = 50;
+  private static readonly CACHE_TIMEOUT = 30000; // 30 seconds
+
   static getGeometry(key: string, generator: () => THREE.BufferGeometry): THREE.BufferGeometry {
+    this.updateAccess(key);
+    
     if (!this.cache.has(key)) {
+      this.cleanupCache();
       this.cache.set(key, generator());
     }
     return this.cache.get(key)!;
   }
   
-  static getLODGeometry(key: string, generators: {
-    high: () => THREE.BufferGeometry;
-    medium: () => THREE.BufferGeometry;
-    low: () => THREE.BufferGeometry;
-  }): LODGeometry {
+  static getLODGeometry(
+    key: string, 
+    garmentType: string,
+    generators: {
+      high: () => THREE.BufferGeometry;
+      medium: () => THREE.BufferGeometry;
+      low: () => THREE.BufferGeometry;
+    }
+  ): LODGeometry {
+    this.updateAccess(key);
+    
     if (!this.lodCache.has(key)) {
+      this.cleanupCache();
+      
+      // Get optimized distances based on garment type and viewport
+      const distances = this.calculateOptimalDistances(garmentType);
+      
       this.lodCache.set(key, {
         high: generators.high(),
         medium: generators.medium(),
-        low: generators.low()
+        low: generators.low(),
+        distances
       });
     }
     return this.lodCache.get(key)!;
+  }
+
+  private static calculateOptimalDistances(garmentType: string) {
+    const scale = ViewportManager.getCurrentScale(garmentType);
+    const deviceType = ViewportManager.getDeviceType();
+    
+    // Adjust LOD distances based on garment scale and device
+    const baseDistances = {
+      high: 2,
+      medium: 6,
+      low: 15
+    };
+
+    const scaleFactor = 1 / scale;
+    const deviceMultiplier = deviceType === 'mobile' ? 1.5 : 1;
+
+    return {
+      high: baseDistances.high * scaleFactor * deviceMultiplier,
+      medium: baseDistances.medium * scaleFactor * deviceMultiplier,
+      low: baseDistances.low * scaleFactor * deviceMultiplier
+    };
+  }
+
+  private static updateAccess(key: string) {
+    this.lastAccess.set(key, Date.now());
+  }
+
+  private static cleanupCache() {
+    const now = Date.now();
+    
+    // Remove expired entries
+    for (const [key, lastAccess] of this.lastAccess.entries()) {
+      if (now - lastAccess > this.CACHE_TIMEOUT) {
+        this.cache.delete(key);
+        this.lodCache.delete(key);
+        this.materialCache.delete(key);
+        this.lastAccess.delete(key);
+      }
+    }
+
+    // Limit cache size
+    if (this.cache.size > this.MAX_CACHE_SIZE) {
+      const entries = Array.from(this.lastAccess.entries())
+        .sort(([, a], [, b]) => a - b);
+      
+      const toRemove = entries.slice(0, Math.floor(this.MAX_CACHE_SIZE * 0.3));
+      toRemove.forEach(([key]) => {
+        this.cache.delete(key);
+        this.lodCache.delete(key);
+        this.materialCache.delete(key);
+        this.lastAccess.delete(key);
+      });
+    }
   }
   
   static clearCache() {
     this.cache.clear();
     this.lodCache.clear();
+    this.materialCache.clear();
+    this.lastAccess.clear();
+  }
+
+  static getCacheStats() {
+    return {
+      geometries: this.cache.size,
+      lodGeometries: this.lodCache.size,
+      materials: this.materialCache.size,
+      memoryUsage: this.estimateMemoryUsage()
+    };
+  }
+
+  private static estimateMemoryUsage(): number {
+    let bytes = 0;
+    for (const geometry of this.cache.values()) {
+      bytes += this.estimateGeometrySize(geometry);
+    }
+    for (const lod of this.lodCache.values()) {
+      bytes += this.estimateGeometrySize(lod.high);
+      bytes += this.estimateGeometrySize(lod.medium);
+      bytes += this.estimateGeometrySize(lod.low);
+    }
+    return bytes;
+  }
+
+  private static estimateGeometrySize(geometry: THREE.BufferGeometry): number {
+    let size = 0;
+    const attributes = geometry.attributes;
+    for (const name in attributes) {
+      const attribute = attributes[name];
+      size += attribute.array.byteLength;
+    }
+    if (geometry.index) {
+      size += geometry.index.array.byteLength;
+    }
+    return size;
   }
 }
 

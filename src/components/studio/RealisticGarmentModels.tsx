@@ -3,7 +3,10 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useStudioStore } from '../../lib/studio/store';
 import { ViewportManager, GARMENT_SCALE_STANDARDS } from '../../lib/studio/garmentScaling';
-import { GeometryCache, MaterialOptimizer } from './GarmentOptimization';
+import { getFabricType } from '../../lib/studio/fabricTypes';
+import { GeometryCache, MaterialOptimizer as LegacyMaterialOptimizer } from './GarmentOptimization';
+import { MaterialOptimizer } from './MaterialOptimizer';
+import { EnhancedLODRenderer, SmartGeometryGenerator } from './EnhancedLODSystem';
 
 interface RealisticGarmentModelProps {
   garmentType: string;
@@ -846,9 +849,51 @@ export const RealisticGarmentModel: React.FC<RealisticGarmentModelProps> = ({
   const meshRef = useRef<THREE.Mesh>(null);
   const { doc } = useStudioStore();
   
-  // Performance-optimized geometry cache
-  const geometry = useMemo(() => {
-    const normalizedType = garmentType.toLowerCase().replace(/[^a-z-]/g, '');
+  // Get standardized positioning
+  const anchorPosition = useMemo(() => 
+    ViewportManager.getAnchorPosition(garmentType, ViewportManager.getGarmentBounds(garmentType)), 
+    [garmentType]
+  );
+
+  // Enhanced optimized material with fabric simulation
+  const material = useMemo(() => {
+    return MaterialOptimizer.getOptimizedMaterial({
+      baseColor: garmentColor,
+      garmentType,
+      fabricType: getFabricType(garmentType),
+      printMethod: 'dtg',
+      designTexture,
+      environmentLighting: true,
+      highQuality: ViewportManager.getDeviceType() !== 'mobile'
+    });
+  }, [garmentColor, garmentType, designTexture]);
+
+  // Enhanced LOD geometry with proper scaling
+  const lodGeometry = useMemo(() => {
+    const scale = ViewportManager.getCurrentScale(garmentType);
+    
+    return SmartGeometryGenerator.generateLODGeometry(
+      garmentType,
+      () => {
+        const baseGeometry = createGarmentGeometry(garmentType);
+        baseGeometry.scale(scale, scale, scale);
+        return baseGeometry;
+      },
+      {
+        enableLOD: true,
+        autoQuality: true,
+        maxTriangles: {
+          high: ViewportManager.getDeviceType() === 'mobile' ? 5000 : 10000,
+          medium: ViewportManager.getDeviceType() === 'mobile' ? 2500 : 5000,
+          low: ViewportManager.getDeviceType() === 'mobile' ? 1000 : 2000
+        }
+      }
+    );
+  }, [garmentType]);
+
+  // Helper function to create geometry based on garment type
+  const createGarmentGeometry = (type: string): THREE.BufferGeometry => {
+    const normalizedType = type.toLowerCase().replace(/[^a-z-]/g, '');
     
     switch (normalizedType) {
       case 'tshirt':
@@ -925,21 +970,7 @@ export const RealisticGarmentModel: React.FC<RealisticGarmentModelProps> = ({
       default:
         return createTShirtGeometry('M');
     }
-  }, [garmentType]);
-
-  // Create realistic fabric material
-  const material = useMemo(() => {
-    const baseColor = new THREE.Color(garmentColor || '#ffffff');
-    
-    return new THREE.MeshStandardMaterial({
-      color: baseColor,
-      roughness: 0.8,
-      metalness: 0.1,
-      map: designTexture,
-      normalScale: new THREE.Vector2(0.5, 0.5),
-      side: THREE.DoubleSide
-    });
-  }, [garmentColor, designTexture]);
+  };
 
   // Subtle animation
   useFrame((state) => {
@@ -955,7 +986,7 @@ export const RealisticGarmentModel: React.FC<RealisticGarmentModelProps> = ({
       garmentType.toLowerCase().includes('trucker')) {
     const capGroup = useMemo(() => createSnapbackGeometry(), []);
     return (
-      <group ref={meshRef as any}>
+      <group position={anchorPosition}>
         <primitive object={capGroup} material={material} />
       </group>
     );
@@ -963,20 +994,40 @@ export const RealisticGarmentModel: React.FC<RealisticGarmentModelProps> = ({
 
   if (garmentType.toLowerCase().includes('beanie')) {
     return (
-      <mesh ref={meshRef} geometry={geometry} material={material} />
+      <group position={anchorPosition}>
+        <EnhancedLODRenderer
+          garmentType={garmentType}
+          geometry={lodGeometry}
+          material={material}
+          config={{
+            enableLOD: true,
+            autoQuality: true
+          }}
+        />
+      </group>
     );
   }
 
   if (garmentType.toLowerCase().includes('tote') || garmentType.toLowerCase().includes('bag')) {
     const toteGroup = useMemo(() => createToteGeometry(), []);
     return (
-      <group ref={meshRef as any}>
+      <group position={anchorPosition}>
         <primitive object={toteGroup} material={material} />
       </group>
     );
   }
 
   return (
-    <mesh ref={meshRef} geometry={geometry} material={material} />
+    <group position={anchorPosition}>
+      <EnhancedLODRenderer
+        garmentType={garmentType}
+        geometry={lodGeometry}
+        material={material}
+        config={{
+          enableLOD: true,
+          autoQuality: true
+        }}
+      />
+    </group>
   );
 };
