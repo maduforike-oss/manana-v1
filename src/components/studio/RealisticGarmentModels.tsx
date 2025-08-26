@@ -2,6 +2,8 @@ import React, { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useStudioStore } from '../../lib/studio/store';
+import { ViewportManager, GARMENT_SCALE_STANDARDS } from '../../lib/studio/garmentScaling';
+import { GeometryCache, MaterialOptimizer } from './GarmentOptimization';
 
 interface RealisticGarmentModelProps {
   garmentType: string;
@@ -9,12 +11,12 @@ interface RealisticGarmentModelProps {
   designTexture?: THREE.Texture;
 }
 
-// Professional T-Shirt Geometry with realistic proportions
-const createTShirtGeometry = (size: string = 'M'): THREE.BufferGeometry => {
-  const sizeMultipliers = {
-    'XS': 0.85, 'S': 0.92, 'M': 1.0, 'L': 1.08, 'XL': 1.16, 'XXL': 1.24
-  };
-  const multiplier = sizeMultipliers[size as keyof typeof sizeMultipliers] || 1.0;
+// Professional T-Shirt Geometry with standardized scaling
+const createTShirtGeometry = (garmentType: string = 't-shirt'): THREE.BufferGeometry => {
+  // Use caching for performance
+  return GeometryCache.getGeometry(`tshirt-${garmentType}`, () => {
+    const standard = ViewportManager.getGarmentStandard(garmentType);
+    const multiplier = standard.scale;
 
   // Create realistic t-shirt shape with proper torso proportions
   const shape = new THREE.Shape();
@@ -56,25 +58,25 @@ const createTShirtGeometry = (size: string = 'M'): THREE.BufferGeometry => {
   rightSleeveHole.quadraticCurveTo(4.8 * multiplier, 2, 4.5 * multiplier, 5.5);
   shape.holes.push(rightSleeveHole);
 
-  const extrudeSettings = {
-    depth: 0.3 * multiplier,
-    bevelEnabled: true,
-    bevelSegments: 8,
-    steps: 2,
-    bevelSize: 0.05,
-    bevelThickness: 0.02,
-    curveSegments: 16
-  };
+    const extrudeSettings = {
+      depth: 0.3 * multiplier,
+      bevelEnabled: true,
+      bevelSegments: 8,
+      steps: 2,
+      bevelSize: 0.05,
+      bevelThickness: 0.02,
+      curveSegments: 16
+    };
 
-  return new THREE.ExtrudeGeometry(shape, extrudeSettings);
+    return new THREE.ExtrudeGeometry(shape, extrudeSettings);
+  });
 };
 
-// Professional Hoodie Geometry with kangaroo pocket and hood
-const createHoodieGeometry = (size: string = 'M'): THREE.BufferGeometry => {
-  const sizeMultipliers = {
-    'XS': 0.85, 'S': 0.92, 'M': 1.0, 'L': 1.08, 'XL': 1.16, 'XXL': 1.24
-  };
-  const multiplier = sizeMultipliers[size as keyof typeof sizeMultipliers] || 1.0;
+// Professional Hoodie Geometry with standardized scaling
+const createHoodieGeometry = (garmentType: string = 'hoodie'): THREE.BufferGeometry => {
+  return GeometryCache.getGeometry(`hoodie-${garmentType}`, () => {
+    const standard = ViewportManager.getGarmentStandard(garmentType);
+    const multiplier = standard.scale;
 
   // Oversized hoodie proportions
   const shape = new THREE.Shape();
@@ -116,25 +118,25 @@ const createHoodieGeometry = (size: string = 'M'): THREE.BufferGeometry => {
   rightSleeveHole.quadraticCurveTo(5.8 * multiplier, 3, 5.5 * multiplier, 6.5);
   shape.holes.push(rightSleeveHole);
 
-  const extrudeSettings = {
-    depth: 0.4 * multiplier, // Thicker for fleece
-    bevelEnabled: true,
-    bevelSegments: 12,
-    steps: 3,
-    bevelSize: 0.08,
-    bevelThickness: 0.03,
-    curveSegments: 20
-  };
+    const extrudeSettings = {
+      depth: 0.4 * multiplier, // Thicker for fleece
+      bevelEnabled: true,
+      bevelSegments: 12,
+      steps: 3,
+      bevelSize: 0.08,
+      bevelThickness: 0.03,
+      curveSegments: 20
+    };
 
-  return new THREE.ExtrudeGeometry(shape, extrudeSettings);
+    return new THREE.ExtrudeGeometry(shape, extrudeSettings);
+  });
 };
 
 // Professional Long Sleeve Geometry
-const createLongSleeveGeometry = (size: string = 'M'): THREE.BufferGeometry => {
-  const sizeMultipliers = {
-    'XS': 0.85, 'S': 0.92, 'M': 1.0, 'L': 1.08, 'XL': 1.16, 'XXL': 1.24
-  };
-  const multiplier = sizeMultipliers[size as keyof typeof sizeMultipliers] || 1.0;
+const createLongSleeveGeometry = (garmentType: string = 'longsleeve'): THREE.BufferGeometry => {
+  return GeometryCache.getGeometry(`longsleeve-${garmentType}`, () => {
+    const standard = ViewportManager.getGarmentStandard(garmentType);
+    const multiplier = standard.scale;
 
   // Similar to t-shirt but with extended sleeves
   const shape = new THREE.Shape();
@@ -165,17 +167,18 @@ const createLongSleeveGeometry = (size: string = 'M'): THREE.BufferGeometry => {
   rightSleeveHole.quadraticCurveTo(5 * multiplier, 2.5, 4.7 * multiplier, 5.5);
   shape.holes.push(rightSleeveHole);
 
-  const extrudeSettings = {
-    depth: 0.25 * multiplier,
-    bevelEnabled: true,
-    bevelSegments: 8,
-    steps: 2,
-    bevelSize: 0.04,
-    bevelThickness: 0.02,
-    curveSegments: 16
-  };
+    const extrudeSettings = {
+      depth: 0.25 * multiplier,
+      bevelEnabled: true,
+      bevelSegments: 8,
+      steps: 2,
+      bevelSize: 0.04,
+      bevelThickness: 0.02,
+      curveSegments: 16
+    };
 
-  return new THREE.ExtrudeGeometry(shape, extrudeSettings);
+    return new THREE.ExtrudeGeometry(shape, extrudeSettings);
+  });
 };
 
 // Professional Polo Geometry with collar and placket
