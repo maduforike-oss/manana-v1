@@ -2,14 +2,35 @@ import React, { useMemo, useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { MeshStandardMaterial, DoubleSide } from 'three';
+import { 
+  createAnisotropicFabricMaterial, 
+  createPrintMethodTexture,
+  DynamicFabricProperties,
+  FabricPhysics 
+} from './AdvancedFabricSimulation';
 
-// Advanced fabric material system with micro-textures and realistic properties
+// Enhanced fabric material system with advanced simulation
 export const createFabricMaterial = (
   garmentType: string, 
   color: string, 
   designTexture?: THREE.Texture,
-  fabricVariant: 'regular' | 'heather' | 'vintage' = 'regular'
-): THREE.MeshStandardMaterial => {
+  fabricVariant: 'regular' | 'heather' | 'vintage' | 'performance' = 'regular',
+  printMethod?: 'screen-print' | 'dtg' | 'embroidery' | 'heat-transfer' | 'discharge'
+): THREE.ShaderMaterial | THREE.MeshStandardMaterial => {
+  
+  // Use advanced anisotropic material for premium fabrics
+  if (['performance', 'denim-jacket', 'hoodie', 'polo'].includes(garmentType)) {
+    let processedTexture = designTexture;
+    
+    // Apply print method effects if specified
+    if (designTexture && printMethod) {
+      processedTexture = createPrintMethodTexture(designTexture, printMethod);
+    }
+    
+    return createAnisotropicFabricMaterial(garmentType, color, processedTexture, fabricVariant);
+  }
+  
+  // Fallback to standard material for basic garments
   const material = new THREE.MeshStandardMaterial({
     color: new THREE.Color(color),
     map: designTexture,
@@ -346,12 +367,14 @@ export const DesignOverlay = ({
   designTexture, 
   garmentType, 
   position = [0, 0, 0.065],
-  scale = 1 
+  scale = 1,
+  printMethod = 'screen-print'
 }: {
   designTexture: THREE.Texture;
   garmentType: string;
   position?: [number, number, number];
   scale?: number;
+  printMethod?: 'screen-print' | 'dtg' | 'embroidery' | 'heat-transfer' | 'discharge';
 }) => {
   const meshRef = useRef<THREE.Mesh>(null);
   
@@ -382,30 +405,33 @@ export const DesignOverlay = ({
     }
   };
 
-  // Enhanced design material with fabric interaction
+  // Enhanced design material with print method simulation
   const designMaterial = useMemo(() => {
+    // Apply print method effects to texture
+    const processedTexture = createPrintMethodTexture(designTexture, printMethod);
+    
     const material = new MeshStandardMaterial({
-      map: designTexture,
+      map: processedTexture,
       transparent: true,
       alphaTest: 0.1,
-      roughness: 0.7,
-      metalness: 0.0,
+      roughness: getPrintMethodRoughness(printMethod),
+      metalness: getPrintMethodMetalness(printMethod),
     });
     
-    // Blend design with fabric lighting
+    // Enhanced shader for print method integration
     material.onBeforeCompile = (shader) => {
       shader.fragmentShader = shader.fragmentShader.replace(
         '#include <output_fragment>',
         `
         #include <output_fragment>
-        // Enhance design integration with fabric
-        gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb * 1.1, 0.2);
+        // Print method specific effects
+        ${getPrintMethodShaderCode(printMethod)}
         `
       );
     };
     
     return material;
-  }, [designTexture]);
+  }, [designTexture, printMethod]);
 
   // Subtle animation for realism
   useFrame((state) => {
@@ -417,9 +443,56 @@ export const DesignOverlay = ({
   const [width, height] = getDesignDimensions();
 
   return (
-    <mesh ref={meshRef} position={position}>
-      <planeGeometry args={[width, height]} />
-      <primitive object={designMaterial} />
-    </mesh>
+    <group>
+      <mesh ref={meshRef} position={position}>
+        <planeGeometry args={[width, height]} />
+        <primitive object={designMaterial} />
+      </mesh>
+      
+      {/* Add fabric physics simulation */}
+      <FabricPhysics meshRef={meshRef} garmentType={garmentType} />
+    </group>
   );
+};
+
+// Print method specific material properties
+const getPrintMethodRoughness = (printMethod: string): number => {
+  switch (printMethod) {
+    case 'screen-print': return 0.7;
+    case 'dtg': return 0.8;
+    case 'embroidery': return 0.9;
+    case 'heat-transfer': return 0.3;
+    case 'discharge': return 0.85;
+    default: return 0.7;
+  }
+};
+
+const getPrintMethodMetalness = (printMethod: string): number => {
+  switch (printMethod) {
+    case 'heat-transfer': return 0.1;
+    case 'embroidery': return 0.05;
+    default: return 0.0;
+  }
+};
+
+const getPrintMethodShaderCode = (printMethod: string): string => {
+  switch (printMethod) {
+    case 'screen-print':
+      return `
+        // Add slight texture variation for screen print
+        gl_FragColor.rgb += (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) * 0.02;
+      `;
+    case 'heat-transfer':
+      return `
+        // Add subtle glossy effect for heat transfer
+        gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb * 1.2, 0.1);
+      `;
+    case 'discharge':
+      return `
+        // Add vintage fade effect for discharge printing
+        gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(0.9), 0.15);
+      `;
+    default:
+      return '// Default print method';
+  }
 };

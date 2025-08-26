@@ -10,6 +10,7 @@ import {
   createJacketGeometry,
   DesignOverlay 
 } from './Enhanced3DModels';
+import { DynamicFabricProperties } from './AdvancedFabricSimulation';
 import { Professional3DLighting } from './Professional3DLighting';
 import { Controls3DView } from './3DViewControls';
 import { createGarmentDetails, createGarmentLabels } from './GarmentDetails';
@@ -37,9 +38,15 @@ const ProfessionalGarmentModel = ({
     return createTShirtGeometry(garmentType || 't-shirt');
   }, [garmentType]);
 
-  // Create professional fabric material
+  // Create professional fabric material with advanced simulation
   const fabricMaterial = useMemo(() => {
-    return createFabricMaterial(garmentType || 't-shirt', garmentColor, designTexture);
+    return createFabricMaterial(
+      garmentType || 't-shirt', 
+      garmentColor, 
+      designTexture, 
+      'regular', 
+      'screen-print'
+    );
   }, [garmentColor, garmentType, designTexture]);
 
   // Subtle animation for realism
@@ -60,12 +67,21 @@ const ProfessionalGarmentModel = ({
         receiveShadow
       />
       
-      {/* Professional design overlay */}
+      {/* Professional design overlay with print method simulation */}
       {designTexture && (
         <DesignOverlay
           designTexture={designTexture}
           garmentType={garmentType || 't-shirt'}
           position={[0, 0, 0.076]}
+          printMethod="screen-print"
+        />
+      )}
+      
+      {/* Dynamic fabric properties simulation */}
+      {fabricMaterial instanceof THREE.ShaderMaterial && (
+        <DynamicFabricProperties 
+          material={fabricMaterial} 
+          garmentType={garmentType || 't-shirt'} 
         />
       )}
       
