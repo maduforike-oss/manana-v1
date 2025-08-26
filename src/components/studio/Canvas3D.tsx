@@ -14,8 +14,9 @@ import { RealisticGarmentModel } from './RealisticGarmentModels';
 import { DynamicFabricProperties } from './AdvancedFabricSimulation';
 import { Professional3DLighting } from './Professional3DLighting';
 import { Controls3DView } from './3DViewControls';
-import { createGarmentDetails, createGarmentLabels } from './GarmentDetails';
+import { ProfessionalGarmentDetails } from './ProfessionalGarmentDetails';
 import { AdvancedDesignMapping } from './AdvancedDesignMapping';
+import { PerformanceMonitor, MaterialOptimizer } from './GarmentOptimization';
 
 // Professional Enhanced Garment Component
 const ProfessionalGarmentModel = ({ 
@@ -299,16 +300,25 @@ export const Canvas3D = () => {
   const garmentType = doc.canvas.garmentType || 't-shirt';
   const garmentColor = doc.canvas.garmentColor || '#ffffff';
 
-  // Render realistic garment model with professional accuracy
+  // Render realistic garment model with professional accuracy and details
   const renderGarmentModel = () => {
     console.log('Rendering garment model:', { garmentType, garmentColor });
     
     return (
-      <RealisticGarmentModel
-        garmentType={garmentType}
-        garmentColor={garmentColor}
-        designTexture={designTexture}
-      />
+      <group>
+        {/* Main garment model */}
+        <RealisticGarmentModel
+          garmentType={garmentType}
+          garmentColor={garmentColor}
+          designTexture={designTexture}
+        />
+        
+        {/* Professional construction details */}
+        <ProfessionalGarmentDetails
+          garmentType={garmentType}
+          garmentColor={garmentColor}
+        />
+      </group>
     );
   };
 
@@ -357,6 +367,9 @@ export const Canvas3D = () => {
           
           {/* Render appropriate professional garment model */}
           {renderGarmentModel()}
+          
+          {/* Performance monitoring */}
+          <PerformanceMonitor />
           
           {/* Professional ground setup */}
           <mesh 
