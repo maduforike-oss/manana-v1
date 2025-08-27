@@ -2,13 +2,14 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LayersPanel } from './LayersPanel';
-import { PropertiesPanel } from './PropertiesPanel';
+import { OptimizedPropertiesPanel } from './OptimizedPropertiesPanel';
 import { CanvasPanel } from './CanvasPanel';
 import { GarmentMockupPreview } from './GarmentMockupPreview';
 import { PrintSurfaceManager } from './PrintSurfaceManager';
 import { ExportPanel } from './ExportPanel';
-import { PricingEngine } from './PricingEngine';
-import { MaterialSelector } from './MaterialSelector';
+import { OptimizedPricingEngine } from './OptimizedPricingEngine';
+import { OptimizedMaterialSelector } from './OptimizedMaterialSelector';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface RightPropsProps {
   collapsed?: boolean;
@@ -18,7 +19,7 @@ interface RightPropsProps {
 
 export const RightProps = ({ 
   collapsed = false, 
-  activeTab = "properties",
+  activeTab = "design",
   onTabChange 
 }: RightPropsProps) => {
   if (collapsed) return null;
@@ -35,48 +36,30 @@ export const RightProps = ({
       >
         <div className="relative">
           {/* Enhanced Tab List */}
-          <TabsList className="grid w-full grid-cols-7 m-3 glass-panel neon-border bg-studio-surface/50 text-xs">
+          <TabsList className="grid w-full grid-cols-4 m-4 glass-panel neon-border bg-studio-surface/50">
             <TabsTrigger 
-              value="properties" 
-              className="studio-tool data-[state=active]:studio-tool data-[state=active]:active"
+              value="design" 
+              className="studio-tool data-[state=active]:studio-tool data-[state=active]:active px-3 py-2"
             >
-              Style
-            </TabsTrigger>
-            <TabsTrigger 
-              value="layers"
-              className="studio-tool data-[state=active]:studio-tool data-[state=active]:active"
-            >
-              Layers
-            </TabsTrigger>
-            <TabsTrigger 
-              value="surfaces"
-              className="studio-tool data-[state=active]:studio-tool data-[state=active]:active"
-            >
-              Surfaces
+              Design
             </TabsTrigger>
             <TabsTrigger 
               value="material"
-              className="studio-tool data-[state=active]:studio-tool data-[state=active]:active"
+              className="studio-tool data-[state=active]:studio-tool data-[state=active]:active px-3 py-2"
             >
               Material
             </TabsTrigger>
             <TabsTrigger 
+              value="preview"
+              className="studio-tool data-[state=active]:studio-tool data-[state=active]:active px-3 py-2"
+            >
+              Preview
+            </TabsTrigger>
+            <TabsTrigger 
               value="pricing"
-              className="studio-tool data-[state=active]:studio-tool data-[state=active]:active"
+              className="studio-tool data-[state=active]:studio-tool data-[state=active]:active px-3 py-2"
             >
               Pricing
-            </TabsTrigger>
-            <TabsTrigger 
-              value="export"
-              className="studio-tool data-[state=active]:studio-tool data-[state=active]:active"
-            >
-              Export
-            </TabsTrigger>
-            <TabsTrigger 
-              value="mockup"
-              className="studio-tool data-[state=active]:studio-tool data-[state=active]:active"
-            >
-              3D
             </TabsTrigger>
           </TabsList>
           
@@ -85,56 +68,66 @@ export const RightProps = ({
         </div>
         
         <TabsContent 
-          value="properties" 
+          value="design" 
           className="flex-1 overflow-hidden animate-in fade-in-50 duration-300 slide-in-from-right-4"
         >
-          <div className="p-3">
-            <PropertiesPanel />
+          <div className="space-y-6">
+            <OptimizedPropertiesPanel />
+            
+            <Card className="border-0 bg-transparent">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <div className="w-2 h-2 bg-secondary rounded-full" />
+                  Layers
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <LayersPanel />
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
         
         <TabsContent 
-          value="layers" 
+          value="preview" 
           className="flex-1 overflow-hidden animate-in fade-in-50 duration-300 slide-in-from-right-4"
         >
-          <div className="p-3">
-            <LayersPanel />
-          </div>
-        </TabsContent>
-        
-        <TabsContent 
-          value="canvas" 
-          className="flex-1 overflow-hidden animate-in fade-in-50 duration-300 slide-in-from-right-4"
-        >
-          <div className="p-3">
-            <CanvasPanel />
-          </div>
-        </TabsContent>
-        
-        <TabsContent 
-          value="mockup" 
-          className="flex-1 overflow-hidden animate-in fade-in-50 duration-300 slide-in-from-right-4"
-        >
-          <div className="p-3">
-            <GarmentMockupPreview />
-          </div>
-        </TabsContent>
-        
-        <TabsContent 
-          value="surfaces" 
-          className="flex-1 overflow-hidden animate-in fade-in-50 duration-300 slide-in-from-right-4"
-        >
-          <div className="p-3">
-            <PrintSurfaceManager />
-          </div>
-        </TabsContent>
-        
-        <TabsContent 
-          value="export" 
-          className="flex-1 overflow-hidden animate-in fade-in-50 duration-300 slide-in-from-right-4"
-        >
-          <div className="p-3">
-            <ExportPanel />
+          <div className="p-4 space-y-6">
+            <Card className="border-0 bg-transparent">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <div className="w-2 h-2 bg-accent rounded-full" />
+                  3D Preview
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <GarmentMockupPreview />
+              </CardContent>
+            </Card>
+            
+            <Card className="border-0 bg-transparent">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <div className="w-2 h-2 bg-primary rounded-full" />
+                  Print Areas
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <PrintSurfaceManager />
+              </CardContent>
+            </Card>
+            
+            <Card className="border-0 bg-transparent">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full" />
+                  Export
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <ExportPanel />
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
         
@@ -142,8 +135,8 @@ export const RightProps = ({
           value="pricing" 
           className="flex-1 overflow-hidden animate-in fade-in-50 duration-300 slide-in-from-right-4"
         >
-          <div className="p-3">
-            <PricingEngine />
+          <div className="p-4">
+            <OptimizedPricingEngine />
           </div>
         </TabsContent>
         
@@ -151,8 +144,8 @@ export const RightProps = ({
           value="material" 
           className="flex-1 overflow-hidden animate-in fade-in-50 duration-300 slide-in-from-right-4"
         >
-          <div className="p-3">
-            <MaterialSelector />
+          <div className="p-4">
+            <OptimizedMaterialSelector />
           </div>
         </TabsContent>
       </Tabs>
