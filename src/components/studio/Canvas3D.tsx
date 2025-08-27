@@ -13,6 +13,7 @@ import { ViewportManager } from '../../lib/studio/garmentScaling';
 import { ViewportHelpers } from './ViewportHelpers';
 import { AdvancedViewportControls } from './AdvancedViewportControls';
 import { useViewportState } from '../../hooks/useViewportState';
+import { Realistic3DTShirt } from './Realistic3DTShirt';
 
 // Design Texture Generator
 const useDesignTexture = () => {
@@ -187,11 +188,20 @@ export const Canvas3D = () => {
           <Professional3DLighting preset={lightingPreset} intensity={1.0} />
           
           {/* Standardized Garment Scene */}
-          <StandardizedGarmentScene
-            garmentType={garmentType}
-            garmentColor={garmentColor}
-            designTexture={designTexture}
-          />
+            {garmentType === 't-shirt' ? (
+              <Realistic3DTShirt 
+                designTexture={designTexture}
+                position={[0, 0, 0]}
+                rotation={[0, 0, 0]}
+                scale={[1.2, 1.2, 1.2]}
+              />
+            ) : (
+              <StandardizedGarmentScene 
+                garmentType={garmentType}
+                garmentColor={garmentColor}
+                designTexture={designTexture}
+              />
+            )}
           
           {/* Advanced Viewport Helpers */}
           <ViewportHelpers

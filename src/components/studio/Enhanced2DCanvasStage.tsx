@@ -11,7 +11,7 @@ import { AlignmentGuides } from './AlignmentGuides';
 import { Enhanced2DMockup } from './Enhanced2DMockup';
 import { ColorSelector } from './ColorSelector';
 
-export const EnhancedCanvasStage = () => {
+export const Enhanced2DCanvasStage = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<any>(null);
   const [stageSize, setStageSize] = useState({ width: 800, height: 600 });
@@ -122,32 +122,12 @@ export const EnhancedCanvasStage = () => {
     setSelectionBox(null);
   }, [selectionBox, dragStart, doc.nodes, selectMany, clearSelection]);
 
-  // Enhanced zoom with smooth transitions
-  const handleWheel = useCallback((e: any) => {
-    e.evt.preventDefault();
-    
-    const scaleBy = 1.1;
-    const stage = stageRef.current;
-    const oldScale = stage.scaleX();
-    const pointer = stage.getPointerPosition();
-
-    const mousePointTo = {
-      x: (pointer.x - stage.x()) / oldScale,
-      y: (pointer.y - stage.y()) / oldScale,
-    };
-
-    const direction = e.evt.deltaY > 0 ? -1 : 1;
-    const newScale = Math.max(0.1, Math.min(5, direction > 0 ? oldScale * scaleBy : oldScale / scaleBy));
-    
-    useStudioStore.getState().setZoom(newScale);
-    
-    const newPos = {
-      x: pointer.x - mousePointTo.x * newScale,
-      y: pointer.y - mousePointTo.y * newScale,
-    };
-    
-    useStudioStore.getState().setPanOffset(newPos);
-  }, []);
+  // Handle stage click for tool interactions
+  const handleStageClick = useCallback((e: any) => {
+    if (e.target === e.target.getStage()) {
+      clearSelection();
+    }
+  }, [clearSelection]);
 
   // Convert node coordinates to screen position
   const getNodeScreenPosition = (node: Node) => {
@@ -297,44 +277,37 @@ export const EnhancedCanvasStage = () => {
     return null;
   };
 
-  // Loading state with professional design
-  if (stageSize.width === 0 || stageSize.height === 0) {
+  // 3D mode rendering
+  if (is3DMode) {
     return (
-      <div ref={containerRef} className="flex-1 bg-workspace overflow-hidden relative">
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-foreground/80">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-3 h-3 bg-primary rounded-full animate-pulse"></div>
-            <span className="text-sm font-medium">Initializing enhanced canvas...</span>
-          </div>
-          <div className="text-xs text-foreground/60">Professional design tools loading</div>
+      <div ref={containerRef} className="relative w-full h-full bg-background">
+        <Canvas3D />
+        <Canvas3DControls />
+        <div className="absolute top-4 right-4 z-10">
+          <ColorSelector />
         </div>
       </div>
     );
   }
 
-  // 3D mode rendering
-  if (is3DMode) {
-    return (
-      <div className="relative w-full h-full">
-        <Canvas3D />
-        <Canvas3DControls />
-      </div>
-    );
-  }
-
-  const garmentWidth = 400;
-  const garmentHeight = 500;
-
   return (
-    <div ref={containerRef} className="flex-1 bg-workspace overflow-hidden relative">
-      {/* Enhanced Grid Background */}
-      <CanvasGrid 
-        zoom={zoom} 
-        panOffset={panOffset} 
-        showGrid={doc.canvas.showGrid}
-        gridSize={doc.canvas.gridSize}
-      />
+    <div ref={containerRef} className="relative w-full h-full bg-background">
+      {/* Color Selector */}
+      <div className="absolute top-4 right-4 z-10">
+        <ColorSelector />
+      </div>
       
+      {/* Advanced Selection Tools */}
+      <AdvancedSelectionTools />
+      
+      {/* Enhanced Mockup Background for T-Shirts */}
+      {doc.canvas.garmentType === 't-shirt' && (
+        <div className="absolute inset-0 z-0">
+          <Enhanced2DMockup />
+        </div>
+      )}
+      
+      {/* Main Canvas */}
       <Stage
         ref={stageRef}
         width={stageSize.width}
@@ -346,99 +319,56 @@ export const EnhancedCanvasStage = () => {
         onMouseDown={handleStageMouseDown}
         onMouseMove={handleStageMouseMove}
         onMouseUp={handleStageMouseUp}
-        onWheel={handleWheel}
-        draggable={activeTool === 'hand'}
-        onDragEnd={(e) => {
-          useStudioStore.getState().setPanOffset({ x: e.target.x(), y: e.target.y() });
-        }}
+        onClick={handleStageClick}
+        className="cursor-crosshair relative z-10"
       >
         <Layer>
-          {/* Enhanced Garment Background */}
-          {garmentImage && (
+          {/* Grid */}
+          <CanvasGrid 
+            zoom={zoom}
+            panOffset={panOffset}
+            showGrid={true}
+            gridSize={20}
+          />
+          
+          {/* Garment Background for non-t-shirt items */}
+          {doc.canvas.garmentType !== 't-shirt' && garmentImage && (
             <Image
               image={garmentImage}
-              x={stageSize.width / 2 - garmentWidth / 2}
-              y={stageSize.height / 2 - garmentHeight / 2}
-              width={garmentWidth}
-              height={garmentHeight}
-              opacity={0.85}
-              shadowColor="rgba(0,0,0,0.2)"
-              shadowBlur={20}
-              shadowOffset={{ x: 0, y: 10 }}
+              x={stageSize.width / 2 - 200}
+              y={stageSize.height / 2 - 250}
+              width={400}
+              height={500}
+              opacity={0.3}
+              listening={false}
             />
           )}
-
-          {/* Enhanced Print Area */}
-          <Rect
-            x={stageSize.width / 2 - garmentWidth / 2 + garmentWidth * 0.25}
-            y={stageSize.height / 2 - garmentHeight / 2 + garmentHeight * 0.3}
-            width={garmentWidth * 0.5}
-            height={garmentHeight * 0.4}
-            fill="transparent"
-            stroke="hsl(var(--primary))"
-            strokeWidth={1.5 / zoom}
-            opacity={0.4}
-            dash={[8 / zoom, 4 / zoom]}
-            cornerRadius={4}
-          />
-
-          {/* Render enhanced design nodes */}
+          
+          {/* Render Nodes */}
           {doc.nodes.map(renderNode)}
-
-          {/* Marquee Selection Box */}
+          
+          {/* Selection Box */}
           {selectionBox && (
             <Rect
               x={selectionBox.x}
               y={selectionBox.y}
               width={selectionBox.width}
               height={selectionBox.height}
-              fill="hsl(var(--primary) / 0.1)"
-              stroke="hsl(var(--primary))"
+              fill="rgba(74, 144, 226, 0.1)"
+              stroke="rgba(74, 144, 226, 0.8)"
               strokeWidth={1}
               dash={[5, 5]}
+              listening={false}
             />
           )}
+          
+          {/* Alignment Guides */}
+          <AlignmentGuides 
+            nodes={doc.nodes}
+            selectedIds={doc.selectedIds}
+          />
         </Layer>
       </Stage>
-
-      {/* Alignment Guides */}
-      <AlignmentGuides nodes={doc.nodes} selectedIds={doc.selectedIds} />
-
-      {/* Advanced Selection Tools */}
-      <AdvancedSelectionTools />
-
-      {/* Enhanced Zoom Controls */}
-      <div className="absolute bottom-4 right-4 bg-card/80 backdrop-blur-lg border border-border rounded-xl p-3 shadow-xl">
-        <div className="flex items-center gap-3 text-sm">
-          <button
-            onClick={() => useStudioStore.getState().setZoom(zoom / 1.2)}
-            className="w-8 h-8 rounded-lg bg-background hover:bg-accent text-foreground flex items-center justify-center transition-all duration-200 hover:scale-105 border border-border shadow-sm"
-            disabled={zoom <= 0.1}
-          >
-            −
-          </button>
-          <span className="min-w-[60px] text-center font-medium text-foreground px-2">
-            {Math.round(zoom * 100)}%
-          </span>
-          <button
-            onClick={() => useStudioStore.getState().setZoom(zoom * 1.2)}
-            className="w-8 h-8 rounded-lg bg-background hover:bg-accent text-foreground flex items-center justify-center transition-all duration-200 hover:scale-105 border border-border shadow-sm"
-            disabled={zoom >= 5}
-          >
-            +
-          </button>
-          <div className="w-px h-6 bg-border mx-1" />
-          <button
-            onClick={() => {
-              useStudioStore.getState().setZoom(1);
-              useStudioStore.getState().setPanOffset({ x: 0, y: 0 });
-            }}
-            className="px-3 py-1.5 rounded-lg bg-background hover:bg-accent text-foreground text-xs font-medium transition-all duration-200 hover:scale-105 border border-border shadow-sm"
-          >
-            Reset View
-          </button>
-        </div>
-      </div>
     </div>
   );
 };
