@@ -3,12 +3,9 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LayersPanel } from './LayersPanel';
 import { OptimizedPropertiesPanel } from './OptimizedPropertiesPanel';
-import { CanvasPanel } from './CanvasPanel';
-import { GarmentMockupPreview } from './GarmentMockupPreview';
-import { PrintSurfaceManager } from './PrintSurfaceManager';
-import { ExportPanel } from './ExportPanel';
-import { OptimizedPricingEngine } from './OptimizedPricingEngine';
 import { OptimizedMaterialSelector } from './OptimizedMaterialSelector';
+import { OptimizedPricingEngine } from './OptimizedPricingEngine';
+import { OptimizedPreviewPanel } from './OptimizedPreviewPanel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface RightPropsProps {
@@ -71,82 +68,28 @@ export const RightProps = ({
           value="design" 
           className="flex-1 overflow-hidden animate-in fade-in-50 duration-300 slide-in-from-right-4"
         >
-          <div className="space-y-6">
-            <OptimizedPropertiesPanel />
-            
-            <Card className="border-0 bg-transparent">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <div className="w-2 h-2 bg-secondary rounded-full" />
-                  Layers
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <LayersPanel />
-              </CardContent>
-            </Card>
-          </div>
+          <OptimizedPropertiesPanel />
         </TabsContent>
         
         <TabsContent 
           value="preview" 
           className="flex-1 overflow-hidden animate-in fade-in-50 duration-300 slide-in-from-right-4"
         >
-          <div className="p-4 space-y-6">
-            <Card className="border-0 bg-transparent">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <div className="w-2 h-2 bg-accent rounded-full" />
-                  3D Preview
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <GarmentMockupPreview />
-              </CardContent>
-            </Card>
-            
-            <Card className="border-0 bg-transparent">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <div className="w-2 h-2 bg-primary rounded-full" />
-                  Print Areas
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <PrintSurfaceManager />
-              </CardContent>
-            </Card>
-            
-            <Card className="border-0 bg-transparent">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full" />
-                  Export
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <ExportPanel />
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-        
-        <TabsContent 
-          value="pricing" 
-          className="flex-1 overflow-hidden animate-in fade-in-50 duration-300 slide-in-from-right-4"
-        >
-          <div className="p-4">
-            <OptimizedPricingEngine />
-          </div>
+          <OptimizedPreviewPanel />
         </TabsContent>
         
         <TabsContent 
           value="material" 
           className="flex-1 overflow-hidden animate-in fade-in-50 duration-300 slide-in-from-right-4"
         >
-          <div className="p-4">
-            <OptimizedMaterialSelector />
-          </div>
+          <OptimizedMaterialSelector />
+        </TabsContent>
+        
+        <TabsContent 
+          value="pricing" 
+          className="flex-1 overflow-hidden animate-in fade-in-50 duration-300 slide-in-from-right-4"
+        >
+          <OptimizedPricingEngine />
         </TabsContent>
       </Tabs>
     </div>
