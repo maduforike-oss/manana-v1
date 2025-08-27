@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { Stage, Layer, Rect, Circle, Text, Image, Line, Star, RegularPolygon } from 'react-konva';
 import { useStudioStore } from '../../lib/studio/store';
 import { getGarmentById } from '@/lib/studio/garments';
@@ -134,8 +134,8 @@ export const Enhanced2DCanvasStage = () => {
     }
   }, [clearSelection]);
 
-  // Convert node coordinates to screen position
-  const getNodeScreenPosition = (node: Node) => {
+  // Memoized layout calculations
+  const layoutMetrics = useMemo(() => {
     const garmentWidth = 400;
     const garmentHeight = 500;
     const printAreaX = garmentWidth * 0.25;
@@ -148,26 +148,22 @@ export const Enhanced2DCanvasStage = () => {
     const scaleX = printAreaWidth / doc.canvas.width;
     const scaleY = printAreaHeight / doc.canvas.height;
 
+    return { printBaseX, printBaseY, scaleX, scaleY };
+  }, [stageSize.width, stageSize.height, doc.canvas.width, doc.canvas.height]);
+
+  // Convert node coordinates to screen position
+  const getNodeScreenPosition = useCallback((node: Node) => {
+    const { printBaseX, printBaseY, scaleX, scaleY } = layoutMetrics;
     return {
       x: printBaseX + (node.x + node.width / 2) * scaleX,
       y: printBaseY + (node.y + node.height / 2) * scaleY
     };
-  };
+  }, [layoutMetrics]);
 
-  // Enhanced node rendering with advanced styling
-  const renderNode = (node: Node) => {
+  // Memoized node rendering with advanced styling
+  const renderNode = useCallback((node: Node) => {
     const isSelected = doc.selectedIds.includes(node.id);
-    const garmentWidth = 400;
-    const garmentHeight = 500;
-    const printAreaX = garmentWidth * 0.25;
-    const printAreaY = garmentHeight * 0.3;
-    const printAreaWidth = garmentWidth * 0.5;
-    const printAreaHeight = garmentHeight * 0.4;
-    
-    const printBaseX = stageSize.width / 2 - garmentWidth / 2 + printAreaX;
-    const printBaseY = stageSize.height / 2 - garmentHeight / 2 + printAreaY;
-    const scaleX = printAreaWidth / doc.canvas.width;
-    const scaleY = printAreaHeight / doc.canvas.height;
+    const { printBaseX, printBaseY, scaleX, scaleY } = layoutMetrics;
 
     const commonProps = {
       key: node.id,
@@ -280,7 +276,7 @@ export const Enhanced2DCanvasStage = () => {
     }
 
     return null;
-  };
+  }, [layoutMetrics, doc.selectedIds, activeTool, snapEnabled, snapToGrid, gridSize, zoom, selectNode, updateNode]);
 
   // 3D mode rendering
   if (is3DMode) {

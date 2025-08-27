@@ -412,7 +412,21 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   },
 }));
 
-// Autosave every 3 seconds
-setInterval(() => {
-  useStudioStore.getState().saveToLocal();
-}, 3000);
+// Debounced autosave with change detection
+let lastSaveState: string | null = null;
+let saveTimeout: NodeJS.Timeout | null = null;
+
+const debouncedSave = () => {
+  if (saveTimeout) clearTimeout(saveTimeout);
+  
+  saveTimeout = setTimeout(() => {
+    const currentState = JSON.stringify(useStudioStore.getState().doc);
+    if (currentState !== lastSaveState) {
+      useStudioStore.getState().saveToLocal();
+      lastSaveState = currentState;
+    }
+  }, 1000); // Reduced frequency, only save when changes occur
+};
+
+// Subscribe to store changes for efficient autosave
+useStudioStore.subscribe(debouncedSave);

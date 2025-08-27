@@ -42,12 +42,22 @@ export const CreativeBackground = () => {
       alpha: Math.random() * 0.3 + 0.1
     });
 
-    // Initialize particles
-    for (let i = 0; i < 50; i++) {
+    // Reduced particle count for better performance
+    for (let i = 0; i < 25; i++) {
       particles.push(createParticle());
     }
 
-    const animate = () => {
+    let lastFrameTime = 0;
+    const targetFPS = 30; // Throttle to 30fps for better performance
+    const frameInterval = 1000 / targetFPS;
+
+    const animate = (currentTime: number) => {
+      if (currentTime - lastFrameTime < frameInterval) {
+        requestAnimationFrame(animate);
+        return;
+      }
+      lastFrameTime = currentTime;
+
       ctx.fillStyle = 'rgba(13, 13, 18, 0.1)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -88,7 +98,7 @@ export const CreativeBackground = () => {
       requestAnimationFrame(animate);
     };
 
-    animate();
+    requestAnimationFrame(animate);
 
     return () => {
       window.removeEventListener('resize', resizeCanvas);
