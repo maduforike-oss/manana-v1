@@ -3,6 +3,8 @@ import { TopBar } from './TopBar';
 import { EnhancedLeftTools } from './EnhancedLeftTools';
 import { RightProps } from './RightProps';
 import { Enhanced2DCanvasStage } from './Enhanced2DCanvasStage';
+import { ColorSelector } from './ColorSelector';
+import { EnhancedBottomControls } from './EnhancedBottomControls';
 import { useStudioStore } from '../../lib/studio/store';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Layers, Settings } from 'lucide-react';
@@ -77,11 +79,19 @@ export const StudioShell = () => {
         </Button>
         
         {/* Main Canvas Area */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0 relative">
           <Enhanced2DCanvasStage />
           
-          {/* Enhanced Status Bar */}
-          <div className="h-7 bg-card/95 border-t border-border/50 backdrop-blur-sm flex items-center justify-between px-4 text-xs shadow-sm">
+          {/* Color Selector - Fixed Position */}
+          <div className="absolute top-4 right-4 z-50 pointer-events-auto">
+            <ColorSelector />
+          </div>
+          
+          {/* Enhanced Bottom Controls */}
+          <EnhancedBottomControls />
+          
+          {/* Simplified Status Bar */}
+          <div className="h-6 bg-card/95 border-t border-border/50 backdrop-blur-sm flex items-center justify-between px-4 text-xs shadow-sm">
             <div className="flex items-center gap-6">
               <span className="font-medium text-foreground">
                 {doc.selectedIds.length > 0 
@@ -100,14 +110,6 @@ export const StudioShell = () => {
                   );
                 }
               })()}
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="font-medium text-foreground">
-                Zoom: {Math.round(zoom * 100)}%
-              </span>
-              <span className="text-foreground/70 font-mono">
-                Canvas: {doc.canvas.width} × {doc.canvas.height}px
-              </span>
             </div>
           </div>
         </div>

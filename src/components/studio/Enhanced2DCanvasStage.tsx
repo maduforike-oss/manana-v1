@@ -283,20 +283,12 @@ export const Enhanced2DCanvasStage = () => {
       <div ref={containerRef} className="relative w-full h-full bg-background">
         <Canvas3D />
         <Canvas3DControls />
-        <div className="absolute top-4 right-4 z-10">
-          <ColorSelector />
-        </div>
       </div>
     );
   }
 
   return (
     <div ref={containerRef} className="relative w-full h-full bg-background">
-      {/* Color Selector */}
-      <div className="absolute top-4 right-4 z-10">
-        <ColorSelector />
-      </div>
-      
       {/* Advanced Selection Tools */}
       <AdvancedSelectionTools />
       
