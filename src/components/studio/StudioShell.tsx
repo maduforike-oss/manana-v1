@@ -121,6 +121,79 @@ export const StudioShell = () => {
             e.preventDefault();
           }
           break;
+        case '1':
+          if (e.ctrlKey || e.metaKey) {
+            // Fit to artboard
+            const canvasElement = document.querySelector('.canvas-container');
+            if (canvasElement) {
+              const { setZoom, setPanOffset, doc } = useStudioStore.getState();
+              const containerRect = canvasElement.getBoundingClientRect();
+              const padding = 40;
+              const scaleX = (containerRect.width - padding) / doc.canvas.width;
+              const scaleY = (containerRect.height - padding) / doc.canvas.height;
+              const optimalZoom = Math.min(scaleX, scaleY, 2);
+              setZoom(optimalZoom);
+              setPanOffset({ 
+                x: (containerRect.width - doc.canvas.width * optimalZoom) / 2,
+                y: (containerRect.height - doc.canvas.height * optimalZoom) / 2
+              });
+            }
+            e.preventDefault();
+          }
+          break;
+        case '2':
+          if (e.ctrlKey || e.metaKey) {
+            // Fit to selection
+            const { doc, setZoom, setPanOffset } = useStudioStore.getState();
+            if (doc.selectedIds.length > 0) {
+              const selectedNodes = doc.nodes.filter(node => doc.selectedIds.includes(node.id));
+              if (selectedNodes.length > 0) {
+                let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                selectedNodes.forEach(node => {
+                  minX = Math.min(minX, node.x);
+                  minY = Math.min(minY, node.y);
+                  maxX = Math.max(maxX, node.x + node.width);
+                  maxY = Math.max(maxY, node.y + node.height);
+                });
+                
+                const selectionWidth = maxX - minX;
+                const selectionHeight = maxY - minY;
+                const canvasElement = document.querySelector('.canvas-container');
+                if (canvasElement) {
+                  const containerRect = canvasElement.getBoundingClientRect();
+                  const padding = 60;
+                  const scaleX = (containerRect.width - padding) / selectionWidth;
+                  const scaleY = (containerRect.height - padding) / selectionHeight;
+                  const optimalZoom = Math.min(scaleX, scaleY, 4);
+                  setZoom(optimalZoom);
+                  
+                  const selectionCenterX = minX + selectionWidth / 2;
+                  const selectionCenterY = minY + selectionHeight / 2;
+                  setPanOffset({ 
+                    x: containerRect.width / 2 - selectionCenterX * optimalZoom,
+                    y: containerRect.height / 2 - selectionCenterY * optimalZoom
+                  });
+                }
+              }
+            }
+            e.preventDefault();
+          }
+          break;
+        case '=':
+        case '+':
+          if (e.ctrlKey || e.metaKey) {
+            const { zoom, setZoom } = useStudioStore.getState();
+            setZoom(Math.min(zoom * 1.2, 5));
+            e.preventDefault();
+          }
+          break;
+        case '-':
+          if (e.ctrlKey || e.metaKey) {
+            const { zoom, setZoom } = useStudioStore.getState();
+            setZoom(Math.max(zoom / 1.2, 0.1));
+            e.preventDefault();
+          }
+          break;
       }
     };
 

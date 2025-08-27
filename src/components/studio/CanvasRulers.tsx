@@ -6,6 +6,7 @@ interface CanvasRulersProps {
   showRulers: boolean;
   canvasWidth: number;
   canvasHeight: number;
+  units?: 'pixels' | 'inches' | 'cm';
 }
 
 export const CanvasRulers = ({ 
@@ -13,51 +14,101 @@ export const CanvasRulers = ({
   panOffset, 
   showRulers, 
   canvasWidth, 
-  canvasHeight 
+  canvasHeight,
+  units = 'pixels'
 }: CanvasRulersProps) => {
   if (!showRulers) return null;
 
-  const rulerSize = 20;
-  const majorStep = 50;
-  const minorStep = 10;
+  const rulerSize = 24;
+  
+  // Unit conversion functions
+  const convertToUnits = (pixels: number): string => {
+    const dpi = 72; // Standard screen DPI
+    switch (units) {
+      case 'inches':
+        return (pixels / dpi).toFixed(2);
+      case 'cm':
+        return (pixels / dpi * 2.54).toFixed(1);
+      default:
+        return Math.round(pixels).toString();
+    }
+  };
+
+  const getUnitSymbol = (): string => {
+    switch (units) {
+      case 'inches': return '"';
+      case 'cm': return 'cm';
+      default: return 'px';
+    }
+  };
+
+  // Dynamic step calculation based on zoom level
+  const getStepSizes = () => {
+    const baseStep = units === 'pixels' ? 50 : (units === 'inches' ? 72 : 28.35); // 1 inch or 1cm in pixels
+    const scaledStep = baseStep * zoom;
+    
+    if (scaledStep < 20) {
+      // Too small, use larger steps
+      return {
+        majorStep: baseStep * (units === 'pixels' ? 4 : 2),
+        minorStep: baseStep * (units === 'pixels' ? 1 : 0.5),
+      };
+    } else if (scaledStep > 200) {
+      // Too large, use smaller steps
+      return {
+        majorStep: baseStep * (units === 'pixels' ? 0.5 : 0.25),
+        minorStep: baseStep * (units === 'pixels' ? 0.1 : 0.125),
+      };
+    }
+    
+    return {
+      majorStep: baseStep,
+      minorStep: baseStep * (units === 'pixels' ? 0.2 : 0.25),
+    };
+  };
+
+  const { majorStep, minorStep } = getStepSizes();
 
   const generateMarks = (length: number, isVertical: boolean) => {
     const marks = [];
     const adjustedLength = length / zoom;
     const offset = isVertical ? panOffset.y : panOffset.x;
     
-    for (let i = 0; i <= adjustedLength; i += minorStep) {
+    for (let i = 0; i <= adjustedLength + majorStep; i += minorStep) {
       const position = (i * zoom) + offset;
-      const isMajor = i % majorStep === 0;
+      const isMajor = Math.abs(i % majorStep) < 0.1;
       
-      if (position >= 0 && position <= length) {
+      if (position >= -10 && position <= length + 10) {
         marks.push(
           <div
-            key={i}
-            className="absolute bg-foreground/60"
+            key={`mark-${i}`}
+            className="absolute bg-foreground/70"
             style={{
               [isVertical ? 'top' : 'left']: `${position}px`,
-              [isVertical ? 'left' : 'top']: isMajor ? '8px' : '12px',
-              [isVertical ? 'width' : 'height']: isMajor ? '12px' : '8px',
+              [isVertical ? 'left' : 'top']: isMajor ? '6px' : '14px',
+              [isVertical ? 'width' : 'height']: isMajor ? '18px' : '10px',
               [isVertical ? 'height' : 'width']: '1px',
             }}
           />
         );
         
         if (isMajor && i > 0) {
+          const value = convertToUnits(i);
           marks.push(
             <div
               key={`label-${i}`}
-              className="absolute text-xs text-foreground/70 font-mono"
+              className="absolute text-xs text-foreground/80 font-mono leading-none select-none"
               style={{
-                [isVertical ? 'top' : 'left']: `${position - 8}px`,
-                [isVertical ? 'left' : 'top']: '2px',
-                fontSize: '10px',
+                [isVertical ? 'top' : 'left']: `${position - (isVertical ? 20 : 15)}px`,
+                [isVertical ? 'left' : 'top']: isVertical ? '1px' : '1px',
+                fontSize: '9px',
                 transform: isVertical ? 'rotate(-90deg)' : 'none',
-                transformOrigin: 'center',
+                transformOrigin: isVertical ? '8px 8px' : 'center',
+                width: isVertical ? '16px' : 'auto',
+                textAlign: 'center' as const,
               }}
             >
-              {i}
+              {value}
             </div>
           );
         }
@@ -93,15 +144,19 @@ export const CanvasRulers = ({
         {generateMarks(canvasHeight, true)}
       </div>
 
-      {/* Corner */}
+      {/* Corner with unit indicator */}
       <div 
-        className="absolute top-0 left-0 bg-muted border-r border-b border-border"
+        className="absolute top-0 left-0 bg-muted border-r border-b border-border flex items-center justify-center"
         style={{ 
           width: `${rulerSize}px`, 
           height: `${rulerSize}px`,
           zIndex: 6
         }}
-      />
+      >
+        <span className="text-xs font-mono text-foreground/60 select-none">
+          {getUnitSymbol()}
+        </span>
+      </div>
     </>
   );
 };

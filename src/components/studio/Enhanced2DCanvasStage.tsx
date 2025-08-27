@@ -35,7 +35,7 @@ export const Enhanced2DCanvasStage = () => {
     snapEnabled 
   } = useStudioStore();
   
-  const { showGrid, showRulers, showBoundingBox, snapToGrid, gridSize } = useViewportManager();
+  const { showGrid, showRulers, showBoundingBox, snapToGrid, gridSize, rulerUnits } = useViewportManager();
 
   // Enhanced image loading with color support
   useEffect(() => {
@@ -301,6 +301,7 @@ export const Enhanced2DCanvasStage = () => {
         showRulers={showRulers}
         canvasWidth={stageSize.width}
         canvasHeight={stageSize.height}
+        units={rulerUnits}
       />
       
       {/* Advanced Selection Tools */}
