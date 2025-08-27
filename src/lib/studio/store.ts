@@ -58,6 +58,8 @@ interface StudioState {
   activePrintSurface: string;
   updateMaterialConfig?: (material: MaterialConfig) => void;
   getCanvasElement: () => HTMLCanvasElement | null;
+  // Phase 2 additions
+  loadStudioFromAppDesign: (design: any) => Promise<void>;
 }
 
 const createInitialDoc = (garmentType?: string): DesignDoc => ({
@@ -356,6 +358,57 @@ export const useStudioStore = create<StudioState>((set, get) => ({
 
   getCanvasElement: () => {
     return document.querySelector('canvas') as HTMLCanvasElement;
+  },
+
+  // Phase 2: Enhanced loading from app store design
+  loadStudioFromAppDesign: async (design: any) => {
+    return new Promise((resolve, reject) => {
+      try {
+        // Initialize with garment type
+        const garmentType = design.garmentType || 'tshirt-white';
+        get().initializeFromGarment(garmentType, 'white');
+        
+        // If design has canvas data, load it
+        if (design.canvas && design.canvas !== '') {
+          try {
+            const canvasData = JSON.parse(design.canvas);
+            if (canvasData.doc) {
+              set(produce((state) => {
+                state.doc = {
+                  ...state.doc,
+                  ...canvasData.doc,
+                  title: design.name,
+                };
+                state.zoom = canvasData.zoom || 1;
+                state.panOffset = canvasData.panOffset || { x: 0, y: 0 };
+                state.mockup = canvasData.mockup || { 
+                  type: 'front', 
+                  color: 'light', 
+                  opacity: 0.8 
+                };
+              }));
+            }
+          } catch (error) {
+            console.warn('Failed to parse canvas data:', error);
+          }
+        }
+        
+        // Update document name
+        set(produce((state) => {
+          state.doc.title = design.name;
+        }));
+        
+        // Save snapshot for undo/redo
+        get().saveSnapshot();
+        
+        resolve();
+      } catch (error) {
+        console.error('Failed to load studio from app design:', error);
+        // Fallback to basic initialization
+        get().initializeFromGarment(design.garmentType || 'tshirt-white', 'white');
+        reject(error);
+      }
+    });
   },
 }));
 

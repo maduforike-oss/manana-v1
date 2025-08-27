@@ -29,7 +29,7 @@ export const StudioHub = () => {
 
   const handleEditDesign = (designId: string) => {
     loadDesign(designId);
-    // This will navigate to the actual studio
+    // This will navigate to the actual studio with loading state
   };
 
   const recentDesigns = designs.slice(0, 6);

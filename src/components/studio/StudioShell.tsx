@@ -8,24 +8,56 @@ import { EnhancedBottomControls } from './EnhancedBottomControls';
 import { useStudioStore } from '../../lib/studio/store';
 import { useAppStore } from '../../store/useAppStore';
 import { useViewportManager } from './EnhancedViewportManager';
+import { StudioLoadingTransition } from './StudioLoadingTransition';
+import { useStudioSync } from '../../hooks/useStudioSync';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Layers, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export const StudioShell = () => {
-  const { doc, zoom, clearSelection, initializeFromGarment } = useStudioStore();
+  const { doc, zoom, clearSelection, initializeFromGarment, loadStudioFromAppDesign } = useStudioStore();
   const { currentDesign } = useAppStore();
   const { toggleGrid, toggleRulers, toggleSnap, toggleBoundingBox } = useViewportManager();
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
   const [activeRightTab, setActiveRightTab] = useState('design'); // Auto-open design tab
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Initialize from current design when component mounts
+  // Sync studio changes back to app store
+  useStudioSync();
+
+  // Enhanced initialization from current design with loading states
   useEffect(() => {
-    if (currentDesign && currentDesign.garmentType) {
-      initializeFromGarment(currentDesign.garmentType, 'white');
-    }
-  }, [currentDesign, initializeFromGarment]);
+    const initializeStudio = async () => {
+      if (currentDesign) {
+        setIsLoading(true);
+        
+        try {
+          // Auto-open design tab when loading from hub
+          setActiveRightTab('design');
+          
+          // Sync studio state with app store design
+          if (loadStudioFromAppDesign) {
+            await loadStudioFromAppDesign(currentDesign);
+          } else {
+            // Fallback to basic initialization
+            initializeFromGarment(currentDesign.garmentType, 'white');
+          }
+          
+          // Small delay for smooth transition
+          await new Promise(resolve => setTimeout(resolve, 200));
+        } catch (error) {
+          console.error('Failed to initialize studio:', error);
+          // Fallback initialization
+          initializeFromGarment(currentDesign.garmentType || 'tshirt-white', 'white');
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    initializeStudio();
+  }, [currentDesign, initializeFromGarment, loadStudioFromAppDesign, setActiveRightTab]);
 
   useEffect(() => {
     // Enhanced keyboard shortcuts
@@ -99,6 +131,9 @@ export const StudioShell = () => {
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">
       <TopBar />
+      
+      {/* Enhanced loading transition */}
+      <StudioLoadingTransition isLoading={isLoading} />
       
       <div className="flex-1 flex overflow-hidden">
         {/* Left Tools Panel */}
