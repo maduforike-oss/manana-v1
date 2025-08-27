@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ChevronDown, ChevronUp, Type, Move, Palette, Layers, Settings, Shirt, Palette as PaletteIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useStudioStore } from '@/lib/studio/store';
-import { PropertiesPanel } from './PropertiesPanel';
+import { EnhancedPropertiesPanel } from './EnhancedPropertiesPanel';
 import { LayersPanel } from './LayersPanel';
 import { CanvasPanel } from './CanvasPanel';
 import { GarmentColorPicker } from './GarmentColorPicker';
@@ -155,7 +155,7 @@ export const OptimizedPropertiesPanel = () => {
             <CollapsibleContent>
               <CardContent className="pt-0 pb-4">
                 {hasSelection ? (
-                  <PropertiesPanel />
+                  <EnhancedPropertiesPanel />
                 ) : (
                   <div className="text-sm text-muted-foreground text-center py-6">
                     Select an element to edit its properties
