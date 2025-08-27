@@ -44,7 +44,7 @@ export const CanvasPanel = () => {
               <Label className="text-xs text-foreground/70">Width (px)</Label>
               <Input
                 type="number"
-                value={doc.canvas.width}
+                value={doc.canvas.width || 1200}
                 onChange={(e) => updateCanvas({ width: parseInt(e.target.value) || 1200 })}
                 className="bg-background border-border/50 text-foreground font-mono"
               />
@@ -53,7 +53,7 @@ export const CanvasPanel = () => {
               <Label className="text-xs text-foreground/70">Height (px)</Label>
               <Input
                 type="number"
-                value={doc.canvas.height}
+                value={doc.canvas.height || 1200}
                 onChange={(e) => updateCanvas({ height: parseInt(e.target.value) || 1200 })}
                 className="bg-background border-border/50 text-foreground font-mono"
               />
@@ -64,7 +64,7 @@ export const CanvasPanel = () => {
         <div className="space-y-2">
           <Label className="text-sm font-semibold text-foreground">Background Color</Label>
           <Input
-            value={doc.canvas.background}
+            value={doc.canvas.background || "transparent"}
             onChange={(e) => updateCanvas({ background: e.target.value })}
             className="bg-background border-border/50 text-foreground font-mono"
             placeholder="transparent or #ffffff"
@@ -74,7 +74,7 @@ export const CanvasPanel = () => {
         <div className="space-y-2">
           <Label className="text-sm font-semibold text-foreground">Print Quality</Label>
           <Select 
-            value={doc.canvas.dpi.toString()} 
+            value={doc.canvas.dpi?.toString() || "300"} 
             onValueChange={(value) => updateCanvas({ dpi: parseInt(value) as 150 | 300 })}
           >
             <SelectTrigger className="bg-background border-border/50 text-foreground">
