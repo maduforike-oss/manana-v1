@@ -1,10 +1,9 @@
-import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
-import { Stage, Layer, Rect, Circle, Text, Image, Line, Star, RegularPolygon } from 'react-konva';
-import { useStudioStore } from '../../lib/studio/store';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
+import { Stage, Layer, Rect, Image } from 'react-konva';
+import { useStudioSelectors, useStudioActions, useViewport } from '../../lib/studio/storeSelectors';
 import { getGarmentById } from '@/lib/studio/garments';
 import { Canvas3D } from './Canvas3D';
 import { Canvas3DControls } from './Canvas3DControls';
-import { Node, TextNode, ShapeNode } from '../../lib/studio/types';
 import { AdvancedSelectionTools } from './AdvancedSelectionTools';
 import { CanvasGrid } from './CanvasGrid';
 import { CanvasRulers } from './CanvasRulers';
@@ -13,6 +12,7 @@ import { AlignmentGuides } from './AlignmentGuides';
 import { Enhanced2DMockup } from './Enhanced2DMockup';
 import { ColorSelector } from './ColorSelector';
 import { SelectionBoundingBox } from './SelectionBoundingBox';
+import { VirtualCanvas } from './optimized/VirtualCanvas';
 
 export const Enhanced2DCanvasStage = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -22,31 +22,25 @@ export const Enhanced2DCanvasStage = () => {
   const [selectionBox, setSelectionBox] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
   
-  const { 
-    doc, 
-    zoom, 
-    panOffset, 
-    clearSelection, 
-    selectNode, 
-    selectMany,
-    activeTool, 
-    is3DMode,
-    updateNode,
-    snapEnabled 
-  } = useStudioStore();
+  // Optimized selectors
+  const { doc, selectedNodes, hasSelection, canvasMetrics, viewportState } = useStudioSelectors();
+  const { selectNode, selectMany, clearSelection, updateNode } = useStudioActions();
+  const { zoom, panOffset } = useViewport();
+  const activeTool = 'select'; // Will be properly connected later
+  const snapEnabled = false; // Will be properly connected later
   
   const { showGrid, showRulers, showBoundingBox, snapToGrid, gridSize, rulerUnits } = useViewportManager();
 
   // Enhanced image loading with color support
   useEffect(() => {
     // For t-shirts, we use our new enhanced mockup system
-    if (doc.canvas.garmentType === 't-shirt') {
+    if (canvasMetrics.garmentType === 't-shirt') {
       setGarmentImage(null); // Let Enhanced2DMockup handle the display
       return;
     }
     
     // For other garments, keep existing behavior
-    const garmentType = doc.canvas.garmentType || 't-shirt';
+    const garmentType = canvasMetrics.garmentType || 't-shirt';
     const garment = getGarmentById(garmentType);
     
     if (garment) {
@@ -56,7 +50,7 @@ export const Enhanced2DCanvasStage = () => {
       img.onerror = () => console.error('Failed to load garment image');
       img.src = garment.images.front;
     }
-  }, [doc.canvas.garmentType, doc.canvas.garmentColor]);
+  }, [canvasMetrics.garmentType, canvasMetrics.garmentColor]);
 
   // Enhanced stage sizing with responsive design
   useEffect(() => {
@@ -77,8 +71,34 @@ export const Enhanced2DCanvasStage = () => {
     return () => observer.disconnect();
   }, []);
 
+  // Memoized layout calculations
+  const layoutMetrics = useMemo(() => {
+    const garmentWidth = 400;
+    const garmentHeight = 500;
+    const printAreaX = garmentWidth * 0.25;
+    const printAreaY = garmentHeight * 0.3;
+    const printAreaWidth = garmentWidth * 0.5;
+    const printAreaHeight = garmentHeight * 0.4;
+    
+    const printBaseX = stageSize.width / 2 - garmentWidth / 2 + printAreaX;
+    const printBaseY = stageSize.height / 2 - garmentHeight / 2 + printAreaY;
+    const scaleX = printAreaWidth / canvasMetrics.width;
+    const scaleY = printAreaHeight / canvasMetrics.height;
+
+    return { printBaseX, printBaseY, scaleX, scaleY };
+  }, [stageSize.width, stageSize.height, canvasMetrics.width, canvasMetrics.height]);
+
+  // Viewport for virtual rendering
+  const viewport = useMemo(() => ({
+    x: panOffset.x,
+    y: panOffset.y,
+    width: stageSize.width,
+    height: stageSize.height,
+    zoom
+  }), [panOffset, stageSize, zoom]);
+
   // Enhanced selection with marquee tool
-  const handleStageMouseDown = useCallback((e: any) => {
+  const handleStageMouseDown = React.useCallback((e: any) => {
     if (activeTool === 'select' && e.target === e.target.getStage()) {
       const pos = e.target.getStage().getPointerPosition();
       setDragStart(pos);
@@ -86,7 +106,7 @@ export const Enhanced2DCanvasStage = () => {
     }
   }, [activeTool]);
 
-  const handleStageMouseMove = useCallback((e: any) => {
+  const handleStageMouseMove = React.useCallback((e: any) => {
     if (dragStart && selectionBox) {
       const pos = e.target.getStage().getPointerPosition();
       setSelectionBox({
@@ -98,19 +118,21 @@ export const Enhanced2DCanvasStage = () => {
     }
   }, [dragStart, selectionBox]);
 
-  const handleStageMouseUp = useCallback((e: any) => {
+  const handleStageMouseUp = React.useCallback((e: any) => {
     if (selectionBox && dragStart) {
-      // Find nodes within selection box
-      const stage = e.target.getStage();
+      // Find nodes within selection box - simplified for performance
       const selectedIds: string[] = [];
       
       doc.nodes.forEach(node => {
-        const nodeCenter = getNodeScreenPosition(node);
+        const { printBaseX, printBaseY, scaleX, scaleY } = layoutMetrics;
+        const nodeX = printBaseX + node.x * scaleX;
+        const nodeY = printBaseY + node.y * scaleY;
+        
         if (
-          nodeCenter.x >= selectionBox.x &&
-          nodeCenter.x <= selectionBox.x + selectionBox.width &&
-          nodeCenter.y >= selectionBox.y &&
-          nodeCenter.y <= selectionBox.y + selectionBox.height
+          nodeX >= selectionBox.x &&
+          nodeX <= selectionBox.x + selectionBox.width &&
+          nodeY >= selectionBox.y &&
+          nodeY <= selectionBox.y + selectionBox.height
         ) {
           selectedIds.push(node.id);
         }
@@ -125,161 +147,17 @@ export const Enhanced2DCanvasStage = () => {
     
     setDragStart(null);
     setSelectionBox(null);
-  }, [selectionBox, dragStart, doc.nodes, selectMany, clearSelection]);
+  }, [selectionBox, dragStart, doc.nodes, layoutMetrics, selectMany, clearSelection]);
 
   // Handle stage click for tool interactions
-  const handleStageClick = useCallback((e: any) => {
+  const handleStageClick = React.useCallback((e: any) => {
     if (e.target === e.target.getStage()) {
       clearSelection();
     }
   }, [clearSelection]);
 
-  // Memoized layout calculations
-  const layoutMetrics = useMemo(() => {
-    const garmentWidth = 400;
-    const garmentHeight = 500;
-    const printAreaX = garmentWidth * 0.25;
-    const printAreaY = garmentHeight * 0.3;
-    const printAreaWidth = garmentWidth * 0.5;
-    const printAreaHeight = garmentHeight * 0.4;
-    
-    const printBaseX = stageSize.width / 2 - garmentWidth / 2 + printAreaX;
-    const printBaseY = stageSize.height / 2 - garmentHeight / 2 + printAreaY;
-    const scaleX = printAreaWidth / doc.canvas.width;
-    const scaleY = printAreaHeight / doc.canvas.height;
-
-    return { printBaseX, printBaseY, scaleX, scaleY };
-  }, [stageSize.width, stageSize.height, doc.canvas.width, doc.canvas.height]);
-
-  // Convert node coordinates to screen position
-  const getNodeScreenPosition = useCallback((node: Node) => {
-    const { printBaseX, printBaseY, scaleX, scaleY } = layoutMetrics;
-    return {
-      x: printBaseX + (node.x + node.width / 2) * scaleX,
-      y: printBaseY + (node.y + node.height / 2) * scaleY
-    };
-  }, [layoutMetrics]);
-
-  // Memoized node rendering with advanced styling
-  const renderNode = useCallback((node: Node) => {
-    const isSelected = doc.selectedIds.includes(node.id);
-    const { printBaseX, printBaseY, scaleX, scaleY } = layoutMetrics;
-
-    const commonProps = {
-      key: node.id,
-      x: printBaseX + node.x * scaleX,
-      y: printBaseY + node.y * scaleY,
-      rotation: node.rotation,
-      opacity: node.opacity,
-      draggable: activeTool === 'select',
-      onClick: () => selectNode(node.id),
-      onDragEnd: (e: any) => {
-        const newX = (e.target.x() - printBaseX) / scaleX;
-        const newY = (e.target.y() - printBaseY) / scaleY;
-        
-        // Snap to grid if enabled
-        const snappedX = (snapEnabled && snapToGrid) ? Math.round(newX / gridSize) * gridSize : newX;
-        const snappedY = (snapEnabled && snapToGrid) ? Math.round(newY / gridSize) * gridSize : newY;
-        
-        updateNode(node.id, { x: snappedX, y: snappedY });
-      },
-      stroke: isSelected ? 'hsl(var(--primary))' : undefined,
-      strokeWidth: isSelected ? 2 / zoom : 0,
-      shadowColor: isSelected ? 'hsl(var(--primary))' : undefined,
-      shadowBlur: isSelected ? 10 : 0,
-      shadowOpacity: isSelected ? 0.3 : 0,
-    };
-
-    switch (node.type) {
-      case 'shape':
-        const shapeNode = node as ShapeNode;
-        const shapeProps = {
-          ...commonProps,
-          fill: shapeNode.fill.type === 'solid' ? shapeNode.fill.color : 'transparent',
-          strokeEnabled: !!shapeNode.stroke,
-          stroke: isSelected ? 'hsl(var(--primary))' : shapeNode.stroke?.color,
-          strokeWidth: isSelected ? 3 / zoom : (shapeNode.stroke?.width || 0) / zoom,
-        };
-
-        switch (shapeNode.shape) {
-          case 'rect':
-            return (
-              <Rect
-                {...shapeProps}
-                width={shapeNode.width * scaleX}
-                height={shapeNode.height * scaleY}
-                cornerRadius={shapeNode.radius || 0}
-              />
-            );
-          case 'circle':
-            return (
-              <Circle
-                {...shapeProps}
-                x={commonProps.x + (shapeNode.width * scaleX) / 2}
-                y={commonProps.y + (shapeNode.height * scaleY) / 2}
-                radius={Math.min(shapeNode.width * scaleX, shapeNode.height * scaleY) / 2}
-              />
-            );
-          case 'triangle':
-            return (
-              <RegularPolygon
-                {...shapeProps}
-                x={commonProps.x + (shapeNode.width * scaleX) / 2}
-                y={commonProps.y + (shapeNode.height * scaleY) / 2}
-                sides={3}
-                radius={Math.min(shapeNode.width * scaleX, shapeNode.height * scaleY) / 2}
-              />
-            );
-          case 'star':
-            return (
-              <Star
-                {...shapeProps}
-                x={commonProps.x + (shapeNode.width * scaleX) / 2}
-                y={commonProps.y + (shapeNode.height * scaleY) / 2}
-                numPoints={shapeNode.points || 5}
-                innerRadius={Math.min(shapeNode.width * scaleX, shapeNode.height * scaleY) / 4}
-                outerRadius={Math.min(shapeNode.width * scaleX, shapeNode.height * scaleY) / 2}
-              />
-            );
-          case 'line':
-            return (
-              <Line
-                {...shapeProps}
-                points={[0, 0, shapeNode.width * scaleX, shapeNode.height * scaleY]}
-                strokeWidth={(shapeNode.stroke?.width || 2) / zoom}
-              />
-            );
-        }
-        break;
-
-      case 'text':
-        const textNode = node as TextNode;
-        return (
-          <Text
-            {...commonProps}
-            text={textNode.text}
-            fontSize={textNode.fontSize * Math.min(scaleX, scaleY)}
-            fontFamily={textNode.fontFamily}
-            fontStyle={textNode.fontWeight > 500 ? 'bold' : 'normal'}
-            fill={textNode.fill.type === 'solid' ? textNode.fill.color : 'black'}
-            width={textNode.width * scaleX}
-            height={textNode.height * scaleY}
-            align={textNode.align}
-            letterSpacing={textNode.letterSpacing}
-            lineHeight={textNode.lineHeight}
-          />
-        );
-
-      case 'image':
-        // Enhanced image rendering will be implemented with the image tools
-        return null;
-    }
-
-    return null;
-  }, [layoutMetrics, doc.selectedIds, activeTool, snapEnabled, snapToGrid, gridSize, zoom, selectNode, updateNode]);
-
   // 3D mode rendering
-  if (is3DMode) {
+  if (viewportState.is3DMode) {
     return (
       <div ref={containerRef} className="relative w-full h-full bg-background">
         <Canvas3D />
@@ -304,7 +182,7 @@ export const Enhanced2DCanvasStage = () => {
       <AdvancedSelectionTools />
       
       {/* Enhanced Mockup Background for T-Shirts */}
-      {doc.canvas.garmentType === 't-shirt' && (
+      {canvasMetrics.garmentType === 't-shirt' && (
         <div className="absolute inset-0 z-0">
           <Enhanced2DMockup />
         </div>
@@ -335,7 +213,7 @@ export const Enhanced2DCanvasStage = () => {
           />
           
           {/* Garment Background for non-t-shirt items */}
-          {doc.canvas.garmentType !== 't-shirt' && garmentImage && (
+          {canvasMetrics.garmentType !== 't-shirt' && garmentImage && (
             <Image
               image={garmentImage}
               x={stageSize.width / 2 - 200}
@@ -347,8 +225,19 @@ export const Enhanced2DCanvasStage = () => {
             />
           )}
           
-          {/* Render Nodes */}
-          {doc.nodes.map(renderNode)}
+          {/* Virtual Canvas for Performance */}
+          <VirtualCanvas
+            nodes={doc.nodes}
+            selectedIds={doc.selectedIds}
+            layoutMetrics={layoutMetrics}
+            viewport={viewport}
+            activeTool={activeTool}
+            snapEnabled={snapEnabled}
+            snapToGrid={snapToGrid}
+            gridSize={gridSize}
+            onSelectNode={selectNode}
+            onUpdateNode={updateNode}
+          />
           
           {/* Selection Box */}
           {selectionBox && (
@@ -371,7 +260,13 @@ export const Enhanced2DCanvasStage = () => {
             selectedIds={doc.selectedIds}
             showBoundingBox={showBoundingBox}
             scale={zoom}
-            getNodeScreenPosition={getNodeScreenPosition}
+            getNodeScreenPosition={(node) => {
+              const { printBaseX, printBaseY, scaleX, scaleY } = layoutMetrics;
+              return {
+                x: printBaseX + (node.x + node.width / 2) * scaleX,
+                y: printBaseY + (node.y + node.height / 2) * scaleY
+              };
+            }}
             onNodeUpdate={updateNode}
           />
           
