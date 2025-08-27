@@ -14,7 +14,7 @@ import {
   Box
 } from 'lucide-react';
 import { useStudioStore } from '../../lib/studio/store';
-import { useViewportState } from '../../hooks/useViewportState';
+import { useViewportManager } from './EnhancedViewportManager';
 import { 
   Tooltip,
   TooltipContent,
@@ -24,7 +24,7 @@ import {
 import { Separator } from '../ui/separator';
 
 export const EnhancedBottomControls = () => {
-  const { zoom, setZoom, setPanOffset, doc } = useStudioStore();
+  const { zoom, setZoom, setPanOffset, doc, snapEnabled } = useStudioStore();
   const {
     showBoundingBox,
     showGrid,
@@ -33,8 +33,19 @@ export const EnhancedBottomControls = () => {
     toggleBoundingBox,
     toggleGrid,
     toggleRulers,
-    toggleSnap
-  } = useViewportState();
+    toggleSnap,
+    gridSize,
+    setGridSize
+  } = useViewportManager();
+
+  // Enhanced zoom functions
+  const zoomPresets = [0.25, 0.5, 1, 1.5, 2];
+  const currentZoomIndex = zoomPresets.findIndex(preset => Math.abs(preset - zoom) < 0.01);
+
+  const handleZoomPreset = (preset: number) => {
+    setZoom(preset);
+    setPanOffset({ x: 0, y: 0 });
+  };
 
   const handleZoomIn = () => {
     setZoom(Math.min(zoom * 1.2, 5));
@@ -120,7 +131,7 @@ export const EnhancedBottomControls = () => {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  variant={snapToGrid ? "default" : "ghost"}
+                  variant={snapToGrid && snapEnabled ? "default" : "ghost"}
                   size="sm"
                   onClick={toggleSnap}
                   className="h-8 w-8 p-0"
@@ -205,8 +216,23 @@ export const EnhancedBottomControls = () => {
 
           <Separator orientation="vertical" className="h-6 mx-2" />
 
-          {/* Canvas Info */}
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          {/* Canvas Info & Quick Zoom */}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1">
+              {zoomPresets.map((preset) => (
+                <button
+                  key={preset}
+                  onClick={() => handleZoomPreset(preset)}
+                  className={`px-2 py-1 rounded text-xs hover:bg-accent transition-colors ${
+                    currentZoomIndex === zoomPresets.indexOf(preset) 
+                      ? 'bg-accent text-foreground' 
+                      : ''
+                  }`}
+                >
+                  {Math.round(preset * 100)}%
+                </button>
+              ))}
+            </div>
             <span className="font-mono">
               Canvas: {doc.canvas.width} × {doc.canvas.height}px
             </span>

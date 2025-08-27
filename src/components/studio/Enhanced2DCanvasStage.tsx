@@ -7,9 +7,12 @@ import { Canvas3DControls } from './Canvas3DControls';
 import { Node, TextNode, ShapeNode } from '../../lib/studio/types';
 import { AdvancedSelectionTools } from './AdvancedSelectionTools';
 import { CanvasGrid } from './CanvasGrid';
+import { CanvasRulers } from './CanvasRulers';
+import { useViewportManager } from './EnhancedViewportManager';
 import { AlignmentGuides } from './AlignmentGuides';
 import { Enhanced2DMockup } from './Enhanced2DMockup';
 import { ColorSelector } from './ColorSelector';
+import { SelectionBoundingBox } from './SelectionBoundingBox';
 
 export const Enhanced2DCanvasStage = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -31,6 +34,8 @@ export const Enhanced2DCanvasStage = () => {
     updateNode,
     snapEnabled 
   } = useStudioStore();
+  
+  const { showGrid, showRulers, showBoundingBox, snapToGrid, gridSize } = useViewportManager();
 
   // Enhanced image loading with color support
   useEffect(() => {
@@ -177,8 +182,8 @@ export const Enhanced2DCanvasStage = () => {
         const newY = (e.target.y() - printBaseY) / scaleY;
         
         // Snap to grid if enabled
-        const snappedX = snapEnabled ? Math.round(newX / 10) * 10 : newX;
-        const snappedY = snapEnabled ? Math.round(newY / 10) * 10 : newY;
+        const snappedX = (snapEnabled && snapToGrid) ? Math.round(newX / gridSize) * gridSize : newX;
+        const snappedY = (snapEnabled && snapToGrid) ? Math.round(newY / gridSize) * gridSize : newY;
         
         updateNode(node.id, { x: snappedX, y: snappedY });
       },
@@ -289,6 +294,15 @@ export const Enhanced2DCanvasStage = () => {
 
   return (
     <div ref={containerRef} className="relative w-full h-full bg-background">
+      {/* Rulers */}
+      <CanvasRulers
+        zoom={zoom}
+        panOffset={panOffset}
+        showRulers={showRulers}
+        canvasWidth={stageSize.width}
+        canvasHeight={stageSize.height}
+      />
+      
       {/* Advanced Selection Tools */}
       <AdvancedSelectionTools />
       
@@ -316,11 +330,11 @@ export const Enhanced2DCanvasStage = () => {
       >
         <Layer>
           {/* Grid */}
-          <CanvasGrid 
+          <CanvasGrid
             zoom={zoom}
             panOffset={panOffset}
-            showGrid={true}
-            gridSize={20}
+            showGrid={showGrid}
+            gridSize={gridSize}
           />
           
           {/* Garment Background for non-t-shirt items */}
@@ -353,6 +367,16 @@ export const Enhanced2DCanvasStage = () => {
               listening={false}
             />
           )}
+          
+          {/* Selection Bounding Box */}
+          <SelectionBoundingBox
+            nodes={doc.nodes}
+            selectedIds={doc.selectedIds}
+            showBoundingBox={showBoundingBox}
+            scale={zoom}
+            getNodeScreenPosition={getNodeScreenPosition}
+            onNodeUpdate={updateNode}
+          />
           
           {/* Alignment Guides */}
           <AlignmentGuides 

@@ -6,25 +6,37 @@ import { Enhanced2DCanvasStage } from './Enhanced2DCanvasStage';
 import { ColorSelector } from './ColorSelector';
 import { EnhancedBottomControls } from './EnhancedBottomControls';
 import { useStudioStore } from '../../lib/studio/store';
+import { useAppStore } from '../../store/useAppStore';
+import { useViewportManager } from './EnhancedViewportManager';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Layers, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export const StudioShell = () => {
-  const { doc, zoom, clearSelection } = useStudioStore();
+  const { doc, zoom, clearSelection, initializeFromGarment } = useStudioStore();
+  const { currentDesign } = useAppStore();
+  const { toggleGrid, toggleRulers, toggleSnap, toggleBoundingBox } = useViewportManager();
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
-  const [activeRightTab, setActiveRightTab] = useState('properties');
+  const [activeRightTab, setActiveRightTab] = useState('design'); // Auto-open design tab
+
+  // Initialize from current design when component mounts
+  useEffect(() => {
+    if (currentDesign && currentDesign.garmentType) {
+      initializeFromGarment(currentDesign.garmentType, 'white');
+    }
+  }, [currentDesign, initializeFromGarment]);
 
   useEffect(() => {
-    // Keyboard shortcuts
+    // Enhanced keyboard shortcuts
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
         return;
       }
 
-      const { activeTool, setActiveTool } = useStudioStore.getState();
+      const { activeTool, setActiveTool, undo, redo } = useStudioStore.getState();
       
+      // Tool shortcuts
       switch (e.key.toLowerCase()) {
         case 'v':
           setActiveTool('select');
@@ -36,17 +48,53 @@ export const StudioShell = () => {
           setActiveTool('text');
           break;
         case 'r':
-          setActiveTool('rect');
+          if (!e.shiftKey) setActiveTool('rect');
           break;
         case 'c':
           setActiveTool('circle');
+          break;
+        case 'g':
+          if (e.shiftKey) {
+            toggleSnap();
+          } else {
+            toggleGrid();
+          }
+          e.preventDefault();
+          break;
+        case 'r':
+          if (e.shiftKey) {
+            toggleRulers();
+            e.preventDefault();
+          }
+          break;
+        case 'b':
+          toggleBoundingBox();
+          e.preventDefault();
+          break;
+        case 'z':
+          if (e.ctrlKey || e.metaKey) {
+            if (e.shiftKey) {
+              redo();
+            } else {
+              undo();
+            }
+            e.preventDefault();
+          }
+          break;
+        case '0':
+          if (e.ctrlKey || e.metaKey) {
+            const { setZoom, setPanOffset } = useStudioStore.getState();
+            setZoom(1);
+            setPanOffset({ x: 0, y: 0 });
+            e.preventDefault();
+          }
           break;
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [toggleGrid, toggleRulers, toggleSnap, toggleBoundingBox]);
 
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">
