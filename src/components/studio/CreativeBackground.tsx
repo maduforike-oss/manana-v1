@@ -42,13 +42,13 @@ export const CreativeBackground = () => {
       alpha: Math.random() * 0.3 + 0.1
     });
 
-    // Reduced particle count for better performance
-    for (let i = 0; i < 25; i++) {
+    // Minimal particle count for demo performance
+    for (let i = 0; i < 8; i++) {
       particles.push(createParticle());
     }
 
     let lastFrameTime = 0;
-    const targetFPS = 30; // Throttle to 30fps for better performance
+    const targetFPS = 15; // Lower FPS for demo optimization
     const frameInterval = 1000 / targetFPS;
 
     const animate = (currentTime: number) => {
@@ -84,7 +84,7 @@ export const CreativeBackground = () => {
           const dy = particle.y - otherParticle.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
 
-          if (distance < 100) {
+          if (distance < 60) {
             ctx.beginPath();
             ctx.moveTo(particle.x, particle.y);
             ctx.lineTo(otherParticle.x, otherParticle.y);

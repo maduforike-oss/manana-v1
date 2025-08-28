@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { TopBar } from './TopBar';
 import { EnhancedLeftTools } from './EnhancedLeftTools';
 import { RightProps } from './RightProps';
-import { Enhanced2DCanvasStage } from './Enhanced2DCanvasStage';
+import { SimplifiedCanvasStage } from './SimplifiedCanvasStage';
 import { ColorSelector } from './ColorSelector';
 import { EnhancedBottomControls } from './EnhancedBottomControls';
 import { useStudioActions } from '../../lib/studio/storeSelectors';
@@ -119,7 +119,7 @@ export const StudioShell = () => {
           
           {/* Main Canvas Area */}
           <div className="flex-1 flex flex-col min-w-0 relative">
-            <Enhanced2DCanvasStage />
+            <SimplifiedCanvasStage />
             
             {/* Color Selector - Fixed Position */}
             <div className="absolute top-4 right-4 z-50 pointer-events-auto">

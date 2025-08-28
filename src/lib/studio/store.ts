@@ -425,7 +425,7 @@ const debouncedSave = () => {
       useStudioStore.getState().saveToLocal();
       lastSaveState = currentState;
     }
-  }, 1000); // Reduced frequency, only save when changes occur
+  }, 2000); // Further reduced for demo stability
 };
 
 // Subscribe to store changes for efficient autosave
