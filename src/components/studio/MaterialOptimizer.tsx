@@ -285,10 +285,17 @@ export class MaterialOptimizer {
       { baseColor: '#4169e1', garmentType: 'cap', fabricType: 'cotton', printMethod: 'embroidery' }
     ];
 
-    // Pre-generate materials in a non-blocking way
-    requestIdleCallback(() => {
-      commonConfigs.forEach(config => this.getOptimizedMaterial(config));
-    });
+    // Pre-generate materials in a non-blocking way with fallback
+    if (window.requestIdleCallback) {
+      window.requestIdleCallback(() => {
+        commonConfigs.forEach(config => this.getOptimizedMaterial(config));
+      });
+    } else {
+      // Fallback for browsers without requestIdleCallback (Safari, older browsers)
+      setTimeout(() => {
+        commonConfigs.forEach(config => this.getOptimizedMaterial(config));
+      }, 16);
+    }
   }
 }
 
