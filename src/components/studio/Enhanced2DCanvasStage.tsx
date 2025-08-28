@@ -270,13 +270,14 @@ export const Enhanced2DCanvasStage = () => {
             onNodeUpdate={updateNode}
           />
           
-          {/* Alignment Guides */}
-          <AlignmentGuides 
-            nodes={doc.nodes}
-            selectedIds={doc.selectedIds}
-          />
         </Layer>
       </Stage>
+
+      {/* Alignment Guides */}
+      <AlignmentGuides 
+        nodes={doc.nodes}
+        selectedIds={doc.selectedIds}
+      />
     </div>
   );
 };
