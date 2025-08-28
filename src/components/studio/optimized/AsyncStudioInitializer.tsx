@@ -23,7 +23,7 @@ export const AsyncStudioInitializer = ({ children, onInitialized }: AsyncStudioI
     setError(null);
 
     try {
-      // Use requestIdleCallback for non-blocking initialization
+      // Use requestIdleCallback for non-blocking initialization with polyfill
       await new Promise(resolve => {
         const initialize = async () => {
           try {
@@ -45,11 +45,19 @@ export const AsyncStudioInitializer = ({ children, onInitialized }: AsyncStudioI
           }
         };
 
-        if (window.requestIdleCallback) {
-          window.requestIdleCallback(() => initialize(), { timeout: 2000 });
-        } else {
-          setTimeout(() => initialize(), 16); // Fallback for browsers without requestIdleCallback
-        }
+        // Browser compatibility polyfill
+        const requestIdleCallback = window.requestIdleCallback || 
+          ((callback: IdleRequestCallback, options?: IdleRequestOptions) => {
+            const start = Date.now();
+            return setTimeout(() => {
+              callback({
+                didTimeout: false,
+                timeRemaining: () => Math.max(0, 50 - (Date.now() - start))
+              });
+            }, 16);
+          });
+
+        requestIdleCallback(() => initialize(), { timeout: 2000 });
       });
 
       setInitState('ready');

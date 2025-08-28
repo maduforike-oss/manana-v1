@@ -1,5 +1,5 @@
-import { StudioShell } from '@/components/studio/StudioShell';
+import { OptimizedStudioShell } from '@/components/studio/OptimizedStudioShell';
 
 export default function StudioPage() {
-  return <StudioShell />;
+  return <OptimizedStudioShell />;
 }

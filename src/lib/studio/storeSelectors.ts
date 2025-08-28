@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 
 // Optimized selectors to prevent unnecessary re-renders
 export const useStudioSelectors = () => {
-  // Base state selectors with shallow comparison
+  // Base state selectors with stable references
   const doc = useStudioStore(state => state.doc);
   const zoom = useStudioStore(state => state.zoom);
   const panOffset = useStudioStore(state => state.panOffset);
