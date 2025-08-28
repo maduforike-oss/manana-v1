@@ -189,6 +189,14 @@ export const Enhanced2DCanvasStage = () => {
       )}
       
       {/* Main Canvas */}
+      {/* Grid overlay */}
+      <CanvasGrid
+        zoom={zoom}
+        panOffset={panOffset}
+        showGrid={showGrid}
+        gridSize={gridSize}
+      />
+      
       <Stage
         ref={stageRef}
         width={stageSize.width}
@@ -204,13 +212,6 @@ export const Enhanced2DCanvasStage = () => {
         className="cursor-crosshair relative z-10"
       >
         <Layer>
-          {/* Grid */}
-          <CanvasGrid
-            zoom={zoom}
-            panOffset={panOffset}
-            showGrid={showGrid}
-            gridSize={gridSize}
-          />
           
           {/* Garment Background for non-t-shirt items */}
           {canvasMetrics.garmentType !== 't-shirt' && garmentImage && (
