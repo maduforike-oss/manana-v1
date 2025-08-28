@@ -76,7 +76,7 @@ export const VirtualCanvas = React.memo<VirtualCanvasProps>(({
   }, [selectedIds]);
 
   return (
-    <Layer>
+    <>
       {visibleNodes.map(node => (
         <NodeRenderer
           key={node.id}
@@ -92,7 +92,7 @@ export const VirtualCanvas = React.memo<VirtualCanvasProps>(({
           onUpdate={onUpdateNode}
         />
       ))}
-    </Layer>
+    </>
   );
 });
 
