@@ -35,20 +35,6 @@ export const NodeRenderer = memo<NodeRendererProps>(({
 }) => {
   const { printBaseX, printBaseY, scaleX, scaleY } = layoutMetrics;
 
-  // Stable callbacks to prevent re-renders
-  const handleClick = React.useCallback(() => onSelect(node.id), [onSelect, node.id]);
-  
-  const handleDragEnd = React.useCallback((e: any) => {
-    const newX = (e.target.x() - printBaseX) / scaleX;
-    const newY = (e.target.y() - printBaseY) / scaleY;
-    
-    // Snap to grid if enabled
-    const snappedX = (snapEnabled && snapToGrid) ? Math.round(newX / gridSize) * gridSize : newX;
-    const snappedY = (snapEnabled && snapToGrid) ? Math.round(newY / gridSize) * gridSize : newY;
-    
-    onUpdate(node.id, { x: snappedX, y: snappedY });
-  }, [printBaseX, printBaseY, scaleX, scaleY, snapEnabled, snapToGrid, gridSize, onUpdate, node.id]);
-
   // Memoize common props to prevent object recreation
   const commonProps = useMemo(() => ({
     key: node.id,
@@ -57,8 +43,17 @@ export const NodeRenderer = memo<NodeRendererProps>(({
     rotation: node.rotation,
     opacity: node.opacity,
     draggable: activeTool === 'select',
-    onClick: handleClick,
-    onDragEnd: handleDragEnd,
+    onClick: () => onSelect(node.id),
+    onDragEnd: (e: any) => {
+      const newX = (e.target.x() - printBaseX) / scaleX;
+      const newY = (e.target.y() - printBaseY) / scaleY;
+      
+      // Snap to grid if enabled
+      const snappedX = (snapEnabled && snapToGrid) ? Math.round(newX / gridSize) * gridSize : newX;
+      const snappedY = (snapEnabled && snapToGrid) ? Math.round(newY / gridSize) * gridSize : newY;
+      
+      onUpdate(node.id, { x: snappedX, y: snappedY });
+    },
     stroke: isSelected ? 'hsl(var(--primary))' : undefined,
     strokeWidth: isSelected ? 2 / zoom : 0,
     shadowColor: isSelected ? 'hsl(var(--primary))' : undefined,
@@ -67,7 +62,8 @@ export const NodeRenderer = memo<NodeRendererProps>(({
   }), [
     node.id, node.x, node.y, node.rotation, node.opacity,
     printBaseX, printBaseY, scaleX, scaleY,
-    activeTool, isSelected, zoom, handleClick, handleDragEnd
+    activeTool, isSelected, zoom, snapEnabled, snapToGrid, gridSize,
+    onSelect, onUpdate
   ]);
 
   // Render shape nodes

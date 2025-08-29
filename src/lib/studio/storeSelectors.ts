@@ -1,54 +1,40 @@
 import { useStudioStore } from './store';
 import { useMemo } from 'react';
 
-// Optimized selectors to prevent unnecessary re-renders
+// Individual selectors for stable references - prevent re-render loops
+export const useDoc = () => useStudioStore(state => state.doc);
+export const useActiveTool = () => useStudioStore(state => state.activeTool);
+export const useSnapEnabled = () => useStudioStore(state => state.snapEnabled);
+export const useZoom = () => useStudioStore(state => state.zoom);
+export const usePanOffset = () => useStudioStore(state => state.panOffset);
+export const useIs3DMode = () => useStudioStore(state => state.is3DMode);
+
+// Simplified selectors without complex memoization to prevent circular deps
 export const useStudioSelectors = () => {
-  // Base state selectors with stable references
   const doc = useStudioStore(state => state.doc);
+  const activeTool = useStudioStore(state => state.activeTool);
+  const snapEnabled = useStudioStore(state => state.snapEnabled);
   const zoom = useStudioStore(state => state.zoom);
   const panOffset = useStudioStore(state => state.panOffset);
-  const activeTool = useStudioStore(state => state.activeTool);
   const is3DMode = useStudioStore(state => state.is3DMode);
-  const snapEnabled = useStudioStore(state => state.snapEnabled);
-
-  // Computed selectors for complex derived state
-  const selectedNodes = useMemo(() => 
-    doc.nodes.filter(node => doc.selectedIds.includes(node.id)),
-    [doc.nodes, doc.selectedIds]
-  );
-
-  const hasSelection = useMemo(() => 
-    doc.selectedIds.length > 0,
-    [doc.selectedIds.length]
-  );
-
-  const selectionBounds = useMemo(() => {
-    if (selectedNodes.length === 0) return null;
-    
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    selectedNodes.forEach(node => {
-      minX = Math.min(minX, node.x);
-      minY = Math.min(minY, node.y);
-      maxX = Math.max(maxX, node.x + node.width);
-      maxY = Math.max(maxY, node.y + node.height);
-    });
-    
-    return { minX, minY, maxX, maxY, width: maxX - minX, height: maxY - minY };
-  }, [selectedNodes]);
-
-  const canvasMetrics = useMemo(() => ({
+  
+  // Simple derived values without useMemo to prevent circular deps
+  const selectedNodes = doc.nodes.filter(node => doc.selectedIds.includes(node.id));
+  const hasSelection = doc.selectedIds.length > 0;
+  
+  const canvasMetrics = {
     garmentType: doc.canvas.garmentType,
     garmentColor: doc.canvas.garmentColor,
     width: doc.canvas.width,
     height: doc.canvas.height,
     background: doc.canvas.background
-  }), [doc.canvas]);
+  };
 
-  const viewportState = useMemo(() => ({
+  const viewportState = {
     zoom,
     panOffset,
     is3DMode
-  }), [zoom, panOffset, is3DMode]);
+  };
 
   return {
     // Base state
@@ -59,7 +45,6 @@ export const useStudioSelectors = () => {
     // Computed state
     selectedNodes,
     hasSelection,
-    selectionBounds,
     canvasMetrics,
     viewportState,
     
@@ -72,10 +57,11 @@ export const useStudioSelectors = () => {
 // Specific selectors for performance-critical components
 export const useCanvasNodes = () => useStudioStore(state => state.doc.nodes);
 export const useSelectedIds = () => useStudioStore(state => state.doc.selectedIds);
-export const useViewport = () => useStudioStore(state => ({ 
-  zoom: state.zoom, 
-  panOffset: state.panOffset 
-}));
+export const useViewport = () => {
+  const zoom = useStudioStore(state => state.zoom);
+  const panOffset = useStudioStore(state => state.panOffset);
+  return { zoom, panOffset };
+};
 export const useCanvasConfig = () => useStudioStore(state => state.doc.canvas);
 
 // Individual action selectors for stable references

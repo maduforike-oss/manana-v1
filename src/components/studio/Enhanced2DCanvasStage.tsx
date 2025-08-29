@@ -263,18 +263,7 @@ export const Enhanced2DCanvasStage = () => {
             snapToGrid={snapToGrid}
             gridSize={gridSize}
             onSelectNode={selectNode}
-            onUpdateNode={useCallback((nodeId, updates) => {
-              // Apply snapping to position updates if enabled
-              if (snapEnabled && (updates.x !== undefined || updates.y !== undefined)) {
-                const snappedPosition = snapToGridPosition({
-                  x: updates.x ?? 0,
-                  y: updates.y ?? 0
-                });
-                updateNode(nodeId, { ...updates, ...snappedPosition });
-              } else {
-                updateNode(nodeId, updates);
-              }
-            }, [snapEnabled, snapToGridPosition, updateNode])}
+            onUpdateNode={updateNode}
           />
           
           {/* Selection Box */}
@@ -305,18 +294,7 @@ export const Enhanced2DCanvasStage = () => {
                 y: printBaseY + (node.y + node.height / 2) * scaleY
               };
             }}
-            onNodeUpdate={useCallback((nodeId, updates) => {
-              // Apply snapping to position updates if enabled
-              if (snapEnabled && (updates.x !== undefined || updates.y !== undefined)) {
-                const snappedPosition = snapToGridPosition({
-                  x: updates.x ?? 0,
-                  y: updates.y ?? 0
-                });
-                updateNode(nodeId, { ...updates, ...snappedPosition });
-              } else {
-                updateNode(nodeId, updates);
-              }
-            }, [snapEnabled, snapToGridPosition, updateNode])}
+            onNodeUpdate={updateNode}
           />
           
         </Layer>
