@@ -159,10 +159,10 @@ export const EnhancedLeftTools = ({ collapsed = false }: EnhancedLeftToolsProps)
         <div className="w-8 h-px bg-border my-2" />
 
         {/* Shape Tools Dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Tooltip>
-              <TooltipTrigger asChild>
+        <Tooltip>
+          <DropdownMenu>
+            <TooltipTrigger asChild>
+              <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -171,28 +171,28 @@ export const EnhancedLeftTools = ({ collapsed = false }: EnhancedLeftToolsProps)
                   <Shapes className="w-6 h-6" />
                   <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-primary rounded-full opacity-60" />
                 </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="bg-card border border-border shadow-lg">
-                <div className="text-center">
-                  <div className="font-medium text-foreground">Shapes</div>
-                  <div className="text-xs text-primary mt-1 font-mono">(S)</div>
-                </div>
-              </TooltipContent>
-            </Tooltip>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent side="right" className="w-48 bg-card border border-border shadow-xl">
-            {shapeTools.map(({ shape, icon: Icon, label }) => (
-              <DropdownMenuItem
-                key={shape}
-                onClick={() => createShape(shape)}
-                className="flex items-center gap-3 p-3 hover:bg-accent cursor-pointer transition-colors"
-              >
-                <Icon className="w-5 h-5 text-foreground/80" />
-                <span className="font-medium text-foreground">{label}</span>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+              </DropdownMenuTrigger>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="bg-card border border-border shadow-lg">
+              <div className="text-center">
+                <div className="font-medium text-foreground">Shapes</div>
+                <div className="text-xs text-primary mt-1 font-mono">(S)</div>
+              </div>
+            </TooltipContent>
+            <DropdownMenuContent side="right" className="w-48 bg-card border border-border shadow-xl">
+              {shapeTools.map(({ shape, icon: Icon, label }) => (
+                <DropdownMenuItem
+                  key={shape}
+                  onClick={() => createShape(shape)}
+                  className="flex items-center gap-3 p-3 hover:bg-accent cursor-pointer transition-colors"
+                >
+                  <Icon className="w-5 h-5 text-foreground/80" />
+                  <span className="font-medium text-foreground">{label}</span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </Tooltip>
 
         {/* Upload Tool */}
         <Tooltip>
