@@ -5,7 +5,7 @@ import { RightProps } from './RightProps';
 import { SimplifiedCanvasStage } from './SimplifiedCanvasStage';
 import { ColorSelector } from './ColorSelector';
 import { EnhancedBottomControls } from './EnhancedBottomControls';
-import { useStudioActions } from '../../lib/studio/storeSelectors';
+import { useSetActiveTool, useUndo, useRedo, useSetZoom, useSetPanOffset } from '../../lib/studio/storeSelectors';
 import { useAppStore } from '../../store/useAppStore';
 import { useViewportManager } from './EnhancedViewportManager';
 import { AsyncStudioInitializer } from './optimized/AsyncStudioInitializer';
@@ -14,7 +14,11 @@ import { ChevronLeft, ChevronRight, Layers, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export const StudioShell = () => {
-  const { undo, redo, setActiveTool, setZoom, setPanOffset } = useStudioActions();
+  const setActiveTool = useSetActiveTool();
+  const undo = useUndo();
+  const redo = useRedo();
+  const setZoom = useSetZoom();
+  const setPanOffset = useSetPanOffset();
   const { currentDesign } = useAppStore();
   const { toggleGrid, toggleRulers, toggleSnap, toggleBoundingBox } = useViewportManager();
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);

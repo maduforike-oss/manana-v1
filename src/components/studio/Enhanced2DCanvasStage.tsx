@@ -1,6 +1,13 @@
-import React, { useRef, useEffect, useState, useMemo } from 'react';
+import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react';
 import { Stage, Layer, Rect, Image } from 'react-konva';
-import { useStudioSelectors, useStudioActions, useViewport } from '../../lib/studio/storeSelectors';
+import { 
+  useStudioSelectors, 
+  useViewport, 
+  useSelectNode, 
+  useSelectMany, 
+  useClearSelection, 
+  useUpdateNode 
+} from '../../lib/studio/storeSelectors';
 import { getGarmentById } from '@/lib/studio/garments';
 import { Canvas3D } from './Canvas3D';
 import { Canvas3DControls } from './Canvas3DControls';
@@ -24,8 +31,13 @@ export const Enhanced2DCanvasStage = () => {
   
   // Optimized selectors
   const { doc, selectedNodes, hasSelection, canvasMetrics, viewportState, activeTool, snapEnabled } = useStudioSelectors();
-  const { selectNode, selectMany, clearSelection, updateNode } = useStudioActions();
   const { zoom, panOffset } = useViewport();
+  
+  // Stable action selectors
+  const selectNode = useSelectNode();
+  const selectMany = useSelectMany();
+  const clearSelection = useClearSelection();
+  const updateNode = useUpdateNode();
   
   const { showGrid, showRulers, showBoundingBox, snapToGrid, gridSize, rulerUnits } = useViewportManager();
 
@@ -86,8 +98,8 @@ export const Enhanced2DCanvasStage = () => {
     return { printBaseX, printBaseY, scaleX, scaleY };
   }, [stageSize.width, stageSize.height, canvasMetrics.width, canvasMetrics.height]);
 
-  // Snapping helper function
-  const snapToGridPosition = React.useCallback((position: { x: number; y: number }) => {
+  // Snapping helper function with stable callback
+  const snapToGridPosition = useCallback((position: { x: number; y: number }) => {
     if (!snapEnabled || !gridSize) return position;
     
     return {
@@ -105,8 +117,8 @@ export const Enhanced2DCanvasStage = () => {
     zoom
   }), [panOffset, stageSize, zoom]);
 
-  // Enhanced selection with marquee tool
-  const handleStageMouseDown = React.useCallback((e: any) => {
+  // Enhanced selection with marquee tool - stable callbacks
+  const handleStageMouseDown = useCallback((e: any) => {
     if (activeTool === 'select' && e.target === e.target.getStage()) {
       const pos = e.target.getStage().getPointerPosition();
       setDragStart(pos);
@@ -114,7 +126,7 @@ export const Enhanced2DCanvasStage = () => {
     }
   }, [activeTool]);
 
-  const handleStageMouseMove = React.useCallback((e: any) => {
+  const handleStageMouseMove = useCallback((e: any) => {
     if (dragStart && selectionBox) {
       const pos = e.target.getStage().getPointerPosition();
       setSelectionBox({
@@ -126,7 +138,7 @@ export const Enhanced2DCanvasStage = () => {
     }
   }, [dragStart, selectionBox]);
 
-  const handleStageMouseUp = React.useCallback((e: any) => {
+  const handleStageMouseUp = useCallback((e: any) => {
     if (selectionBox && dragStart) {
       // Find nodes within selection box - simplified for performance
       const selectedIds: string[] = [];
@@ -157,8 +169,8 @@ export const Enhanced2DCanvasStage = () => {
     setSelectionBox(null);
   }, [selectionBox, dragStart, doc.nodes, layoutMetrics, selectMany, clearSelection]);
 
-  // Handle stage click for tool interactions
-  const handleStageClick = React.useCallback((e: any) => {
+  // Handle stage click for tool interactions - stable callback
+  const handleStageClick = useCallback((e: any) => {
     if (e.target === e.target.getStage()) {
       clearSelection();
     }
@@ -251,7 +263,7 @@ export const Enhanced2DCanvasStage = () => {
             snapToGrid={snapToGrid}
             gridSize={gridSize}
             onSelectNode={selectNode}
-            onUpdateNode={(nodeId, updates) => {
+            onUpdateNode={useCallback((nodeId, updates) => {
               // Apply snapping to position updates if enabled
               if (snapEnabled && (updates.x !== undefined || updates.y !== undefined)) {
                 const snappedPosition = snapToGridPosition({
@@ -262,7 +274,7 @@ export const Enhanced2DCanvasStage = () => {
               } else {
                 updateNode(nodeId, updates);
               }
-            }}
+            }, [snapEnabled, snapToGridPosition, updateNode])}
           />
           
           {/* Selection Box */}
@@ -293,7 +305,7 @@ export const Enhanced2DCanvasStage = () => {
                 y: printBaseY + (node.y + node.height / 2) * scaleY
               };
             }}
-            onNodeUpdate={(nodeId, updates) => {
+            onNodeUpdate={useCallback((nodeId, updates) => {
               // Apply snapping to position updates if enabled
               if (snapEnabled && (updates.x !== undefined || updates.y !== undefined)) {
                 const snappedPosition = snapToGridPosition({
@@ -304,7 +316,7 @@ export const Enhanced2DCanvasStage = () => {
               } else {
                 updateNode(nodeId, updates);
               }
-            }}
+            }, [snapEnabled, snapToGridPosition, updateNode])}
           />
           
         </Layer>

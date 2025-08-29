@@ -70,7 +70,7 @@ export const VirtualCanvas = React.memo<VirtualCanvasProps>(({
     });
   }, [nodes, layoutMetrics, visibleBounds]);
 
-  // Memoized node selection check
+  // Stable node selection check with reduced re-renders
   const isNodeSelected = useCallback((nodeId: string) => {
     return selectedIds.includes(nodeId);
   }, [selectedIds]);

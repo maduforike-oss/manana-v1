@@ -78,30 +78,17 @@ export const useViewport = () => useStudioStore(state => ({
 }));
 export const useCanvasConfig = () => useStudioStore(state => state.doc.canvas);
 
-// Action selectors to prevent prop drilling
-export const useStudioActions = () => {
-  return useStudioStore(state => ({
-    // Node actions
-    selectNode: state.selectNode,
-    selectMany: state.selectMany,
-    clearSelection: state.clearSelection,
-    updateNode: state.updateNode,
-    addNode: state.addNode,
-    removeNode: state.removeNode,
-    
-    // Tool actions
-    setActiveTool: state.setActiveTool,
-    
-    // View actions
-    setZoom: state.setZoom,
-    setPanOffset: state.setPanOffset,
-    toggle3DMode: state.toggle3DMode,
-    
-    // History actions
-    undo: state.undo,
-    redo: state.redo,
-    
-    // Canvas actions
-    updateCanvas: state.updateCanvas
-  }));
-};
+// Individual action selectors for stable references
+export const useSelectNode = () => useStudioStore(state => state.selectNode);
+export const useSelectMany = () => useStudioStore(state => state.selectMany);
+export const useClearSelection = () => useStudioStore(state => state.clearSelection);
+export const useUpdateNode = () => useStudioStore(state => state.updateNode);
+export const useAddNode = () => useStudioStore(state => state.addNode);
+export const useRemoveNode = () => useStudioStore(state => state.removeNode);
+export const useSetActiveTool = () => useStudioStore(state => state.setActiveTool);
+export const useSetZoom = () => useStudioStore(state => state.setZoom);
+export const useSetPanOffset = () => useStudioStore(state => state.setPanOffset);
+export const useToggle3DMode = () => useStudioStore(state => state.toggle3DMode);
+export const useUndo = () => useStudioStore(state => state.undo);
+export const useRedo = () => useStudioStore(state => state.redo);
+export const useUpdateCanvas = () => useStudioStore(state => state.updateCanvas);

@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { Stage, Layer, Rect, Image } from 'react-konva';
-import { useStudioSelectors, useStudioActions, useViewport } from '../../lib/studio/storeSelectors';
+import { useStudioSelectors, useSelectNode, useClearSelection, useUpdateNode, useViewport } from '../../lib/studio/storeSelectors';
 import { getGarmentById } from '@/lib/studio/garments';
 import { Canvas3D } from './Canvas3D';
 import { Canvas3DControls } from './Canvas3DControls';
@@ -14,8 +14,12 @@ export const SimplifiedCanvasStage = () => {
   
   // Optimized selectors
   const { doc, canvasMetrics, viewportState } = useStudioSelectors();
-  const { selectNode, clearSelection, updateNode } = useStudioActions();
   const { zoom, panOffset } = useViewport();
+  
+  // Stable action selectors
+  const selectNode = useSelectNode();
+  const clearSelection = useClearSelection();
+  const updateNode = useUpdateNode();
   
   // Simplified image loading
   useEffect(() => {
