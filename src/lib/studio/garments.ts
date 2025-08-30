@@ -23,6 +23,22 @@ import womensTankWhiteFront from '@/assets/garments/womens-tank-white-front.jpg'
 import performanceBlackFront from '@/assets/garments/performance-black-front.jpg';
 import longsleeveHeatherFront from '@/assets/garments/longsleeve-heather-front.jpg';
 
+// Load any images dropped into src/assets/custom at build time.
+// as: 'url' means Vite will return the resolved URL string.
+const customFiles = import.meta.glob('@/assets/custom/*.{png,jpg,jpeg}', { eager: true, as: 'url' });
+
+interface CustomMap { [id: string]: { [side: string]: string } }
+const customImageMap: CustomMap = {};
+
+// Build a map: { 'tshirt': { front: '...url...', back: '...url...' }, ... }
+for (const [path, url] of Object.entries(customFiles)) {
+  const filename = path.split('/').pop()!.toLowerCase();
+  const [id, sideWithExt] = filename.split('-', 2);
+  const side = sideWithExt.split('.')[0]; // front, back, etc.
+  if (!customImageMap[id]) customImageMap[id] = {};
+  customImageMap[id][side] = url as string;
+}
+
 export interface GarmentColor {
   id: string;
   name: string;
@@ -518,18 +534,32 @@ export const GARMENT_TYPES: GarmentType[] = [
   },
 ];
 
+// Helper function to merge custom images
+function mergeCustomImages(g: GarmentType): GarmentType {
+  const custom = customImageMap[g.id];
+  if (!custom) return g;
+  return {
+    ...g,
+    images: {
+      ...g.images,
+      ...custom, // overrides front/back/side if provided
+    },
+  };
+}
+
 // Helper functions
 export const getGarmentById = (id: string): GarmentType | undefined => {
-  return GARMENT_TYPES.find(garment => garment.id === id);
+  const garment = GARMENT_TYPES.find(garment => garment.id === id);
+  return garment ? mergeCustomImages(garment) : undefined;
 };
 
 export const getGarmentsByCategory = (category: string): GarmentType[] => {
-  if (category === 'All') return GARMENT_TYPES;
-  return GARMENT_TYPES.filter(garment => garment.category === category);
+  if (category === 'All') return GARMENT_TYPES.map(mergeCustomImages);
+  return GARMENT_TYPES.filter(garment => garment.category === category).map(mergeCustomImages);
 };
 
 export const getPopularGarments = (): GarmentType[] => {
-  return GARMENT_TYPES.filter(garment => garment.popular);
+  return GARMENT_TYPES.filter(garment => garment.popular).map(mergeCustomImages);
 };
 
 export const getColorByGarmentAndId = (garmentId: string, colorId: string): GarmentColor | undefined => {
