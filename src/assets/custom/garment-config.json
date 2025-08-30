@@ -1,0 +1,160 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "lastUpdated": "2024-08-30",
+    "description": "Configuration for custom garment assets"
+  },
+  "garmentMappings": {
+    "t-shirt": {
+      "displayName": "T-Shirt",
+      "category": "Basics",
+      "aliases": ["tshirt", "tee"],
+      "supportedOrientations": ["front", "back", "side"],
+      "defaultColor": "white"
+    },
+    "hoodie": {
+      "displayName": "Hoodie",
+      "category": "Outerwear",
+      "aliases": ["hood", "pullover-hoodie"],
+      "supportedOrientations": ["front", "back", "side"],
+      "defaultColor": "black"
+    },
+    "tank": {
+      "displayName": "Tank Top",
+      "category": "Basics",
+      "aliases": ["tank-top", "tanktop", "vest"],
+      "supportedOrientations": ["front", "back"],
+      "defaultColor": "white"
+    },
+    "vneck": {
+      "displayName": "V-Neck T-Shirt",
+      "category": "Basics",
+      "aliases": ["v-neck", "vneck-tee"],
+      "supportedOrientations": ["front", "back"],
+      "defaultColor": "white"
+    },
+    "long-sleeve-tee": {
+      "displayName": "Long Sleeve T-Shirt",
+      "category": "Basics",
+      "aliases": ["long-sleeve", "longsleeve", "ls-tee"],
+      "supportedOrientations": ["front", "back", "side"],
+      "defaultColor": "white"
+    },
+    "polo": {
+      "displayName": "Polo Shirt",
+      "category": "Basics",
+      "aliases": ["polo-shirt"],
+      "supportedOrientations": ["front", "back"],
+      "defaultColor": "navy"
+    },
+    "zip-hoodie": {
+      "displayName": "Zip-Up Hoodie",
+      "category": "Outerwear",
+      "aliases": ["zip-up", "zipup-hoodie", "zipper-hoodie"],
+      "supportedOrientations": ["front", "back", "side"],
+      "defaultColor": "black"
+    },
+    "crewneck": {
+      "displayName": "Crewneck Sweatshirt",
+      "category": "Outerwear",
+      "aliases": ["crew", "sweatshirt"],
+      "supportedOrientations": ["front", "back"],
+      "defaultColor": "gray"
+    },
+    "bomber-jacket": {
+      "displayName": "Bomber Jacket",
+      "category": "Outerwear",
+      "aliases": ["bomber"],
+      "supportedOrientations": ["front", "back", "side"],
+      "defaultColor": "black"
+    },
+    "denim-jacket": {
+      "displayName": "Denim Jacket",
+      "category": "Outerwear",
+      "aliases": ["denim"],
+      "supportedOrientations": ["front", "back"],
+      "defaultColor": "blue"
+    },
+    "cap": {
+      "displayName": "Baseball Cap",
+      "category": "Accessories",
+      "aliases": ["baseball-cap", "hat"],
+      "supportedOrientations": ["front", "side"],
+      "defaultColor": "black"
+    },
+    "beanie": {
+      "displayName": "Beanie",
+      "category": "Accessories",
+      "aliases": ["winter-hat", "knit-hat"],
+      "supportedOrientations": ["front", "side"],
+      "defaultColor": "black"
+    },
+    "snapback": {
+      "displayName": "Snapback Cap",
+      "category": "Accessories",
+      "aliases": ["snap-back", "flat-brim"],
+      "supportedOrientations": ["front", "side"],
+      "defaultColor": "black"
+    },
+    "trucker-hat": {
+      "displayName": "Trucker Hat",
+      "category": "Accessories",
+      "aliases": ["trucker"],
+      "supportedOrientations": ["front", "side"],
+      "defaultColor": "black"
+    },
+    "tote": {
+      "displayName": "Tote Bag",
+      "category": "Accessories",
+      "aliases": ["tote-bag", "canvas-bag"],
+      "supportedOrientations": ["front", "back"],
+      "defaultColor": "white"
+    },
+    "apron": {
+      "displayName": "Kitchen Apron",
+      "category": "Specialty",
+      "aliases": ["kitchen-apron", "cooking-apron"],
+      "supportedOrientations": ["front"],
+      "defaultColor": "white"
+    },
+    "onesie": {
+      "displayName": "Baby Onesie",
+      "category": "Baby & Kids",
+      "aliases": ["baby-onesie", "infant-bodysuit"],
+      "supportedOrientations": ["front", "back"],
+      "defaultColor": "white"
+    },
+    "womens-fitted-tee": {
+      "displayName": "Women's Fitted Tee",
+      "category": "Women's",
+      "aliases": ["womens-tee", "fitted-tee", "ladies-tee"],
+      "supportedOrientations": ["front", "back"],
+      "defaultColor": "pink"
+    },
+    "performance-shirt": {
+      "displayName": "Performance Shirt",
+      "category": "Athletic",
+      "aliases": ["performance", "athletic-shirt", "sports-shirt"],
+      "supportedOrientations": ["front", "back"],
+      "defaultColor": "black"
+    }
+  },
+  "uploadGuidelines": {
+    "fileFormats": ["PNG", "JPG", "JPEG"],
+    "maxFileSize": "10MB",
+    "recommendedSize": "1024x1024px",
+    "backgroundColor": "White or transparent",
+    "orientation": "Front-facing, centered",
+    "compression": "High quality, minimal compression"
+  },
+  "namingConvention": {
+    "pattern": "{garment-id}-{orientation}.{ext}",
+    "examples": [
+      "tshirt-front.png",
+      "hoodie-back.jpg",
+      "tank-side.jpeg"
+    ],
+    "separators": ["-"],
+    "caseStyle": "lowercase"
+  }
+}

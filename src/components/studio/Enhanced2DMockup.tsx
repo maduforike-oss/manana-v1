@@ -1,20 +1,11 @@
 import React, { useMemo } from 'react';
 import { useStudioStore } from '@/lib/studio/store';
-import whiteShirt from '@/assets/mockups/tshirt-white-front-clean.jpg';
-import blackShirt from '@/assets/mockups/tshirt-black-front-clean.jpg';
-import navyShirt from '@/assets/mockups/tshirt-navy-front-clean.jpg';
-import grayShirt from '@/assets/mockups/tshirt-gray-front-clean.jpg';
+import { CanvasImageLoader } from './CanvasImageLoader';
+import { TSHIRT_COLORS } from './ColorSelector';
 
 interface Enhanced2DMockupProps {
   className?: string;
 }
-
-const TSHIRT_COLORS = [
-  { id: 'white', name: 'White', hex: '#FFFFFF', image: whiteShirt },
-  { id: 'black', name: 'Black', hex: '#000000', image: blackShirt },
-  { id: 'navy', name: 'Navy', hex: '#1A237E', image: navyShirt },
-  { id: 'gray', name: 'Heather Gray', hex: '#B8B8B8', image: grayShirt },
-];
 
 export const Enhanced2DMockup: React.FC<Enhanced2DMockupProps> = ({ className = '' }) => {
   const { doc } = useStudioStore();
@@ -25,11 +16,11 @@ export const Enhanced2DMockup: React.FC<Enhanced2DMockupProps> = ({ className = 
 
   return (
     <div className={`relative w-full h-full flex items-center justify-center ${className}`}>
-      {/* T-Shirt Base */}
+      {/* T-Shirt Base - Now uses dynamic image loader */}
       <div className="relative w-[400px] h-[400px]">
-        <img
-          src={currentColor.image}
-          alt={`${currentColor.name} T-Shirt`}
+        <CanvasImageLoader
+          garmentId={doc.canvas.garmentType || 't-shirt'}
+          orientation="front"
           className="w-full h-full object-contain"
           style={{
             filter: currentColor.id !== 'white' ? 'none' : 'brightness(1.05)'

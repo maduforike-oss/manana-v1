@@ -6,7 +6,8 @@ import { useStudioStore } from '../../../lib/studio/store';
 import { cn } from '@/lib/utils';
 import { GARMENT_TYPES, getGarmentsByCategory, getColorByGarmentAndId } from '@/lib/studio/garments';
 import { GarmentPreview } from './GarmentPreview';
-import { Sparkles, Filter } from 'lucide-react';
+import { ImageUploadDialog } from './ImageUploadDialog';
+import { Sparkles, Filter, Upload } from 'lucide-react';
 
 const CATEGORIES = ['All', 'Basics', 'Outerwear', 'Accessories', 'Professional', 'Athletic', "Women's", 'Baby & Kids', 'Specialty'];
 
@@ -48,22 +49,40 @@ export const GarmentSelector = () => {
     }));
   };
 
+  const handleUploadComplete = (uploadedFiles: string[]) => {
+    console.log('Upload completed:', uploadedFiles);
+    // Note: In a real implementation, this would trigger a re-import of the image mappings
+    // For now, the user would need to refresh or the images would appear on next build
+  };
+
   return (
     <div className="h-full bg-background overflow-auto">
       <div className="container mx-auto py-8 px-4 max-w-7xl">
-        {/* Enhanced Header */}
+        {/* Enhanced Header with Upload */}
         <div className="text-center mb-12">
-          <div className="flex items-center justify-center gap-2 mb-4">
+          <div className="flex items-center justify-center gap-4 mb-4">
             <Sparkles className="w-8 h-8 text-primary animate-pulse" />
             <h1 className="text-5xl font-bold bg-gradient-to-r from-primary via-primary-glow to-secondary bg-clip-text text-transparent">
               Choose Your Canvas
             </h1>
             <Sparkles className="w-8 h-8 text-secondary animate-pulse" />
           </div>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Select from our premium garment collection. Each item features HD mockups, professional color options, 
-            and industry-standard specifications for the perfect design experience.
-          </p>
+          
+          <div className="flex items-center justify-center gap-4 mb-6">
+            <p className="text-xl text-muted-foreground max-w-3xl leading-relaxed">
+              Select from our premium garment collection. Each item features HD mockups, professional color options, 
+              and industry-standard specifications for the perfect design experience.
+            </p>
+            <ImageUploadDialog
+              onUploadComplete={handleUploadComplete}
+              trigger={
+                <Button variant="outline" size="sm" className="gap-2 shrink-0">
+                  <Upload className="w-4 h-4" />
+                  Upload Images
+                </Button>
+              }
+            />
+          </div>
           <div className="flex items-center justify-center gap-6 mt-6 text-sm text-muted-foreground">
             <span className="flex items-center gap-2">
               <Badge variant="outline" className="bg-primary/10">300 DPI</Badge>

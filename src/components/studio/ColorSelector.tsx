@@ -2,7 +2,14 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
 import { useStudioStore } from '@/lib/studio/store';
-import { TSHIRT_COLORS } from './Enhanced2DMockup';
+
+// T-Shirt color options - now separate from Enhanced2DMockup for reusability
+export const TSHIRT_COLORS = [
+  { id: 'white', name: 'White', hex: '#FFFFFF' },
+  { id: 'black', name: 'Black', hex: '#000000' },
+  { id: 'navy', name: 'Navy', hex: '#1A237E' },
+  { id: 'gray', name: 'Heather Gray', hex: '#B8B8B8' },
+];
 
 export const ColorSelector = () => {
   const { doc, updateCanvas } = useStudioStore();
