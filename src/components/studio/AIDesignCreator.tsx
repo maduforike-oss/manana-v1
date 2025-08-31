@@ -1,48 +1,36 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { Sparkles, Upload, Wand2, ArrowLeft, Loader2, Shirt, Brain, Type, Camera, FileImage, Palette } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
-import { useStudioStore } from '../../lib/studio/store';
-import { GARMENT_TYPES } from '@/lib/studio/garments';
-import { 
-  analyzeDesignPrompt, 
-  generateDesignElements, 
-  elementsToNodes,
-  analyzeImageForDesign
-} from '@/lib/studio/aiDesignGenerator';
-import { cn } from '@/lib/utils';
-import { 
-  Brain, 
-  Upload, 
-  Type, 
-  Palette, 
-  Sparkles, 
-  ImageIcon,
-  Shirt,
-  ArrowLeft,
-  Loader2,
-  Wand2,
-  Camera,
-  FileImage
-} from 'lucide-react';
+import { useStudioStore } from '@/lib/studio/store';
+import { useNavigation } from '@/hooks/useNavigation';
+import { GARMENTS } from '@/lib/studio/garments';
+import { analyzeDesignPrompt, generateDesignElements, elementsToNodes, analyzeImageForDesign } from '@/lib/studio/aiDesignGenerator';
+import { garmentGenerator, GenerationOptions } from '@/lib/studio/garmentImageGenerator';
+import { getGarmentSpec } from '@/lib/studio/garmentSpecs';
+import { toast } from 'sonner';
 
 interface AIDesignCreatorProps {
   onBack?: () => void;
 }
 
-export const AIDesignCreator = ({ onBack }: AIDesignCreatorProps) => {
-  const [mode, setMode] = useState<'prompt' | 'image' | null>(null);
+export const AIDesignCreator: React.FC<AIDesignCreatorProps> = ({ onBack }) => {
+  const [mode, setMode] = useState<'select' | 'prompt' | 'image' | 'garment'>('select');
   const [prompt, setPrompt] = useState('');
-  const [selectedGarment, setSelectedGarment] = useState('');
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [selectedGarment, setSelectedGarment] = useState<string>('tshirt');
+  const [selectedOrientation, setSelectedOrientation] = useState<'front' | 'back'>('front');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [generationStep, setGenerationStep] = useState<string>('');
   
-  const { createDesign, setActiveTab } = useAppStore();
-  const { initializeFromGarment, addNode } = useStudioStore();
+  const { createDesign, setCurrentTab } = useAppStore();
+  const { initializeStudio, addNode, setDoc } = useStudioStore();
+  const { navigateToStudio } = useNavigation();
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -53,37 +41,99 @@ export const AIDesignCreator = ({ onBack }: AIDesignCreatorProps) => {
     }
   };
 
-  const generateDesign = async () => {
-    if (!selectedGarment || (!prompt && !uploadedImage)) return;
-    
+  const generateGarmentBase = async () => {
+    if (!selectedGarment) {
+      toast.error('Please select a garment type');
+      return;
+    }
+
     setIsGenerating(true);
-    
+    setGenerationStep('Generating garment template...');
+
     try {
-      // Create the design first
-      const success = createDesign(selectedGarment);
-      if (!success) {
-        alert('Design limit reached! Upgrade to create more designs.');
-        return;
+      // Generate garment base image
+      const generationOptions: GenerationOptions = {
+        garmentId: selectedGarment,
+        orientation: selectedOrientation,
+        color: 'white',
+        material: 'cotton',
+        style: 'minimal'
+      };
+
+      const result = await garmentGenerator.generateGarment(generationOptions);
+      
+      setGenerationStep('Setting up canvas...');
+
+      // Create a new design
+      const design = createDesign({
+        name: `${result.spec.name} Design`,
+        garmentType: selectedGarment as any
+      });
+
+      // Initialize studio with generated garment
+      initializeStudio();
+      
+      // Update canvas configuration with garment specs
+      const canvasSize = { width: result.spec.canvasWidth, height: result.spec.canvasHeight };
+      setDoc(prev => ({
+        ...prev,
+        canvas: {
+          ...prev.canvas,
+          width: canvasSize.width,
+          height: canvasSize.height,
+          garmentType: selectedGarment,
+          baseImageUrl: result.imageUrl
+        }
+      }));
+
+      setGenerationStep('');
+      toast.success('Garment template ready!');
+
+      // Navigate to studio
+      setCurrentTab('studio');
+      if (navigateToStudio) {
+        navigateToStudio();
       }
+    } catch (error) {
+      console.error('Garment generation failed:', error);
+      toast.error('Failed to generate garment template. Please try again.');
+    } finally {
+      setIsGenerating(false);
+      setGenerationStep('');
+    }
+  };
 
-      // Initialize studio with garment
-      initializeFromGarment(selectedGarment, 'white');
+  const generateDesign = async () => {
+    if (!selectedGarment) {
+      toast.error('Please select a garment type');
+      return;
+    }
 
-      // Simulate AI generation delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
+    if (mode === 'prompt' && !prompt.trim()) {
+      toast.error('Please enter a design prompt');
+      return;
+    }
 
-      // Generate design elements based on mode
+    if (mode === 'image' && !uploadedImage) {
+      toast.error('Please upload an image');
+      return;
+    }
+
+    setIsGenerating(true);
+
+    try {
+      // First generate garment base
+      await generateGarmentBase();
+
+      // Then add design elements
       if (mode === 'prompt') {
         await generateFromPrompt();
       } else if (mode === 'image') {
         await generateFromImage();
       }
-
-      // Navigate to studio
-      setActiveTab('studio');
     } catch (error) {
       console.error('Design generation failed:', error);
-      alert('Failed to generate design. Please try again.');
+      toast.error('Failed to generate design. Please try again.');
     } finally {
       setIsGenerating(false);
     }
@@ -131,110 +181,121 @@ export const AIDesignCreator = ({ onBack }: AIDesignCreatorProps) => {
     }
   };
 
-  if (mode === null) {
+  if (mode === 'select') {
     return (
-      <div className="h-full bg-background overflow-auto">
-        <div className="container mx-auto py-8 px-4 max-w-4xl">
-          {onBack && (
-            <Button
-              onClick={onBack}
-              variant="ghost"
-              className="mb-6"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Hub
-            </Button>
-          )}
-
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20 p-6">
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
           <div className="text-center mb-12">
-            <div className="flex items-center justify-center gap-4 mb-4">
-              <Brain className="w-10 h-10 text-primary" />
-              <h1 className="text-5xl font-bold bg-gradient-to-r from-primary via-purple-500 to-secondary bg-clip-text text-transparent">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              {onBack && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onBack}
+                  className="absolute left-6 top-6"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </Button>
+              )}
+              <Sparkles className="w-8 h-8 text-primary animate-pulse" />
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                 AI Design Creator
               </h1>
-              <Wand2 className="w-10 h-10 text-secondary" />
+              <Sparkles className="w-8 h-8 text-primary animate-pulse" />
             </div>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              Let AI create the perfect design for your apparel. Choose your approach and watch as intelligent algorithms craft professional designs tailored to your vision.
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Create stunning apparel designs using AI. Choose your preferred method to get started.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          {/* Mode Selection Cards */}
+          <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            {/* Quick Garment Generation */}
             <Card 
-              className="cursor-pointer hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/50"
-              onClick={() => setMode('prompt')}
+              className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 border-2 hover:border-primary/50"
+              onClick={() => setMode('garment')}
             >
               <CardHeader className="text-center pb-4">
-                <div className="mx-auto mb-4 p-4 bg-primary/10 rounded-full w-fit">
-                  <Type className="w-8 h-8 text-primary" />
+                <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-accent to-accent/60 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Shirt className="w-8 h-8 text-white" />
                 </div>
-                <CardTitle className="text-2xl">Text Prompt</CardTitle>
+                <CardTitle className="text-xl">Quick Start</CardTitle>
               </CardHeader>
               <CardContent className="text-center">
-                <p className="text-muted-foreground mb-6">
-                  Describe your vision and let AI create a design that matches your imagination. Perfect for bringing ideas to life.
+                <p className="text-muted-foreground mb-4">
+                  Generate a clean garment template and start designing immediately.
                 </p>
-                <div className="space-y-2">
-                  <Badge variant="outline" className="mr-2">Natural Language</Badge>
-                  <Badge variant="outline" className="mr-2">Style Analysis</Badge>
-                  <Badge variant="outline">Smart Layout</Badge>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  <Badge variant="secondary">Fast</Badge>
+                  <Badge variant="secondary">Clean Base</Badge>
                 </div>
-                <Button className="w-full mt-6">
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Create from Prompt
-                </Button>
               </CardContent>
             </Card>
 
+            {/* Text Prompt Mode */}
             <Card 
-              className="cursor-pointer hover:shadow-lg transition-all duration-300 border-2 hover:border-secondary/50"
+              className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 border-2 hover:border-primary/50"
+              onClick={() => setMode('prompt')}
+            >
+              <CardHeader className="text-center pb-4">
+                <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-primary to-primary/60 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Wand2 className="w-8 h-8 text-white" />
+                </div>
+                <CardTitle className="text-xl">From Text Prompt</CardTitle>
+              </CardHeader>
+              <CardContent className="text-center">
+                <p className="text-muted-foreground mb-4">
+                  Describe your design idea and let AI create it for you.
+                </p>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  <Badge variant="secondary">Smart Layouts</Badge>
+                  <Badge variant="secondary">Typography</Badge>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Image Upload Mode */}
+            <Card 
+              className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 border-2 hover:border-primary/50"
               onClick={() => setMode('image')}
             >
               <CardHeader className="text-center pb-4">
-                <div className="mx-auto mb-4 p-4 bg-secondary/10 rounded-full w-fit">
-                  <Camera className="w-8 h-8 text-secondary" />
+                <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-secondary to-secondary/60 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Upload className="w-8 h-8 text-white" />
                 </div>
-                <CardTitle className="text-2xl">Image Analysis</CardTitle>
+                <CardTitle className="text-xl">From Image</CardTitle>
               </CardHeader>
               <CardContent className="text-center">
-                <p className="text-muted-foreground mb-6">
-                  Upload an image and AI will analyze it to create appropriate apparel designs. Great for inspiration and adaptation.
+                <p className="text-muted-foreground mb-4">
+                  Upload an image and AI will analyze it to create design elements.
                 </p>
-                <div className="space-y-2">
-                  <Badge variant="outline" className="mr-2">Image Recognition</Badge>
-                  <Badge variant="outline" className="mr-2">Color Extraction</Badge>
-                  <Badge variant="outline">Style Adaptation</Badge>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  <Badge variant="secondary">Color Extraction</Badge>
+                  <Badge variant="secondary">Style Transfer</Badge>
                 </div>
-                <Button className="w-full mt-6" variant="secondary">
-                  <FileImage className="w-4 h-4 mr-2" />
-                  Upload & Analyze
-                </Button>
               </CardContent>
             </Card>
           </div>
 
+          {/* Feature Highlights */}
           <div className="mt-16 text-center">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-              <div className="p-6 bg-card border border-border rounded-xl">
-                <Brain className="w-8 h-8 text-primary mx-auto mb-3" />
-                <h3 className="font-semibold text-foreground mb-2">Intelligent Analysis</h3>
-                <p className="text-sm text-muted-foreground">
-                  Advanced AI analyzes your input and generates contextually appropriate designs
-                </p>
+            <div className="flex flex-wrap justify-center gap-6 max-w-4xl mx-auto">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-primary rounded-full"></div>
+                <span className="text-sm text-muted-foreground">Apparel-Optimized</span>
               </div>
-              <div className="p-6 bg-card border border-border rounded-xl">
-                <Palette className="w-8 h-8 text-secondary mx-auto mb-3" />
-                <h3 className="font-semibold text-foreground mb-2">Smart Composition</h3>
-                <p className="text-sm text-muted-foreground">
-                  Automatically creates balanced layouts with proper sizing and positioning
-                </p>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-primary rounded-full"></div>
+                <span className="text-sm text-muted-foreground">Print-Ready Output</span>
               </div>
-              <div className="p-6 bg-card border border-border rounded-xl">
-                <Shirt className="w-8 h-8 text-green-500 mx-auto mb-3" />
-                <h3 className="font-semibold text-foreground mb-2">Apparel Optimized</h3>
-                <p className="text-sm text-muted-foreground">
-                  Designs are created specifically for apparel with print-ready specifications
-                </p>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-primary rounded-full"></div>
+                <span className="text-sm text-muted-foreground">Professional Quality</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-primary rounded-full"></div>
+                <span className="text-sm text-muted-foreground">Instant Generation</span>
               </div>
             </div>
           </div>
@@ -243,11 +304,121 @@ export const AIDesignCreator = ({ onBack }: AIDesignCreatorProps) => {
     );
   }
 
+  if (mode === 'garment') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20 p-6">
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="flex items-center gap-4 mb-8">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setMode('select')}
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold">Quick Garment Setup</h1>
+              <p className="text-muted-foreground">Generate a clean template to start designing</p>
+            </div>
+          </div>
+
+          {/* Garment Selection */}
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Select Garment Type & Orientation</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Garment Type Selection */}
+              <div className="space-y-3">
+                <label className="text-sm font-medium">Garment Type</label>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                  {Object.entries(GARMENTS).map(([key, garment]) => (
+                    <Button
+                      key={key}
+                      variant={selectedGarment === key ? "default" : "outline"}
+                      onClick={() => setSelectedGarment(key)}
+                      className="p-4 h-auto flex flex-col gap-2"
+                    >
+                      <Shirt className="w-6 h-6" />
+                      <span className="text-sm">{garment.name}</span>
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Orientation Selection */}
+              <div className="space-y-3">
+                <label className="text-sm font-medium">Orientation</label>
+                <div className="flex gap-3">
+                  <Button
+                    variant={selectedOrientation === 'front' ? "default" : "outline"}
+                    onClick={() => setSelectedOrientation('front')}
+                  >
+                    Front
+                  </Button>
+                  <Button
+                    variant={selectedOrientation === 'back' ? "default" : "outline"}
+                    onClick={() => setSelectedOrientation('back')}
+                  >
+                    Back
+                  </Button>
+                </div>
+              </div>
+
+              {/* Garment Spec Preview */}
+              {selectedGarment && (
+                <div className="p-4 bg-muted rounded-lg">
+                  <h4 className="font-medium mb-2">Template Specifications</h4>
+                  {(() => {
+                    const spec = getGarmentSpec(selectedGarment);
+                    return spec ? (
+                      <div className="text-sm text-muted-foreground space-y-1">
+                        <div>Canvas: {spec.canvasWidth} × {spec.canvasHeight}px</div>
+                        <div>DPI: {spec.dpi}</div>
+                        <div>Print Area: {spec.printAreas[selectedOrientation]?.width || 'N/A'} × {spec.printAreas[selectedOrientation]?.height || 'N/A'}px</div>
+                      </div>
+                    ) : (
+                      <div className="text-sm text-muted-foreground">Specifications not available</div>
+                    );
+                  })()}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Generate Button */}
+          <div className="flex justify-center">
+            <Button
+              onClick={generateGarmentBase}
+              disabled={isGenerating || !selectedGarment}
+              size="lg"
+              className="px-8"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  {generationStep || 'Generating...'}
+                </>
+              ) : (
+                <>
+                  <Wand2 className="w-4 h-4 mr-2" />
+                  Generate Template
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Prompt and Image modes (existing functionality)
   return (
     <div className="h-full bg-background overflow-auto">
       <div className="container mx-auto py-8 px-4 max-w-4xl">
         <Button
-          onClick={() => setMode(null)}
+          onClick={() => setMode('select')}
           variant="ghost"
           className="mb-6"
         >
@@ -278,16 +449,16 @@ export const AIDesignCreator = ({ onBack }: AIDesignCreatorProps) => {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {GARMENT_TYPES.slice(0, 8).map((garment) => (
+                {Object.entries(GARMENTS).slice(0, 8).map(([key, garment]) => (
                   <Button
-                    key={garment.id}
-                    onClick={() => setSelectedGarment(garment.id)}
-                    variant={selectedGarment === garment.id ? "default" : "outline"}
+                    key={key}
+                    onClick={() => setSelectedGarment(key)}
+                    variant={selectedGarment === key ? "default" : "outline"}
                     className="h-auto p-4 flex flex-col items-center gap-2"
                   >
                     <Shirt className="w-6 h-6" />
                     <span className="text-xs capitalize">
-                      {garment.name.replace('-', ' ')}
+                      {garment.name}
                     </span>
                   </Button>
                 ))}
@@ -400,6 +571,3 @@ export const AIDesignCreator = ({ onBack }: AIDesignCreatorProps) => {
     </div>
   );
 };
-
-// This file now uses the advanced AI design generator system
-// All AI analysis functions have been moved to @/lib/studio/aiDesignGenerator
