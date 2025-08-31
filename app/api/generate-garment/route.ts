@@ -2,22 +2,31 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { generateImage, cutoutAndClean, putToStorage } from "@/lib/ai/garmentGen";
 import { buildSpec } from "@/lib/studio/garmentSpecs";
+import { normalizeStyle, STYLE_PROMPTS } from "@/lib/studio/stylePrompts";
 
 export const runtime = "edge";
 
+const HEX = /^#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})$/;
+
 const Input = z.object({
-  garmentId: z.string(),
+  garmentId: z.string().min(1),
   orientation: z.enum(["front","back","side"]),
-  material: z.string().optional(),
-  colorHex: z.string().default("#FFFFFF"),
+  material: z.string().default("cotton"),
+  colorHex: z.string().regex(HEX).default("#FFFFFF"),
   style: z.string().optional(),
   mode: z.enum(["auto","openai","mock"]).default("auto"),
 });
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const { garmentId, orientation, material, colorHex, style, mode } = Input.parse(body);
+  const raw = await req.json();
+  const parsed = Input.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json({ ok:false, error:"invalid_input", issues: parsed.error.issues }, { status: 400 });
+  }
+  const { garmentId, orientation, material, colorHex, style, mode } = parsed.data;
   const spec = buildSpec({ garmentId, orientation });
+  const styleKey = normalizeStyle(style);
+  const stylePhrase = STYLE_PROMPTS[styleKey];
 
   try {
     const gen = await generateImage({ garmentId, orientation, material, colorHex, style, mode, spec });

@@ -45,47 +45,17 @@ export const STYLE_PROMPTS: Record<StyleKey, string> = {
  * Extend this as your users invent new words.
  */
 const STYLE_SYNONYMS: Record<string, StyleKey> = {
-  // minimalist
-  clean: "minimalist",
-  simple: "minimalist",
-  minimal: "minimalist",
-  // vintage
-  retro: "vintage",
-  classic: "vintage",
-  heritage: "vintage",
-  // modern
-  contemporary: "modern",
-  current: "modern",
-  // grunge
-  distressed: "grunge",
-  rugged: "grunge",
-  raw: "grunge",
-  // elegant
-  luxury: "elegant",
-  classy: "elegant",
-  refined: "elegant",
-  premium: "elegant",
-  // playful
-  fun: "playful",
-  lively: "playful",
-  // streetwear
-  urban: "streetwear",
-  hype: "streetwear",
-  edgy: "streetwear",
-  // sporty
-  athletic: "sporty",
-  performance: "sporty",
-  // bohemian
-  boho: "bohemian",
-  organic: "bohemian",
-  // art-deco
-  artdeco: "art-deco",
-  deco: "art-deco",
-  // futuristic
-  "hi-tech": "futuristic",
-  hitech: "futuristic",
-  "sci-fi": "futuristic",
-  scifi: "futuristic",
+  clean: "minimalist", simple: "minimalist", minimal: "minimalist",
+  retro: "vintage", classic: "vintage", heritage: "vintage",
+  contemporary: "modern", current: "modern",
+  distressed: "grunge", rugged: "grunge", raw: "grunge",
+  luxury: "elegant", classy: "elegant", refined: "elegant", premium: "elegant",
+  fun: "playful", lively: "playful",
+  urban: "streetwear", hype: "streetwear", edgy: "streetwear",
+  athletic: "sporty", performance: "sporty",
+  boho: "bohemian", organic: "bohemian",
+  artdeco: "art-deco", deco: "art-deco",
+  "hi-tech": "futuristic", hitech: "futuristic", "sci-fi": "futuristic", scifi: "futuristic",
 };
 
 /**
@@ -95,13 +65,7 @@ const STYLE_SYNONYMS: Record<string, StyleKey> = {
 export function normalizeStyle(input?: string | null): StyleKey {
   if (!input) return "modern";
   const s = String(input).trim().toLowerCase();
-  if ((Object.keys(STYLE_PROMPTS) as StyleKey[]).includes(s as StyleKey)) {
-    return s as StyleKey;
-  }
-  // try synonyms
+  if ((Object.keys(STYLE_PROMPTS) as StyleKey[]).includes(s as StyleKey)) return s as StyleKey;
   const compact = s.replace(/\s+/g, "-");
-  if (STYLE_SYNONYMS[s]) return STYLE_SYNONYMS[s];
-  if (STYLE_SYNONYMS[compact]) return STYLE_SYNONYMS[compact];
-  // fallback
-  return "modern";
+  return STYLE_SYNONYMS[s] ?? STYLE_SYNONYMS[compact] ?? "modern";
 }
