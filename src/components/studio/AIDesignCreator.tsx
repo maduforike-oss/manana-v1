@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Sparkles, Upload, Wand2, ArrowLeft, Loader2, Shirt, Brain, Type, Camera, FileImage, Palette } from 'lucide-react';
+import { Sparkles, Upload, Wand2, ArrowLeft, Loader2, Shirt, Brain, Type, Camera, FileImage, Palette, Key } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { useStudioStore } from '@/lib/studio/store';
 import { useAppNavigation } from '@/hooks/useNavigation';
@@ -12,6 +12,8 @@ import { GARMENT_TYPES } from '@/lib/studio/garments';
 import { analyzeDesignPrompt, generateDesignElements, elementsToNodes, analyzeImageForDesign } from '@/lib/studio/aiDesignGenerator';
 import { garmentGenerator, GenerationOptions } from '@/lib/studio/garmentImageGenerator';
 import { buildSpec, getGarmentName } from '@/lib/studio/garmentSpecs';
+import { generateImage, hasOpenAIKey, GenMode } from '@/lib/ai/garmentGen';
+import { OpenAIKeyDialog } from './OpenAIKeyDialog';
 import { toast } from 'sonner';
 
 interface AIDesignCreatorProps {
@@ -27,6 +29,7 @@ export const AIDesignCreator: React.FC<AIDesignCreatorProps> = ({ onBack }) => {
   const [selectedOrientation, setSelectedOrientation] = useState<'front' | 'back'>('front');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationStep, setGenerationStep] = useState<string>('');
+  const [showKeyDialog, setShowKeyDialog] = useState(false);
   
   const { createDesign, setActiveTab } = useAppStore();
   const { addNode, newDesign, updateCanvas } = useStudioStore();
@@ -41,9 +44,15 @@ export const AIDesignCreator: React.FC<AIDesignCreatorProps> = ({ onBack }) => {
     }
   };
 
-  const generateGarmentBase = async () => {
+  const generateGarmentBase = async (mode: GenMode = 'auto') => {
     if (!selectedGarment) {
       toast.error('Please select a garment type');
+      return;
+    }
+
+    // Check if we need OpenAI key for non-mock mode
+    if (mode === 'openai' && !hasOpenAIKey()) {
+      setShowKeyDialog(true);
       return;
     }
 
@@ -51,16 +60,17 @@ export const AIDesignCreator: React.FC<AIDesignCreatorProps> = ({ onBack }) => {
     setGenerationStep('Generating garment template...');
 
     try {
-      // Generate garment base image
-      const generationOptions: GenerationOptions = {
+      // Generate garment base image using new system
+      const spec = buildSpec({ garmentId: selectedGarment, orientation: selectedOrientation });
+      
+      const result = await generateImage({
         garmentId: selectedGarment,
         orientation: selectedOrientation,
-        color: 'white',
         material: 'cotton',
-        style: 'minimal'
-      };
-
-      const result = await garmentGenerator.generateGarment(generationOptions);
+        colorHex: '#ffffff',
+        mode,
+        spec
+      });
       
       setGenerationStep('Setting up canvas...');
 
@@ -75,7 +85,6 @@ export const AIDesignCreator: React.FC<AIDesignCreatorProps> = ({ onBack }) => {
       newDesign(selectedGarment);
       
       // Update canvas configuration with garment specs
-      const spec = buildSpec({ garmentId: selectedGarment, orientation: selectedOrientation });
       updateCanvas({
         width: spec.size.w,
         height: spec.size.h,
@@ -379,13 +388,33 @@ export const AIDesignCreator: React.FC<AIDesignCreatorProps> = ({ onBack }) => {
             </CardContent>
           </Card>
 
-          {/* Generate Button */}
-          <div className="flex justify-center">
+          {/* Generate Buttons */}
+          <div className="flex justify-center gap-3">
             <Button
-              onClick={generateGarmentBase}
+              onClick={() => generateGarmentBase('mock')}
+              disabled={isGenerating || !selectedGarment}
+              variant="outline"
+              size="lg"
+              className="px-6"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  {generationStep || 'Generating...'}
+                </>
+              ) : (
+                <>
+                  <Shirt className="w-4 h-4 mr-2" />
+                  Mock Template
+                </>
+              )}
+            </Button>
+            
+            <Button
+              onClick={() => generateGarmentBase('openai')}
               disabled={isGenerating || !selectedGarment}
               size="lg"
-              className="px-8"
+              className="px-6"
             >
               {isGenerating ? (
                 <>
@@ -395,7 +424,7 @@ export const AIDesignCreator: React.FC<AIDesignCreatorProps> = ({ onBack }) => {
               ) : (
                 <>
                   <Wand2 className="w-4 h-4 mr-2" />
-                  Generate Template
+                  AI Generate
                 </>
               )}
             </Button>
@@ -560,6 +589,13 @@ export const AIDesignCreator: React.FC<AIDesignCreatorProps> = ({ onBack }) => {
           </Button>
         </div>
       </div>
+      
+      {/* OpenAI Key Dialog */}
+      <OpenAIKeyDialog 
+        open={showKeyDialog}
+        onOpenChange={setShowKeyDialog}
+        onKeySet={() => generateGarmentBase('openai')}
+      />
     </div>
   );
 };
