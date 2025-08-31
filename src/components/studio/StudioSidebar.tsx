@@ -2,6 +2,8 @@
 import { useState } from "react";
 import { useStudioStore } from "@/lib/studio/store";
 import { getCandidateUrls, setRuntimeGarmentImage } from "@/lib/studio/imageMapping";
+import { StylePicker } from "./StylePicker";
+import type { StyleKey } from "@/lib/studio/stylePrompts";
 import { GARMENT_TYPES } from "@/lib/studio/garments";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +16,7 @@ export function StudioSidebar() {
   const { doc, updateCanvas } = useStudioStore();
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [style, setStyle] = useState<StyleKey>("modern");
   
   // Get current garment info from canvas
   const currentGarmentType = doc.canvas.garmentType || 'tshirt';
@@ -30,7 +33,9 @@ export function StudioSidebar() {
         body: JSON.stringify({ 
           garmentId: currentGarmentType, 
           orientation: currentOrientation, 
-          colorHex: "#f5f5f5", 
+          colorHex: "#f5f5f5",
+          material: "cotton",
+          style,
           mode 
         }),
       });
@@ -118,6 +123,8 @@ export function StudioSidebar() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
+          <StylePicker value={style} onChange={setStyle} />
+          
           <div className="flex flex-col gap-2">
             <Button
               onClick={() => generate("auto")}
