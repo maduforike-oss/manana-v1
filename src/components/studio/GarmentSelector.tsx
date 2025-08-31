@@ -6,8 +6,8 @@ import { useStudioStore } from '../../../lib/studio/store';
 import { cn } from '@/lib/utils';
 import { GARMENT_TYPES, getGarmentsByCategory, getColorByGarmentAndId } from '@/lib/studio/garments';
 import { GarmentPreview } from './GarmentPreview';
-import { ImageUploadDialog } from './ImageUploadDialog';
-import { Sparkles, Filter, Upload } from 'lucide-react';
+import { SmartImageUploadDialog } from './SmartImageUploadDialog';
+import { Sparkles, Filter, Upload, Brain } from 'lucide-react';
 
 const CATEGORIES = ['All', 'Basics', 'Outerwear', 'Accessories', 'Professional', 'Athletic', "Women's", 'Baby & Kids', 'Specialty'];
 
@@ -49,10 +49,9 @@ export const GarmentSelector = () => {
     }));
   };
 
-  const handleUploadComplete = (uploadedFiles: string[]) => {
-    console.log('Upload completed:', uploadedFiles);
-    // Note: In a real implementation, this would trigger a re-import of the image mappings
-    // For now, the user would need to refresh or the images would appear on next build
+  const handleUploadComplete = (results: { original: string; suggested: string; recognition: any }[]) => {
+    console.log('Smart upload completed:', results);
+    // TODO: Refresh garment list to show new custom images
   };
 
   return (
@@ -73,12 +72,12 @@ export const GarmentSelector = () => {
               Select from our premium garment collection. Each item features HD mockups, professional color options, 
               and industry-standard specifications for the perfect design experience.
             </p>
-            <ImageUploadDialog
+            <SmartImageUploadDialog
               onUploadComplete={handleUploadComplete}
               trigger={
-                <Button variant="outline" size="sm" className="gap-2 shrink-0">
-                  <Upload className="w-4 h-4" />
-                  Upload Images
+                <Button variant="default" size="sm" className="gap-2 shrink-0">
+                  <Brain className="w-4 h-4" />
+                  Smart Upload
                 </Button>
               }
             />
