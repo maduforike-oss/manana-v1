@@ -6,6 +6,7 @@ export interface GenerateGarmentRequest {
   orientation: Orientation;
   material?: string;
   colorHex?: string;
+  style?: string;
   mode?: GenMode;
 }
 

@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { GarmentSpec, buildSpec } from "@/lib/studio/garmentSpecs";
+import { normalizeStyle, STYLE_PROMPTS } from "@/lib/studio/stylePrompts";
 
 export type GenMode = "auto" | "openai" | "mock";
 
@@ -8,6 +9,7 @@ export async function generateImage(opts: {
   orientation: "front" | "back" | "side";
   material?: string;
   colorHex?: string;
+  style?: string;
   mode?: GenMode;
   spec: GarmentSpec;
 }) {
@@ -32,11 +34,24 @@ export async function generateImage(opts: {
   }
 
   const openai = new OpenAI({ apiKey });
-  const sys = "You render apparel product images on transparent background; single garment, centered, requested angle.";
-  const user =
-    `Generate a ${opts.garmentId} (${opts.orientation}) on TRANSPARENT background, studio lighting, ` +
-    `material ${opts.material ?? "cotton"}, color ${opts.colorHex ?? "#ffffff"}, canvas ${opts.spec.size.w}x${opts.spec.size.h}.`;
-  const prompt = `${sys}\n${user}`;
+  
+  // Build enhanced prompt with style integration
+  const styleKey = normalizeStyle(opts.style);
+  const stylePhrase = STYLE_PROMPTS[styleKey];
+  const hex = opts.colorHex ?? "#ffffff";
+  const material = opts.material ?? "cotton";
+  const garmentName = opts.garmentId;
+  const orientation = opts.orientation;
+
+  const prompt = [
+    `Clean studio ${garmentName} (${orientation})`,
+    `color ${hex}`,
+    `material ${material}`,
+    stylePhrase,
+    "centered composition, transparent background, no logos, no people",
+    "even, product-style lighting, realistic drape and stitching",
+    "print-ready clarity, crisp edges, no halos",
+  ].join(", ");
 
   // Using DALL-E 3 for high-quality garment generation
   const r = await openai.images.generate({
