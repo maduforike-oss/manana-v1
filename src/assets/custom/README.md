@@ -1,38 +1,37 @@
-# Custom Apparel Assets
+# Custom Garment Assets
 
-This folder contains user-uploaded apparel assets that are processed by Vite during build.
+This directory contains custom garment images that override the default static images.
 
-## Naming Convention
+## Current Custom Images Available:
+- crewneck-front.png - Custom crewneck sweatshirt image
+- polo-front.png - Custom polo shirt image  
+- zip-hoodie-front.png - Custom zip-up hoodie image
+- longsleeve-front.png - Custom long-sleeve t-shirt image
 
-All files should follow the pattern: `<garmentId>-<orientation>.<ext>`
+## Naming Convention:
+Files should follow the pattern: `{garment-id}-{orientation}.{ext}`
 
-Where:
-- `garmentId`: The type of garment (e.g., tshirt, hoodie, crop-top)
-- `orientation`: The view angle (front, back, or side)
-- `ext`: File extension (png, jpg, etc.)
+Examples:
+- `t-shirt-front.png`
+- `hoodie-back.jpg`
+- `cap-side.jpeg`
 
-## Examples
+## Supported Orientations:
+- `front` (most common)
+- `back` 
+- `side`
 
-```
-tshirt-front.png
-tshirt-back.png
-hoodie-front.png
-hoodie-back.png
-crop-top-front.png
-crop-top-back.png
-tank-top-front.png
-tank-top-back.png
-```
+## How It Works:
+The image mapping system (`src/lib/studio/imageMapping.ts`) automatically:
+1. Scans this directory for images
+2. Parses filenames to extract garment type and orientation  
+3. Maps them to garment IDs using normalization rules
+4. Makes them available in the GarmentSelector and canvas via CanvasImageLoader
+5. Prioritizes custom images over static defaults
 
-## Usage
+## Integration Points:
+- **GarmentSelector**: Uses `mergeImagesWithGarments()` to show custom images
+- **Canvas**: Uses `CanvasImageLoader` component with `getGarmentImage()` function
+- **Studio**: Automatically renders custom images on mockups and previews
 
-These assets are automatically processed by Vite and can be imported as ES6 modules:
-
-```typescript
-import tshirtFront from '@/assets/custom/tshirt-front.png';
-import hoodieFront from '@/assets/custom/hoodie-front.png';
-```
-
-## Bundle Management
-
-Compress all custom assets into a single zip file and extract them here. Vite will automatically pick them up during the build process.
+To add your images: Simply copy the 4 uploaded images to this directory with the correct names and they'll be automatically integrated into the system.
