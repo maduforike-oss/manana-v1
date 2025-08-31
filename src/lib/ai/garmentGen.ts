@@ -26,9 +26,9 @@ export async function generateImage(opts: {
   }
 
   // --- OpenAI images path (transparent PNG) ---
-  const apiKey = getOpenAIKey();
+  const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    throw new Error("OpenAI API key not found. Please add your API key to continue.");
+    throw new Error("OpenAI API key not configured on server. Please add OPENAI_API_KEY environment variable.");
   }
 
   const openai = new OpenAI({ apiKey });
@@ -116,13 +116,17 @@ export async function putToStorage(_pngBase64: string, _path: string) {
   return { ok: true, stored: false };
 }
 
-// Helper function to get OpenAI API key from localStorage
+// Helper function to get OpenAI API key from environment (server-side)
 function getOpenAIKey(): string | null {
-  if (typeof window === 'undefined') return null;
+  // Server-side: use environment variable
+  if (typeof window === 'undefined') {
+    return process.env.OPENAI_API_KEY || null;
+  }
+  // Client-side: use localStorage as fallback
   return localStorage.getItem('openai_api_key');
 }
 
-// Helper function to set OpenAI API key in localStorage
+// Helper function to set OpenAI API key in localStorage (client-side only)
 export function setOpenAIKey(key: string) {
   if (typeof window === 'undefined') return;
   localStorage.setItem('openai_api_key', key);

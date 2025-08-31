@@ -12,7 +12,8 @@ import { GARMENT_TYPES } from '@/lib/studio/garments';
 import { analyzeDesignPrompt, generateDesignElements, elementsToNodes, analyzeImageForDesign } from '@/lib/studio/aiDesignGenerator';
 import { garmentGenerator, GenerationOptions } from '@/lib/studio/garmentImageGenerator';
 import { buildSpec, getGarmentName } from '@/lib/studio/garmentSpecs';
-import { generateImage, hasOpenAIKey, GenMode } from '@/lib/ai/garmentGen';
+import { GenMode } from '@/lib/ai/garmentGen';
+import { generateGarmentAPI } from '@/lib/api/garmentGeneration';
 import { OpenAIKeyDialog } from './OpenAIKeyDialog';
 import { toast } from 'sonner';
 
@@ -50,27 +51,22 @@ export const AIDesignCreator: React.FC<AIDesignCreatorProps> = ({ onBack }) => {
       return;
     }
 
-    // Check if we need OpenAI key for non-mock mode
-    if (mode === 'openai' && !hasOpenAIKey()) {
-      setShowKeyDialog(true);
-      return;
-    }
-
     setIsGenerating(true);
     setGenerationStep('Generating garment template...');
 
     try {
-      // Generate garment base image using new system
-      const spec = buildSpec({ garmentId: selectedGarment, orientation: selectedOrientation });
-      
-      const result = await generateImage({
+      // Generate garment base image using API
+      const result = await generateGarmentAPI({
         garmentId: selectedGarment,
         orientation: selectedOrientation,
         material: 'cotton',
         colorHex: '#ffffff',
-        mode,
-        spec
+        mode
       });
+
+      if (!result.ok) {
+        throw new Error(result.error || 'Generation failed');
+      }
       
       setGenerationStep('Setting up canvas...');
 
@@ -85,6 +81,7 @@ export const AIDesignCreator: React.FC<AIDesignCreatorProps> = ({ onBack }) => {
       newDesign(selectedGarment);
       
       // Update canvas configuration with garment specs
+      const spec = buildSpec({ garmentId: selectedGarment, orientation: selectedOrientation });
       updateCanvas({
         width: spec.size.w,
         height: spec.size.h,
@@ -92,14 +89,15 @@ export const AIDesignCreator: React.FC<AIDesignCreatorProps> = ({ onBack }) => {
       });
 
       setGenerationStep('');
-      toast.success('Garment template ready!');
+      toast.success(`${getGarmentName(selectedGarment)} template ready!`);
 
       // Navigate to studio
       setActiveTab('studio');
       navigateToTab('studio');
     } catch (error) {
       console.error('Garment generation failed:', error);
-      toast.error('Failed to generate garment template. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to generate garment template';
+      toast.error(errorMessage);
     } finally {
       setIsGenerating(false);
       setGenerationStep('');
@@ -589,13 +587,6 @@ export const AIDesignCreator: React.FC<AIDesignCreatorProps> = ({ onBack }) => {
           </Button>
         </div>
       </div>
-      
-      {/* OpenAI Key Dialog */}
-      <OpenAIKeyDialog 
-        open={showKeyDialog}
-        onOpenChange={setShowKeyDialog}
-        onKeySet={() => generateGarmentBase('openai')}
-      />
     </div>
   );
 };
