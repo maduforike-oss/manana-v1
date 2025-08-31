@@ -49,7 +49,7 @@ export function getGarmentImage(garmentId: string, orientation: Orientation = "f
   return urls[0] || null;
 }
 
-export function getAllGarmentImages() {
+export function getAllGarmentImages(garmentId?: string) {
   return {};
 }
 
@@ -57,8 +57,11 @@ export const staticImageMap = new Map<string, string>();
 export const customImageMap = new Map<string, string>();
 export const mockupImageMap = new Map<string, string>();
 
-export function validateImageFileName(fileName: string): boolean {
-  return /\.(png|jpg|jpeg|gif|webp)$/i.test(fileName);
+export function validateImageFileName(fileName: string) {
+  return {
+    valid: /\.(png|jpg|jpeg|gif|webp)$/i.test(fileName),
+    error: !(/\.(png|jpg|jpeg|gif|webp)$/i.test(fileName)) ? 'Invalid file type' : null
+  };
 }
 
 export function createImageMetadata(file: File) {
@@ -72,19 +75,18 @@ export function createImageMetadata(file: File) {
 
 export interface UploadProgress {
   filename: string;
-  loaded: number;
-  total: number;
-  percentage: number;
+  loaded?: number;
+  total?: number;
+  percentage?: number;
   status: string;
   error?: any;
-  progress?: number;
-  valid?: boolean;
+  progress: number;
 }
 
-export function mergeImagesWithGarment() {
-  return [];
+export function mergeImagesWithGarment(garment: any) {
+  return garment;
 }
 
-export function mergeImagesWithGarments() {
-  return [];
+export function mergeImagesWithGarments(garments: any[]) {
+  return garments;
 }
