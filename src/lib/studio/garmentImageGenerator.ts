@@ -1,6 +1,6 @@
 import { toast } from 'sonner';
 import { pipeline, env } from '@huggingface/transformers';
-import { GarmentSpec, getGarmentSpec } from './garmentSpecs';
+import { GarmentSpec, buildSpec, getGarmentName, Orientation } from './garmentSpecs';
 
 // Configure transformers for browser usage
 env.allowLocalModels = false;
@@ -8,7 +8,7 @@ env.useBrowserCache = true;
 
 export interface GenerationOptions {
   garmentId: string;
-  orientation: 'front' | 'back';
+  orientation: Orientation;
   color?: string;
   material?: string;
   style?: string;
@@ -55,16 +55,14 @@ export class GarmentImageGenerator {
   async generateGarment(options: GenerationOptions): Promise<GeneratedGarmentResult> {
     const { garmentId, orientation, color = 'white', material = 'cotton', style = 'minimal' } = options;
     
-    const spec = getGarmentSpec(garmentId);
-    if (!spec) {
-      throw new Error(`Unknown garment type: ${garmentId}`);
-    }
+    const spec = buildSpec({ garmentId, orientation });
+    const garmentName = getGarmentName(garmentId);
 
-    toast.loading(`Generating ${spec.name} template...`);
+    toast.loading(`Generating ${garmentName} template...`);
 
     try {
       // Step 1: Generate base garment image
-      const generatedImageUrl = await this.generateBaseImage(spec, orientation, color, material, style);
+      const generatedImageUrl = await this.generateBaseImage(spec, garmentName, orientation, color, material, style);
       
       // Step 2: Remove background and ensure transparency
       const transparentImageUrl = await this.ensureTransparency(generatedImageUrl);
@@ -95,14 +93,15 @@ export class GarmentImageGenerator {
 
   private async generateBaseImage(
     spec: GarmentSpec,
+    garmentName: string,
     orientation: string,
     color: string,
     material: string,
     style: string
   ): Promise<string> {
     // Enhanced prompt with garment specifications
-    const prompt = `${spec.basePrompt}, ${color} ${material} ${spec.name}, ${orientation} view, ${style} style, 
-      transparent background, no logos, clean edges, professional studio lighting at ${spec.lighting.angle} degrees, 
+    const prompt = `Clean minimal ${color} ${material} ${garmentName}, ${orientation} view, ${style} style, 
+      transparent background, no logos, clean edges, professional studio lighting at 45 degrees, 
       high resolution, product photography, centered composition, print-ready quality`;
 
     if (this.apiKey) {
@@ -114,7 +113,7 @@ export class GarmentImageGenerator {
     }
   }
 
-  private async generateWithRunware(prompt: string, spec: GarmentSpec): Promise<string> {
+  private async generateWithRunware(prompt: string, spec: any): Promise<string> {
     try {
       const response = await fetch('https://api.runware.ai/v1', {
         method: 'POST',
@@ -129,9 +128,9 @@ export class GarmentImageGenerator {
           {
             taskType: 'imageInference',
             taskUUID: crypto.randomUUID(),
-            positivePrompt: prompt,
-            width: spec.canvasWidth,
-            height: spec.canvasHeight,
+        positivePrompt: prompt,
+        width: spec.size.w,
+        height: spec.size.h,
             model: 'runware:100@1',
             numberResults: 1,
             outputFormat: 'PNG',
@@ -160,8 +159,8 @@ export class GarmentImageGenerator {
     
     // Create a canvas with the garment spec dimensions
     const canvas = document.createElement('canvas');
-    canvas.width = spec.canvasWidth;
-    canvas.height = spec.canvasHeight;
+    canvas.width = spec.size.w;
+    canvas.height = spec.size.h;
     const ctx = canvas.getContext('2d');
     
     if (!ctx) throw new Error('Canvas context not available');
@@ -194,13 +193,10 @@ export class GarmentImageGenerator {
       garmentHeight
     );
     
-    // Add print area indicator
-    const printArea = spec.printAreas.front;
-    if (printArea) {
-      ctx.strokeStyle = '#007bff';
-      ctx.setLineDash([10, 5]);
-      ctx.strokeRect(printArea.x, printArea.y, printArea.width, printArea.height);
-    }
+    // Add print area indicator (safe area)
+    ctx.strokeStyle = '#007bff';
+    ctx.setLineDash([10, 5]);
+    ctx.strokeRect(spec.safeArea.x, spec.safeArea.y, spec.safeArea.w, spec.safeArea.h);
     
     return canvas.toDataURL('image/png');
   }
@@ -298,8 +294,8 @@ export class GarmentImageGenerator {
       const img = await this.loadImage(imageUrl);
       
       const canvas = document.createElement('canvas');
-      canvas.width = spec.canvasWidth;
-      canvas.height = spec.canvasHeight;
+      canvas.width = spec.size.w;
+      canvas.height = spec.size.h;
       const ctx = canvas.getContext('2d');
       
       if (!ctx) throw new Error('Canvas context not available');

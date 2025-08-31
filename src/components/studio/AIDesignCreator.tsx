@@ -7,11 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Sparkles, Upload, Wand2, ArrowLeft, Loader2, Shirt, Brain, Type, Camera, FileImage, Palette } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { useStudioStore } from '@/lib/studio/store';
-import { useNavigation } from '@/hooks/useNavigation';
-import { GARMENTS } from '@/lib/studio/garments';
+import { useAppNavigation } from '@/hooks/useNavigation';
+import { GARMENT_TYPES } from '@/lib/studio/garments';
 import { analyzeDesignPrompt, generateDesignElements, elementsToNodes, analyzeImageForDesign } from '@/lib/studio/aiDesignGenerator';
 import { garmentGenerator, GenerationOptions } from '@/lib/studio/garmentImageGenerator';
-import { getGarmentSpec } from '@/lib/studio/garmentSpecs';
+import { buildSpec, getGarmentName } from '@/lib/studio/garmentSpecs';
 import { toast } from 'sonner';
 
 interface AIDesignCreatorProps {
@@ -28,9 +28,9 @@ export const AIDesignCreator: React.FC<AIDesignCreatorProps> = ({ onBack }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationStep, setGenerationStep] = useState<string>('');
   
-  const { createDesign, setCurrentTab } = useAppStore();
-  const { initializeStudio, addNode, setDoc } = useStudioStore();
-  const { navigateToStudio } = useNavigation();
+  const { createDesign, setActiveTab } = useAppStore();
+  const { addNode, newDesign, updateCanvas } = useStudioStore();
+  const { navigateToTab } = useAppNavigation();
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -65,35 +65,29 @@ export const AIDesignCreator: React.FC<AIDesignCreatorProps> = ({ onBack }) => {
       setGenerationStep('Setting up canvas...');
 
       // Create a new design
-      const design = createDesign({
-        name: `${result.spec.name} Design`,
-        garmentType: selectedGarment as any
-      });
+      const success = createDesign(selectedGarment);
+      if (!success) {
+        toast.error('Design limit reached. Please upgrade your plan.');
+        return;
+      }
 
       // Initialize studio with generated garment
-      initializeStudio();
+      newDesign(selectedGarment);
       
       // Update canvas configuration with garment specs
-      const canvasSize = { width: result.spec.canvasWidth, height: result.spec.canvasHeight };
-      setDoc(prev => ({
-        ...prev,
-        canvas: {
-          ...prev.canvas,
-          width: canvasSize.width,
-          height: canvasSize.height,
-          garmentType: selectedGarment,
-          baseImageUrl: result.imageUrl
-        }
-      }));
+      const spec = buildSpec({ garmentId: selectedGarment, orientation: selectedOrientation });
+      updateCanvas({
+        width: spec.size.w,
+        height: spec.size.h,
+        garmentType: selectedGarment
+      });
 
       setGenerationStep('');
       toast.success('Garment template ready!');
 
       // Navigate to studio
-      setCurrentTab('studio');
-      if (navigateToStudio) {
-        navigateToStudio();
-      }
+      setActiveTab('studio');
+      navigateToTab('studio');
     } catch (error) {
       console.error('Garment generation failed:', error);
       toast.error('Failed to generate garment template. Please try again.');
@@ -333,11 +327,11 @@ export const AIDesignCreator: React.FC<AIDesignCreatorProps> = ({ onBack }) => {
               <div className="space-y-3">
                 <label className="text-sm font-medium">Garment Type</label>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                  {Object.entries(GARMENTS).map(([key, garment]) => (
+                  {GARMENT_TYPES.slice(0, 10).map((garment) => (
                     <Button
-                      key={key}
-                      variant={selectedGarment === key ? "default" : "outline"}
-                      onClick={() => setSelectedGarment(key)}
+                      key={garment.id}
+                      variant={selectedGarment === garment.id ? "default" : "outline"}
+                      onClick={() => setSelectedGarment(garment.id)}
                       className="p-4 h-auto flex flex-col gap-2"
                     >
                       <Shirt className="w-6 h-6" />
@@ -371,15 +365,13 @@ export const AIDesignCreator: React.FC<AIDesignCreatorProps> = ({ onBack }) => {
                 <div className="p-4 bg-muted rounded-lg">
                   <h4 className="font-medium mb-2">Template Specifications</h4>
                   {(() => {
-                    const spec = getGarmentSpec(selectedGarment);
-                    return spec ? (
+                    const spec = buildSpec({ garmentId: selectedGarment, orientation: selectedOrientation });
+                    return (
                       <div className="text-sm text-muted-foreground space-y-1">
-                        <div>Canvas: {spec.canvasWidth} × {spec.canvasHeight}px</div>
+                        <div>Canvas: {spec.size.w} × {spec.size.h}px</div>
                         <div>DPI: {spec.dpi}</div>
-                        <div>Print Area: {spec.printAreas[selectedOrientation]?.width || 'N/A'} × {spec.printAreas[selectedOrientation]?.height || 'N/A'}px</div>
+                        <div>Safe Area: {spec.safeArea.w} × {spec.safeArea.h}px</div>
                       </div>
-                    ) : (
-                      <div className="text-sm text-muted-foreground">Specifications not available</div>
                     );
                   })()}
                 </div>
@@ -449,11 +441,11 @@ export const AIDesignCreator: React.FC<AIDesignCreatorProps> = ({ onBack }) => {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {Object.entries(GARMENTS).slice(0, 8).map(([key, garment]) => (
+                {GARMENT_TYPES.slice(0, 8).map((garment) => (
                   <Button
-                    key={key}
-                    onClick={() => setSelectedGarment(key)}
-                    variant={selectedGarment === key ? "default" : "outline"}
+                    key={garment.id}
+                    onClick={() => setSelectedGarment(garment.id)}
+                    variant={selectedGarment === garment.id ? "default" : "outline"}
                     className="h-auto p-4 flex flex-col items-center gap-2"
                   >
                     <Shirt className="w-6 h-6" />
