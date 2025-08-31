@@ -11,9 +11,10 @@ import { useAppNavigation } from '@/hooks/useNavigation';
 import { GARMENT_TYPES } from '@/lib/studio/garments';
 import { analyzeDesignPrompt, generateDesignElements, elementsToNodes, analyzeImageForDesign } from '@/lib/studio/aiDesignGenerator';
 import { garmentGenerator, GenerationOptions } from '@/lib/studio/garmentImageGenerator';
-import { buildSpec, getGarmentName } from '@/lib/studio/garmentSpecs';
+import { buildSpec, getGarmentName, Orientation } from '@/lib/studio/garmentSpecs';
 import { GenMode } from '@/lib/ai/garmentGen';
 import { generateGarmentAPI } from '@/lib/api/garmentGeneration';
+import { setRuntimeGarmentImage } from '@/lib/studio/imageMapping';
 import { OpenAIKeyDialog } from './OpenAIKeyDialog';
 import { toast } from 'sonner';
 
@@ -69,6 +70,11 @@ export const AIDesignCreator: React.FC<AIDesignCreatorProps> = ({ onBack }) => {
       }
       
       setGenerationStep('Setting up canvas...');
+
+      // Register the generated image in the runtime mapping system
+      if (result.previewDataUrl) {
+        setRuntimeGarmentImage(selectedGarment, selectedOrientation as Orientation, result.previewDataUrl);
+      }
 
       // Create a new design
       const success = createDesign(selectedGarment);
