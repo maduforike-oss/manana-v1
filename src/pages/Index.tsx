@@ -6,7 +6,7 @@ import { MarketPage } from '@/components/pages/MarketPage';
 import { CommunityPage } from '@/components/pages/CommunityPage';
 import { OrdersPage } from '@/components/pages/OrdersPage';
 import { ProfilePage } from '@/components/pages/ProfilePage';
-import { SmartRecognitionShowcase } from '@/components/studio/SmartRecognitionShowcase';
+
 
 const Index = () => {
   const { activeTab, setUser } = useAppStore();
@@ -41,7 +41,7 @@ const Index = () => {
       case 'community':
         return <CommunityPage />;
       case 'studio':
-        return <SmartRecognitionShowcase />;
+        return <StudioPage />;
       case 'orders':
         return <OrdersPage />;
       case 'profile':
