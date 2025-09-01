@@ -26,9 +26,9 @@ const App = () => (
         <AppLayout>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/studio" element={<StudioPage />} />
+            <Route path="/studio" element={<StudioPro />} />
             <Route path="/studio/editor" element={<StudioEditor />} />
-            <Route path="/studio/pro" element={<StudioPro />} />
+            <Route path="/studio/legacy" element={<StudioPage />} />
             <Route path="/orders/:id" element={<OrderDetails />} />
             <Route path="/profile/settings" element={<ProfileSettings />} />
             <Route path="/profile/upgrade" element={<UpgradePlan />} />
