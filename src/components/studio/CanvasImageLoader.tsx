@@ -5,6 +5,7 @@ import { getGarmentImage, getAllGarmentImages } from '@/lib/studio/imageMapping'
 interface CanvasImageLoaderProps {
   garmentId: string;
   orientation?: 'front' | 'back' | 'side';
+  color?: string;
   className?: string;
   style?: React.CSSProperties;
   onLoad?: () => void;
@@ -23,6 +24,7 @@ interface CanvasImageLoaderProps {
 export const CanvasImageLoader: React.FC<CanvasImageLoaderProps> = ({
   garmentId,
   orientation = 'front',
+  color = 'white',
   className,
   style,
   onLoad,
@@ -31,9 +33,9 @@ export const CanvasImageLoader: React.FC<CanvasImageLoaderProps> = ({
   children,
 }) => {
   const imageSrc = useMemo(() => {
-    const resolvedImage = getGarmentImage(garmentId, orientation);
+    const resolvedImage = getGarmentImage(garmentId, orientation, color);
     return resolvedImage || fallbackSrc;
-  }, [garmentId, orientation, fallbackSrc]);
+  }, [garmentId, orientation, color, fallbackSrc]);
 
   if (!imageSrc) {
     // No image available - render placeholder or children
@@ -72,8 +74,8 @@ export const useGarmentImages = (garmentId: string) => {
 /**
  * Hook to get a specific garment image
  */
-export const useGarmentImage = (garmentId: string, orientation: 'front' | 'back' | 'side' = 'front') => {
+export const useGarmentImage = (garmentId: string, orientation: 'front' | 'back' | 'side' = 'front', color: string = 'white') => {
   return useMemo(() => {
-    return getGarmentImage(garmentId, orientation);
-  }, [garmentId, orientation]);
+    return getGarmentImage(garmentId, orientation, color);
+  }, [garmentId, orientation, color]);
 };

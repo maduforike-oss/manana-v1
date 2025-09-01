@@ -14,14 +14,16 @@ const normalize = (s: string) => aliases[s] ?? s;
 const path = (folder: string, id: string, o: Orientation, ext: string = "png") =>
   `/assets/${folder}/${id}-${o}.${ext}`;
 
-export function getCandidateUrls(garmentId: string, o: Orientation = "front") {
+export function getCandidateUrls(garmentId: string, o: Orientation = "front", color: string = "white") {
   const id = normalize(garmentId);
   const rt = runtimeOverride.get(`${id}:${o}`);
   const list = [
-    rt ?? path("custom", id, o),      // runtime override beats everything
+    rt,                                // runtime override beats everything
+    `/catalog/${id}/${color}/${o}.png`, // new catalog structure
+    path("custom", id, o),
     path("garments", id, o),
     path("mockups", id, o),
-  ];
+  ].filter(Boolean);
   return list;
 }
 
@@ -44,8 +46,8 @@ export function clearAllRuntimeGarmentImages() {
 }
 
 // Legacy compatibility exports
-export function getGarmentImage(garmentId: string, orientation: Orientation = "front"): string | null {
-  const urls = getCandidateUrls(garmentId, orientation);
+export function getGarmentImage(garmentId: string, orientation: Orientation = "front", color: string = "white"): string | null {
+  const urls = getCandidateUrls(garmentId, orientation, color);
   return urls[0] || null;
 }
 
