@@ -4,7 +4,7 @@ import { getGarmentImage, getAllGarmentImages } from '@/lib/studio/imageMapping'
 
 interface CanvasImageLoaderProps {
   garmentId: string;
-  orientation?: 'front' | 'back' | 'side';
+  orientation?: 'front' | 'back' | 'left' | 'right';
   color?: string;
   className?: string;
   style?: React.CSSProperties;
@@ -74,7 +74,7 @@ export const useGarmentImages = (garmentId: string) => {
 /**
  * Hook to get a specific garment image
  */
-export const useGarmentImage = (garmentId: string, orientation: 'front' | 'back' | 'side' = 'front', color: string = 'white') => {
+export const useGarmentImage = (garmentId: string, orientation: 'front' | 'back' | 'left' | 'right' = 'front', color: string = 'white') => {
   return useMemo(() => {
     return getGarmentImage(garmentId, orientation, color);
   }, [garmentId, orientation, color]);

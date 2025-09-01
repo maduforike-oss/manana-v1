@@ -1,98 +1,54 @@
-export interface CatalogPrintArea {
+export type ViewName = "front" | "back" | "left" | "right";
+
+export interface PrintArea {
   unit: "mm";
-  safe: Array<{ x: number; y: number }>;
-  mmToPx: number;
+  safe: { x: number; y: number }[];  // polygon
+  mmToPx: number;                     // scale for the chosen size (simple MVP)
 }
 
-export interface CatalogGarmentView {
-  mockup: string;
-}
-
-export interface CatalogGarmentColor {
+export interface GarmentColor {
   name: string;
   hex: string;
-  views: {
-    front?: CatalogGarmentView;
-    back?: CatalogGarmentView;
-    side?: CatalogGarmentView;
-  };
-  printArea: CatalogPrintArea;
+  views: Record<ViewName, { mockup: string }>;
+  printArea: PrintArea;
 }
 
-export interface CatalogGarment {
+export interface Garment {
   slug: string;
   name: string;
-  colors: CatalogGarmentColor[];
+  colors: GarmentColor[];
   sizes: string[];
 }
 
-export interface GarmentCatalog {
+export interface Catalog {
   dpi: number;
-  garments: CatalogGarment[];
+  garments: Garment[];
 }
 
-// Default catalog data
-export const DEFAULT_CATALOG: GarmentCatalog = {
-  "dpi": 300,
-  "garments": [
-    {
-      "slug": "t-shirt",
-      "name": "T-Shirt",
-      "colors": [
-        {
-          "name": "White",
-          "hex": "#FFFFFF",
-          "views": {
-            "front": { "mockup": "/catalog/t-shirt/white/front.png" },
-            "back":  { "mockup": "/catalog/t-shirt/white/back.png" }
-          },
-          "printArea": {
-            "unit": "mm",
-            "safe": [ {"x":-140,"y":-200},{"x":140,"y":-200},{"x":140,"y":200},{"x":-140,"y":200} ],
-            "mmToPx": 3.543307
-          }
-        }
-      ],
-      "sizes": ["S","M","L","XL","XXL"]
-    },
-    {
-      "slug": "hoodie",
-      "name": "Hoodie (Pullover)",
-      "colors": [
-        {
-          "name": "White",
-          "hex": "#FFFFFF",
-          "views": {
-            "front": { "mockup": "/catalog/hoodie/white/front.png" }
-          },
-          "printArea": {
-            "unit": "mm",
-            "safe": [ {"x":-140,"y":-190},{"x":140,"y":-190},{"x":140,"y":190},{"x":-140,"y":190} ],
-            "mmToPx": 3.543307
-          }
-        }
-      ],
-      "sizes": ["S","M","L","XL","XXL"]
-    }
-  ]
-};
-
-// Catalog utilities
-export function getCatalogGarment(slug: string): CatalogGarment | undefined {
-  return DEFAULT_CATALOG.garments.find(g => g.slug === slug);
+// Swappable data source. Today: static file. Later: Supabase.
+export async function getCatalog(): Promise<Catalog> {
+  const res = await fetch("/catalog/manifest.json", { cache: "no-store" });
+  if (!res.ok) throw new Error("Failed to load catalog");
+  return res.json();
 }
 
-export function getCatalogGarmentColor(slug: string, colorName: string): CatalogGarmentColor | undefined {
-  const garment = getCatalogGarment(slug);
+export async function getGarment(slug: string): Promise<Garment | undefined> {
+  const cat = await getCatalog();
+  return cat.garments.find(g => g.slug === slug);
+}
+
+// Utility functions for backward compatibility
+export async function getCatalogGarmentColor(slug: string, colorName: string): Promise<GarmentColor | undefined> {
+  const garment = await getGarment(slug);
   return garment?.colors.find(c => c.name.toLowerCase() === colorName.toLowerCase());
 }
 
-export function getCatalogImageUrl(slug: string, color: string, orientation: "front" | "back" | "side"): string | null {
-  const garmentColor = getCatalogGarmentColor(slug, color);
-  return garmentColor?.views[orientation]?.mockup || null;
+export async function getCatalogImageUrl(slug: string, color: string, view: ViewName): Promise<string | null> {
+  const garmentColor = await getCatalogGarmentColor(slug, color);
+  return garmentColor?.views[view]?.mockup || null;
 }
 
-export function getPrintArea(slug: string, color: string): CatalogPrintArea | null {
-  const garmentColor = getCatalogGarmentColor(slug, color);
+export async function getPrintArea(slug: string, color: string): Promise<PrintArea | null> {
+  const garmentColor = await getCatalogGarmentColor(slug, color);
   return garmentColor?.printArea || null;
 }

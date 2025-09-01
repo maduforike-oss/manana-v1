@@ -1,4 +1,4 @@
-export type Orientation = "front" | "back" | "side";
+export type Orientation = "front" | "back" | "left" | "right";
 
 const runtimeOverride = new Map<string,string>();
 export function setRuntimeGarmentImage(garmentId: string, o: Orientation, url: string) {

@@ -1,10 +1,10 @@
-export type Orientation = "front" | "back" | "side";
+export type Orientation = "front" | "back" | "left" | "right";
 
 export interface GarmentSpec {
   size: { w: number; h: number }; // px
   dpi: number;
   safeArea: { x: number; y: number; w: number; h: number }; // px
-  angle: "front" | "back" | "side";
+  angle: "front" | "back" | "left" | "right";
 }
 
 export function buildSpec(input: { garmentId: string; orientation: Orientation }): GarmentSpec {

@@ -1,0 +1,59 @@
+{
+  "dpi": 300,
+  "garments": [
+    {
+      "slug": "t-shirt",
+      "name": "T-Shirt",
+      "colors": [
+        {
+          "name": "White",
+          "hex": "#FFFFFF",
+          "views": {
+            "front": { "mockup": "/catalog/t-shirt/white/front.png" },
+            "back": { "mockup": "/catalog/t-shirt/white/back.png" },
+            "left": { "mockup": "/catalog/t-shirt/white/left.png" },
+            "right": { "mockup": "/catalog/t-shirt/white/right.png" }
+          },
+          "printArea": {
+            "unit": "mm",
+            "safe": [
+              {"x": -140, "y": -200},
+              {"x": 140, "y": -200},
+              {"x": 140, "y": 200},
+              {"x": -140, "y": 200}
+            ],
+            "mmToPx": 3.543307
+          }
+        }
+      ],
+      "sizes": ["S", "M", "L", "XL", "XXL"]
+    },
+    {
+      "slug": "hoodie",
+      "name": "Hoodie (Pullover)",
+      "colors": [
+        {
+          "name": "White",
+          "hex": "#FFFFFF",
+          "views": {
+            "front": { "mockup": "/catalog/hoodie/white/front.png" },
+            "back": { "mockup": "/catalog/hoodie/white/back.png" },
+            "left": { "mockup": "/catalog/hoodie/white/left.png" },
+            "right": { "mockup": "/catalog/hoodie/white/right.png" }
+          },
+          "printArea": {
+            "unit": "mm",
+            "safe": [
+              {"x": -140, "y": -190},
+              {"x": 140, "y": -190},
+              {"x": 140, "y": 190},
+              {"x": -140, "y": 190}
+            ],
+            "mmToPx": 3.543307
+          }
+        }
+      ],
+      "sizes": ["S", "M", "L", "XL", "XXL"]
+    }
+  ]
+}
