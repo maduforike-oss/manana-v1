@@ -13,6 +13,7 @@ import Followers from "./pages/Followers";
 import UserProfile from "./pages/UserProfile";
 import { StudioPage } from "./components/pages/StudioPage";
 import StudioEditor from "./pages/StudioEditor";
+import StudioPro from "./pages/StudioPro";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/studio" element={<StudioPage />} />
             <Route path="/studio/editor" element={<StudioEditor />} />
+            <Route path="/studio/pro" element={<StudioPro />} />
             <Route path="/orders/:id" element={<OrderDetails />} />
             <Route path="/profile/settings" element={<ProfileSettings />} />
             <Route path="/profile/upgrade" element={<UpgradePlan />} />
