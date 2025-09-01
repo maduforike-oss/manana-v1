@@ -11,6 +11,8 @@ import { ProfileSettings } from "./pages/ProfileSettings";
 import { UpgradePlan } from "./pages/UpgradePlan";
 import Followers from "./pages/Followers";
 import UserProfile from "./pages/UserProfile";
+import { StudioPage } from "./components/pages/StudioPage";
+import StudioEditor from "./pages/StudioEditor";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +25,8 @@ const App = () => (
         <AppLayout>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/studio" element={<StudioPage />} />
+            <Route path="/studio/editor" element={<StudioEditor />} />
             <Route path="/orders/:id" element={<OrderDetails />} />
             <Route path="/profile/settings" element={<ProfileSettings />} />
             <Route path="/profile/upgrade" element={<UpgradePlan />} />
