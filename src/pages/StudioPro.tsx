@@ -17,6 +17,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas as FabricCanvas, Circle, Rect, Triangle, IText, PencilBrush, FabricImage, Line } from "fabric";
+import { CANVAS_PRESETS } from "../lib/studio/presets";
 
 // ---------- Bottom Tabs (aligns with Manana) ----------
 const BottomTabs: React.FC<{ active: "profile"|"orders"|"studio"|"community"|"market" }> = ({ active }) => {
@@ -101,6 +102,13 @@ const StudioPro: React.FC = () => {
   const [objects, setObjects] = useState<any[]>([]);
   const [history, setHistory] = useState<string[]>([]);
   const [histIndex, setHistIndex] = useState<number>(-1);
+  
+  // Canvas configuration state
+  const [activePreset, setActivePreset] = useState<string>("t-shirt");
+  const [canvasWidth, setCanvasWidth] = useState<number>(800);
+  const [canvasHeight, setCanvasHeight] = useState<number>(600);
+  const [canvasDpi, setCanvasDpi] = useState<150 | 300>(300);
+  const [canvasBackground, setCanvasBackground] = useState<string>("transparent");
 
   const gridDataUrl = useMemo(() => makeGridPattern(24, "rgba(0,0,0,0.07)"), []);
   const printAreaPx = useMemo(() => ({
@@ -464,6 +472,53 @@ const StudioPro: React.FC = () => {
     if (tool === "brush") startBrush(); else stopBrush();
   }, [tool, fill, brushW]);
 
+  // Canvas setup functions
+  const applyCanvasPreset = (presetName: string) => {
+    if (presetName === "Custom") return;
+    
+    const preset = CANVAS_PRESETS[presetName];
+    if (!preset) return;
+    
+    setActivePreset(presetName);
+    setCanvasWidth(preset.width);
+    setCanvasHeight(preset.height);
+    setCanvasDpi(preset.dpi);
+    setCanvasBackground(preset.background);
+    
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    // Update canvas dimensions (scaled down for UI)
+    const scale = 0.2; // Scale down for UI display
+    canvas.setWidth(preset.width * scale);
+    canvas.setHeight(preset.height * scale);
+    canvas.renderAll();
+    (window as any).__pushStudioHistory?.();
+  };
+
+  const updateCanvasDimensions = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const scale = 0.2; // Scale down for UI display
+    canvas.setWidth(canvasWidth * scale);
+    canvas.setHeight(canvasHeight * scale);
+    canvas.renderAll();
+    (window as any).__pushStudioHistory?.();
+  };
+
+  const updateCanvasBackground = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    if (canvasBackground === "transparent") {
+      canvas.backgroundColor = "transparent";
+    } else {
+      canvas.backgroundColor = canvasBackground;
+    }
+    canvas.renderAll();
+  };
+
   // Selected object property sync
   const applyPropsToActive = () => {
     const c = canvasRef.current!;
@@ -592,6 +647,67 @@ const StudioPro: React.FC = () => {
           <div className="text-xs text-neutral-500">
             Safe area: {safeWmm}×{safeHmm} mm → {printAreaPx.w}×{printAreaPx.h} px
           </div>
+
+          <div className="border-t pt-3" />
+
+          <div className="font-medium">Canvas Setup</div>
+          <label className="text-xs">Garment Preset
+            <select 
+              value={activePreset} 
+              onChange={(e) => applyCanvasPreset(e.target.value)}
+              className="w-full border rounded px-2 py-1 text-xs"
+            >
+              <option value="Custom">Custom</option>
+              {Object.keys(CANVAS_PRESETS).map(preset => (
+                <option key={preset} value={preset}>
+                  {preset.charAt(0).toUpperCase() + preset.slice(1).replace('-', ' ')}
+                </option>
+              ))}
+            </select>
+          </label>
+          
+          <div className="grid grid-cols-2 gap-2">
+            <label className="text-xs">Width (px)
+              <input 
+                type="number" 
+                value={canvasWidth} 
+                onChange={(e) => setCanvasWidth(parseInt(e.target.value) || 800)}
+                onBlur={updateCanvasDimensions}
+                className="w-full border rounded px-2 py-1 text-xs" 
+              />
+            </label>
+            <label className="text-xs">Height (px)
+              <input 
+                type="number" 
+                value={canvasHeight} 
+                onChange={(e) => setCanvasHeight(parseInt(e.target.value) || 600)}
+                onBlur={updateCanvasDimensions}
+                className="w-full border rounded px-2 py-1 text-xs" 
+              />
+            </label>
+          </div>
+          
+          <label className="text-xs">Background
+            <input 
+              type="text" 
+              value={canvasBackground} 
+              onChange={(e) => setCanvasBackground(e.target.value)}
+              onBlur={updateCanvasBackground}
+              placeholder="transparent or #ffffff"
+              className="w-full border rounded px-2 py-1 text-xs" 
+            />
+          </label>
+          
+          <label className="text-xs">Print Quality
+            <select 
+              value={canvasDpi.toString()} 
+              onChange={(e) => setCanvasDpi(parseInt(e.target.value) as 150 | 300)}
+              className="w-full border rounded px-2 py-1 text-xs"
+            >
+              <option value="150">150 DPI (Web)</option>
+              <option value="300">300 DPI (Print)</option>
+            </select>
+          </label>
 
           <div className="border-t pt-3" />
 
