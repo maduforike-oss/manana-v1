@@ -118,21 +118,25 @@ export const PreviewTab: React.FC = () => {
           ctx.font = `${fontSize}px ${(node as any).fontFamily || 'Arial'}`;
           ctx.fillText((node as any).text || 'Text', x, y + fontSize);
         } else if (node.type === 'image' && (node as any).src) {
-          try {
-            const img = new Image();
-            img.crossOrigin = 'anonymous';
-            await new Promise((resolve) => {
-              img.onload = resolve;
-              img.onerror = resolve;
-              img.src = (node as any).src;
-            });
-            
-            if (img.complete && img.naturalWidth > 0) {
-              ctx.drawImage(img, x, y, width, height);
+          // Image loading wrapped in async
+          const loadImage = async () => {
+            try {
+              const img = new Image();
+              img.crossOrigin = 'anonymous';
+              await new Promise((resolve) => {
+                img.onload = resolve;
+                img.onerror = resolve;
+                img.src = (node as any).src;
+              });
+              
+              if (img.complete && img.naturalWidth > 0) {
+                ctx.drawImage(img, x, y, width, height);
+              }
+            } catch (e) {
+              // Skip failed images
             }
-          } catch (e) {
-            // Skip failed images
-          }
+          };
+          loadImage();
         }
         
         ctx.restore();

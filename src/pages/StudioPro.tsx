@@ -1,11 +1,35 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BottomNavigation } from '@/components/BottomNavigation';
 import { DesignTab } from '../studio/DesignTab';
 import { MaterialTab } from '../studio/MaterialTab';
 import { PreviewTab } from '../studio/PreviewTab';
 import { PricingTab } from '../studio/PricingTab';
 import { useStudioStore } from '../studio/store';
+
+type TabId = "profile"|"orders"|"studio"|"community"|"market";
+const BottomTabs: React.FC<{ active?: TabId; activeTab?: TabId }> = ({ active, activeTab }) => {
+  const current = (active ?? activeTab ?? "studio") as TabId;
+  const Tab = ({ label, path, id }: { label: string; path: string; id: TabId }) => (
+    <button
+      onClick={() => (window.location.href = path)}
+      className={
+        "px-3 py-2 rounded-md border " +
+        (current === id ? "bg-black text-white border-black" : "bg-white text-black hover:bg-neutral-50")
+      }
+    >
+      {label}
+    </button>
+  );
+  return (
+    <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-40 flex gap-2 bg-white/90 backdrop-blur border rounded-xl p-2 shadow">
+      <Tab id="profile"   label="Profile"   path="/profile" />
+      <Tab id="orders"    label="Orders"    path="/orders" />
+      <Tab id="studio"    label="Studio"    path="/studio" />
+      <Tab id="community" label="Community" path="/community" />
+      <Tab id="market"    label="Market"    path="/market" />
+    </div>
+  );
+};
 
 // Query param support for garment configuration
 const useQueryParams = () => {
@@ -77,7 +101,7 @@ const StudioPro: React.FC = () => {
       </div>
 
       {/* Bottom Navigation */}
-      <BottomNavigation activeTab="studio" />
+      <BottomTabs active="studio" />
     </div>
   );
 };

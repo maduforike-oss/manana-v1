@@ -39,7 +39,8 @@ export const MaterialTab: React.FC = () => {
     if (selectedMethod === 'DTG') {
       // Check for minimum line width
       const thinLines = nodes.some(node => 
-        node.type === 'shape' && (node as any).strokeWidth < METHOD_RULES.DTG.minLineWidthMm * 3.543
+        (node.type === 'rect' || node.type === 'circle' || node.type === 'triangle') && 
+        (node as any).strokeWidth < METHOD_RULES.DTG.minLineWidthMm * 3.543
       );
       if (thinLines) {
         violations.push(`Lines must be at least ${METHOD_RULES.DTG.minLineWidthMm}mm thick`);

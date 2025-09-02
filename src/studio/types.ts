@@ -1,6 +1,7 @@
 export type ViewName = "front" | "back" | "left" | "right";
 export type GarmentSize = "XS" | "S" | "M" | "L" | "XL" | "XXL";
 export type PrintMethod = "DTG" | "Screen" | "Vinyl";
+export type Tool = "select" | "brush" | "rect" | "circle" | "triangle" | "text" | "image";
 
 export interface MethodRules {
   DTG: {
@@ -69,7 +70,7 @@ export interface StudioGarment {
 
 export interface StudioNode {
   id: string;
-  type: "text" | "image" | "shape" | "path";
+  type: "text" | "image" | "rect" | "circle" | "triangle" | "path";
   x: number;
   y: number;
   width: number;

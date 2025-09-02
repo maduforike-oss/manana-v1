@@ -28,9 +28,7 @@ import {
   Redo
 } from 'lucide-react';
 import { useStudioStore } from './store';
-import { StudioNode } from './types';
-
-type Tool = 'select' | 'brush' | 'rect' | 'circle' | 'triangle' | 'text' | 'image';
+import { StudioNode, Tool } from './types';
 
 export const DesignTab: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
