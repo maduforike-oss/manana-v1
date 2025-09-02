@@ -32,12 +32,17 @@ export const OptimizedPropertiesPanel = () => {
   const selectedNodes = doc.nodes.filter(node => node.selected);
   const hasSelection = selectedNodes.length > 0;
   
-  // For now, we'll simplify and not show garment selection until store is updated
-  const currentGarment = null;
-  const garmentColors: any[] = [];
+  // Get current garment from canvas config
+  const currentGarmentType = doc.canvas.garmentType;
+  const currentGarment = currentGarmentType ? getGarmentById(currentGarmentType) : null;
+  const garmentColors: any[] = currentGarment?.colors || [];
 
   const handleGarmentColorChange = (colorId: string) => {
-    // Will be implemented when store has garment tracking
+    // Update garment color in store
+    if (currentGarmentType) {
+      // We'll need to implement this in the store
+      console.log('Change garment color to:', colorId);
+    }
   };
 
   return (

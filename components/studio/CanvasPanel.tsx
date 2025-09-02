@@ -17,9 +17,9 @@ export const CanvasPanel = () => {
         <div className="space-y-2">
           <Label className="text-sm font-semibold text-foreground">Canvas Preset</Label>
           <Select 
-            value="Custom" 
+            value={doc.canvas.garmentType || "Custom"} 
             onValueChange={(preset) => {
-              if (preset !== "Custom") {
+              if (preset !== "Custom" && CANVAS_PRESETS[preset]) {
                 updateCanvas(CANVAS_PRESETS[preset]);
               }
             }}
@@ -28,9 +28,12 @@ export const CanvasPanel = () => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-card border-border/50">
+              <SelectItem value="Custom" className="text-foreground hover:bg-accent/80">
+                Custom
+              </SelectItem>
               {Object.keys(CANVAS_PRESETS).map(preset => (
                 <SelectItem key={preset} value={preset} className="text-foreground hover:bg-accent/80">
-                  {preset}
+                  {preset.charAt(0).toUpperCase() + preset.slice(1).replace('-', ' ')}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -45,7 +48,10 @@ export const CanvasPanel = () => {
               <Input
                 type="number"
                 value={doc.canvas.width}
-                onChange={(e) => updateCanvas({ width: parseInt(e.target.value) || 1200 })}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value) || 1200;
+                  updateCanvas({ width: value });
+                }}
                 className="bg-background border-border/50 text-foreground font-mono"
               />
             </div>
@@ -54,7 +60,10 @@ export const CanvasPanel = () => {
               <Input
                 type="number"
                 value={doc.canvas.height}
-                onChange={(e) => updateCanvas({ height: parseInt(e.target.value) || 1200 })}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value) || 1200;
+                  updateCanvas({ height: value });
+                }}
                 className="bg-background border-border/50 text-foreground font-mono"
               />
             </div>
@@ -62,13 +71,31 @@ export const CanvasPanel = () => {
         </div>
 
         <div className="space-y-2">
-          <Label className="text-sm font-semibold text-foreground">Background Color</Label>
-          <Input
-            value={doc.canvas.background}
-            onChange={(e) => updateCanvas({ background: e.target.value })}
-            className="bg-background border-border/50 text-foreground font-mono"
-            placeholder="transparent or #ffffff"
-          />
+          <Label className="text-sm font-semibold text-foreground">Background</Label>
+          <div className="grid grid-cols-[1fr_auto] gap-2">
+            <Input
+              value={doc.canvas.background}
+              onChange={(e) => updateCanvas({ background: e.target.value })}
+              className="bg-background border-border/50 text-foreground font-mono"
+              placeholder="transparent or #ffffff"
+            />
+            {doc.canvas.background !== "transparent" && doc.canvas.background.startsWith("#") && (
+              <Input
+                type="color"
+                value={doc.canvas.background}
+                onChange={(e) => updateCanvas({ background: e.target.value })}
+                className="w-12 h-10 p-1 bg-background border-border/50"
+              />
+            )}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => updateCanvas({ background: "transparent" })}
+            className="w-full text-xs"
+          >
+            Set Transparent
+          </Button>
         </div>
 
         <div className="space-y-2">
