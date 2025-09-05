@@ -1,4 +1,4 @@
-import { Search, Heart, Bookmark, Filter, TrendingUp, Star, Eye, Download, Grid3X3, LayoutGrid, List, Play, Palette, Ruler, Layers, Info, ShoppingBag, Truck, X, ChevronRight, Package, Sparkles } from 'lucide-react';
+import { Search, Heart, Bookmark, Filter, TrendingUp, Star, Eye, Download, Grid3X3, LayoutGrid, List, Play, Palette, Ruler, Layers, Info, ShoppingBag, Truck, X, ChevronRight, Package, Sparkles, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,9 +11,11 @@ import { useToast } from '@/hooks/use-toast';
 import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { generateStudioMarketData, StudioGarmentData, FILTER_PRESETS, PrintAreaSize } from '@/lib/studio/marketData';
+import { useAppStore } from '@/store/useAppStore';
 
 export const MarketPage = () => {
   const { toast } = useToast();
+  const { setActiveTab: setAppActiveTab } = useAppStore();
   const [likedDesigns, setLikedDesigns] = useState<string[]>([]);
   const [savedDesigns, setSavedDesigns] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -178,12 +180,29 @@ export const MarketPage = () => {
   const uniqueTags = [...new Set(mockGarments.flatMap(g => g.tags))];
 
 
+  const handleProfileClick = () => {
+    setAppActiveTab('profile');
+  };
+
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-background">
         {/* eBay-style Header */}
         <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border/60">
           <div className="container mx-auto px-4 py-3">
+            {/* Top bar with profile link */}
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-xl font-bold text-foreground">Marketplace</h1>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={handleProfileClick}
+                className="rounded-full h-9 w-9 p-0 hover:bg-muted/80"
+              >
+                <User className="h-5 w-5" />
+              </Button>
+            </div>
+
             {/* Search Bar */}
             <div className="relative mb-4">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -191,9 +210,9 @@ export const MarketPage = () => {
                 placeholder="Search for anything"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-12 h-11 text-base rounded-full bg-muted/50 border-border/60 focus:border-primary/50"
+                className="pl-10 pr-12 h-11 text-base rounded-full bg-muted/50 border-border/60 focus:border-primary/50 transition-all duration-200 focus:bg-background"
               />
-              <Button size="sm" className="absolute right-1 top-1/2 transform -translate-y-1/2 rounded-full h-9 px-4">
+              <Button size="sm" className="absolute right-1 top-1/2 transform -translate-y-1/2 rounded-full h-9 px-4 bg-primary hover:bg-primary/90 transition-all duration-200">
                 Search
               </Button>
             </div>
@@ -252,7 +271,7 @@ export const MarketPage = () => {
           </div>
         </div>
 
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-4 max-h-[calc(100vh-12rem)] overflow-y-auto scrollbar-hide">
           {/* eBay-style Category Pills */}
           <div className="flex items-center gap-3 mb-4 overflow-x-auto scrollbar-hide pb-2">
             <Button
@@ -297,22 +316,54 @@ export const MarketPage = () => {
               </div>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 {sortedDesigns.slice(0, 4).map((design) => (
-                  <Card key={design.id} className="overflow-hidden border border-border/60 hover:shadow-md transition-all duration-200">
-                    <div className="relative aspect-square">
+                  <Card 
+                    key={design.id} 
+                    className="overflow-hidden border border-border/60 hover:shadow-lg hover:border-primary/30 transition-all duration-300 cursor-pointer group"
+                    onClick={() => handleDesignClick(design)}
+                  >
+                    <div className="relative aspect-square overflow-hidden">
                       <img 
                         src={design.thumbSrc} 
                         alt={design.name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
-                      <Badge className="absolute top-2 left-2 bg-red-500 text-white text-xs">
+                      <Badge className="absolute top-2 left-2 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-medium shadow-lg">
                         Deal
                       </Badge>
+                      <div className="absolute top-2 right-2 flex gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0 bg-black/20 hover:bg-black/40 backdrop-blur-sm rounded-full"
+                          onClick={(e) => handleLikeDesign(design.id, e)}
+                        >
+                          <Heart className={cn("h-4 w-4", likedDesigns.includes(design.id) ? "fill-red-500 text-red-500" : "text-white")} />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0 bg-black/20 hover:bg-black/40 backdrop-blur-sm rounded-full"
+                          onClick={(e) => handleSaveDesign(design.id, e)}
+                        >
+                          <Bookmark className={cn("h-4 w-4", savedDesigns.includes(design.id) ? "fill-blue-500 text-blue-500" : "text-white")} />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="p-3">
-                      <p className="text-sm font-medium text-foreground truncate">{design.name}</p>
+                    <div className="p-3 bg-gradient-to-b from-card to-card/80">
+                      <p className="text-sm font-medium text-foreground truncate mb-1">{design.name}</p>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-lg font-bold text-foreground">${design.price}</span>
+                        <span className="text-lg font-bold text-primary">${design.price}</span>
                         <span className="text-sm text-muted-foreground line-through">${(design.price * 1.3).toFixed(2)}</span>
+                      </div>
+                      <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Eye className="h-3 w-3" />
+                          {design.views}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Heart className="h-3 w-3" />
+                          {design.likes}
+                        </span>
                       </div>
                     </div>
                   </Card>
@@ -327,17 +378,22 @@ export const MarketPage = () => {
               <h2 className="text-lg font-semibold text-foreground mb-4">Recently viewed</h2>
               <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
                 {sortedDesigns.slice(4, 10).map((design) => (
-                  <Card key={design.id} className="overflow-hidden border border-border/60 hover:shadow-md transition-all duration-200">
-                    <div className="relative aspect-square">
+                  <Card 
+                    key={design.id} 
+                    className="overflow-hidden border border-border/60 hover:shadow-lg hover:border-primary/30 transition-all duration-300 cursor-pointer group"
+                    onClick={() => handleDesignClick(design)}
+                  >
+                    <div className="relative aspect-square overflow-hidden">
                       <img 
                         src={design.thumbSrc} 
                         alt={design.name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>
-                    <div className="p-2">
-                      <p className="text-xs text-foreground truncate">{design.name}</p>
-                      <p className="text-sm font-bold text-foreground">${design.price}</p>
+                    <div className="p-2 bg-gradient-to-b from-card to-card/80">
+                      <p className="text-xs text-foreground truncate font-medium">{design.name}</p>
+                      <p className="text-sm font-bold text-primary">${design.price}</p>
                     </div>
                   </Card>
                 ))}
@@ -354,10 +410,10 @@ export const MarketPage = () => {
                   <Button
                     key={type}
                     variant="outline"
-                    className="h-20 flex-col gap-2 text-xs"
+                    className="h-20 flex-col gap-2 text-xs hover:bg-primary/10 hover:border-primary/50 transition-all duration-200"
                     onClick={() => setSelectedGarmentTypes([type])}
                   >
-                    <Package className="h-6 w-6" />
+                    <Package className="h-6 w-6 text-primary" />
                     {type.charAt(0).toUpperCase() + type.slice(1).replace('-', ' ')}
                   </Button>
                 ))}
