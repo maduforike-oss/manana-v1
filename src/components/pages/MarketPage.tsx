@@ -186,7 +186,7 @@ export const MarketPage = () => {
             {/* Top bar with refined spacing */}
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-manana-coral to-primary bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
                   Marketplace
                 </h1>
                 <p className="text-sm text-muted-foreground mt-1">Discover unique fashion designs</p>
@@ -195,9 +195,9 @@ export const MarketPage = () => {
                 variant="ghost" 
                 size="sm"
                 onClick={handleProfileClick}
-                className="rounded-full h-10 w-10 p-0 hover:bg-manana-coral/10 hover:border-manana-coral/20 border border-transparent transition-all duration-300"
+                className="rounded-full h-10 w-10 p-0 hover:bg-primary/10 hover:border-primary/20 border border-transparent transition-all duration-300"
               >
-                <User className="h-5 w-5 text-manana-coral" />
+                <User className="h-5 w-5 text-primary" />
               </Button>
             </div>
 
@@ -208,9 +208,9 @@ export const MarketPage = () => {
                 placeholder="Search designs, creators, styles..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-12 pr-16 h-12 text-base rounded-2xl bg-manana-cream/30 border-border/30 focus:border-manana-coral/50 transition-all duration-300 focus:bg-background/80 focus:shadow-fashion"
+                className="pl-12 pr-16 h-12 text-base rounded-2xl bg-manana-cream/30 border-border/30 focus:border-primary/50 transition-all duration-300 focus:bg-background/80 focus:shadow-fashion"
               />
-              <Button size="sm" className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-xl h-8 px-4 bg-manana-coral hover:bg-manana-coral-dark transition-all duration-300 shadow-sm">
+              <Button size="sm" className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-xl h-8 px-4 bg-primary hover:bg-primary/90 transition-all duration-300 shadow-sm">
                 Search
               </Button>
             </div>
@@ -230,7 +230,7 @@ export const MarketPage = () => {
                   className={cn(
                     "rounded-xl h-9 px-4 text-sm font-medium transition-all duration-300 flex items-center gap-2",
                     activeTab === key 
-                      ? "bg-manana-coral text-white shadow-sm" 
+                      ? "bg-primary text-primary-foreground shadow-sm" 
                       : "text-muted-foreground hover:text-foreground hover:bg-background/50"
                   )}
                   onClick={() => setActiveTab(key)}
@@ -250,7 +250,7 @@ export const MarketPage = () => {
               variant={activeFilterPreset === null ? "default" : "outline"}
               size="sm"
               onClick={() => clearAllFilters()}
-              className="h-9 px-4 text-sm rounded-full whitespace-nowrap bg-manana-coral hover:bg-manana-coral-dark"
+              className="h-9 px-4 text-sm rounded-full whitespace-nowrap bg-primary hover:bg-primary/90"
             >
               All Categories
             </Button>
@@ -263,8 +263,8 @@ export const MarketPage = () => {
                 className={cn(
                   "h-9 px-4 text-sm rounded-full whitespace-nowrap transition-all duration-300",
                   activeFilterPreset === presetName
-                    ? "bg-manana-coral hover:bg-manana-coral-dark"
-                    : "border-border/40 hover:border-manana-coral/30 hover:bg-manana-coral/5"
+                    ? "bg-primary hover:bg-primary/90"
+                    : "border-border/40 hover:border-primary/30 hover:bg-primary/5"
                 )}
               >
                 {presetName}
@@ -274,7 +274,7 @@ export const MarketPage = () => {
               variant="outline"
               size="sm"
               onClick={() => setShowFilters(!showFilters)}
-              className="h-9 px-4 text-sm rounded-full whitespace-nowrap border-border/40 hover:border-manana-coral/30 hover:bg-manana-coral/5"
+              className="h-9 px-4 text-sm rounded-full whitespace-nowrap border-border/40 hover:border-primary/30 hover:bg-primary/5"
             >
               <Filter className="h-4 w-4 mr-2" />
               Filters
@@ -289,7 +289,7 @@ export const MarketPage = () => {
                   <h2 className="text-xl font-bold text-foreground">Featured This Week</h2>
                   <p className="text-sm text-muted-foreground mt-1">Handpicked by our design team</p>
                 </div>
-                <Button variant="ghost" size="sm" className="text-manana-coral hover:text-manana-coral-dark hover:bg-manana-coral/5">
+                <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80 hover:bg-primary/5">
                   View Collection
                   <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
@@ -308,7 +308,7 @@ export const MarketPage = () => {
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                      <Badge className="absolute top-4 left-4 bg-manana-coral text-white text-xs font-medium shadow-lg border-0 rounded-full px-3 py-1">
+                      <Badge className="absolute top-4 left-4 bg-primary text-primary-foreground text-xs font-medium shadow-lg border-0 rounded-full px-3 py-1">
                         Featured
                       </Badge>
                       <div className="absolute top-4 right-4 flex gap-2">
@@ -318,7 +318,7 @@ export const MarketPage = () => {
                           className="h-9 w-9 p-0 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-full border border-white/20 transition-all duration-300"
                           onClick={(e) => handleLikeDesign(design.id, e)}
                         >
-                          <Heart className={cn("h-4 w-4 transition-all duration-300", likedDesigns.includes(design.id) ? "fill-manana-coral text-manana-coral scale-110" : "text-white")} />
+                          <Heart className={cn("h-4 w-4 transition-all duration-300", likedDesigns.includes(design.id) ? "fill-primary text-primary scale-110" : "text-white")} />
                         </Button>
                         <Button
                           size="sm"
@@ -335,17 +335,17 @@ export const MarketPage = () => {
                             e.stopPropagation();
                             handleOpenInStudio(design);
                           }}
-                          className="w-full bg-manana-coral hover:bg-manana-coral-dark text-white rounded-xl h-10 font-medium shadow-lg transition-all duration-300"
+                          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg h-10 font-medium transition-all duration-200"
                         >
                           Open in Studio
                         </Button>
                       </div>
                     </div>
                     <div className="p-6">
-                      <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-manana-coral transition-colors duration-300">{design.name}</h3>
+                      <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors duration-300">{design.name}</h3>
                       <p className="text-sm text-muted-foreground mb-4">by {design.creator}</p>
                       <div className="flex items-center justify-between">
-                        <span className="text-2xl font-bold text-manana-coral">${design.price}</span>
+                        <span className="text-2xl font-bold text-primary">${design.price}</span>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <Eye className="h-4 w-4" />
@@ -372,7 +372,7 @@ export const MarketPage = () => {
                   <h2 className="text-xl font-bold text-foreground">Trending Designers</h2>
                   <p className="text-sm text-muted-foreground mt-1">Follow the creators making waves</p>
                 </div>
-                <Button variant="ghost" size="sm" className="text-manana-coral hover:text-manana-coral-dark hover:bg-manana-coral/5">
+                <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80 hover:bg-primary/5">
                   See All Creators
                   <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
@@ -381,12 +381,12 @@ export const MarketPage = () => {
                 {trendingDesigners.map((designer) => (
                   <Card 
                     key={designer.id}
-                    className="p-6 text-center hover:shadow-fashion transition-all duration-300 cursor-pointer group border-border/30 hover:border-manana-coral/30 bg-gradient-to-b from-background to-manana-cream/10"
+                    className="p-6 text-center hover:shadow-fashion transition-all duration-300 cursor-pointer group border-border/30 hover:border-primary/30 bg-gradient-to-b from-background to-manana-cream/10"
                   >
                     <div className="relative mx-auto w-16 h-16 mb-4">
-                      <Avatar className="w-16 h-16 ring-2 ring-manana-coral/20 group-hover:ring-manana-coral/40 transition-all duration-300">
+                      <Avatar className="w-16 h-16 ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all duration-300">
                         <AvatarImage src={designer.avatar} />
-                        <AvatarFallback className="bg-manana-coral text-white text-lg font-bold">
+                        <AvatarFallback className="bg-primary text-primary-foreground text-lg font-bold">
                           {designer.name.split(' ').map(n => n[0]).join('')}
                         </AvatarFallback>
                       </Avatar>
@@ -394,19 +394,19 @@ export const MarketPage = () => {
                         <Crown className="absolute -top-1 -right-1 h-5 w-5 text-yellow-500" />
                       )}
                       {designer.badge === 'Rising Star' && (
-                        <Star className="absolute -top-1 -right-1 h-5 w-5 text-manana-coral" />
+                        <Star className="absolute -top-1 -right-1 h-5 w-5 text-primary" />
                       )}
                     </div>
-                    <h3 className="font-semibold text-foreground mb-1 group-hover:text-manana-coral transition-colors duration-300">{designer.name}</h3>
+                    <h3 className="font-semibold text-foreground mb-1 group-hover:text-primary transition-colors duration-300">{designer.name}</h3>
                     <p className="text-xs text-muted-foreground mb-2">{designer.specialty}</p>
-                    <Badge variant="outline" className="mb-3 text-xs border-manana-coral/30 text-manana-coral">
+                    <Badge variant="outline" className="mb-3 text-xs border-primary/30 text-primary">
                       {designer.badge}
                     </Badge>
                     <p className="text-sm font-medium text-foreground">{designer.followers} followers</p>
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="mt-4 w-full rounded-xl border-manana-coral/30 text-manana-coral hover:bg-manana-coral hover:text-white transition-all duration-300"
+                      className="mt-4 w-full rounded-xl border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300"
                     >
                       Follow
                     </Button>
@@ -424,7 +424,7 @@ export const MarketPage = () => {
                 {sortedDesigns.slice(3, 9).map((design) => (
                   <Card 
                     key={design.id} 
-                    className="overflow-hidden border-border/30 hover:shadow-fashion hover:border-manana-coral/30 transition-all duration-300 cursor-pointer group bg-gradient-to-b from-background to-manana-cream/10"
+                    className="overflow-hidden border-border/30 hover:shadow-fashion hover:border-primary/30 transition-all duration-300 cursor-pointer group bg-gradient-to-b from-background to-manana-cream/10"
                     onClick={() => handleDesignClick(design)}
                   >
                     <div className="relative aspect-square overflow-hidden">
@@ -440,13 +440,13 @@ export const MarketPage = () => {
                         className="absolute top-2 right-2 h-7 w-7 p-0 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-full border border-white/20 opacity-0 group-hover:opacity-100 transition-all duration-300"
                         onClick={(e) => handleLikeDesign(design.id, e)}
                       >
-                        <Heart className={cn("h-3 w-3", likedDesigns.includes(design.id) ? "fill-manana-coral text-manana-coral" : "text-white")} />
+                        <Heart className={cn("h-3 w-3", likedDesigns.includes(design.id) ? "fill-primary text-primary" : "text-white")} />
                       </Button>
                     </div>
                     <div className="p-3">
                       <p className="text-sm text-foreground truncate font-medium mb-1">{design.name}</p>
                       <p className="text-xs text-muted-foreground mb-2">by {design.creator}</p>
-                      <span className="text-sm font-bold text-manana-coral">${design.price}</span>
+                      <span className="text-sm font-bold text-primary">${design.price}</span>
                     </div>
                   </Card>
                 ))}
@@ -499,7 +499,7 @@ export const MarketPage = () => {
                       className="absolute top-3 right-3 h-8 w-8 p-0 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-full border border-white/20 transition-all duration-300"
                       onClick={(e) => handleLikeDesign(design.id, e)}
                     >
-                      <Heart className={cn("h-4 w-4 transition-all duration-300", likedDesigns.includes(design.id) ? "fill-manana-coral text-manana-coral scale-110" : "text-white")} />
+                      <Heart className={cn("h-4 w-4 transition-all duration-300", likedDesigns.includes(design.id) ? "fill-primary text-primary scale-110" : "text-white")} />
                     </Button>
 
                     {/* Quick Actions on Hover */}
@@ -509,7 +509,7 @@ export const MarketPage = () => {
                           e.stopPropagation();
                           handleOpenInStudio(design);
                         }}
-                        className="w-full bg-manana-coral hover:bg-manana-coral-dark text-white rounded-xl h-9 font-medium shadow-lg transition-all duration-300"
+                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg h-9 font-medium transition-all duration-200"
                       >
                         Design This
                       </Button>
@@ -543,10 +543,10 @@ export const MarketPage = () => {
                   <div className="p-4">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-foreground group-hover:text-manana-coral transition-colors duration-300 line-clamp-1">{design.name}</h3>
+                        <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors duration-300 line-clamp-1">{design.name}</h3>
                         <p className="text-sm text-muted-foreground">by {design.creator}</p>
                       </div>
-                      <span className="text-lg font-bold text-manana-coral">${design.price}</span>
+                      <span className="text-lg font-bold text-primary">${design.price}</span>
                     </div>
                     
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -574,7 +574,7 @@ export const MarketPage = () => {
           <div className="text-center py-8">
             <Button 
               variant="outline" 
-              className="rounded-xl px-8 py-3 border-manana-coral/30 text-manana-coral hover:bg-manana-coral hover:text-white transition-all duration-300"
+              className="rounded-xl px-8 py-3 border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300"
             >
               Load More Designs
             </Button>

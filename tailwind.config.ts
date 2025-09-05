@@ -50,9 +50,6 @@ export default {
 					'accent-orange': 'hsl(var(--studio-accent-orange))'
 				},
 				manana: {
-					coral: 'hsl(var(--manana-coral))',
-					'coral-light': 'hsl(var(--manana-coral-light))',
-					'coral-dark': 'hsl(var(--manana-coral-dark))',
 					sage: 'hsl(var(--manana-sage))',
 					'sage-light': 'hsl(var(--manana-sage-light))',
 					'sage-dark': 'hsl(var(--manana-sage-dark))',
