@@ -32,8 +32,7 @@ export const MarketPage = () => {
   // Generate studio market data
   const studioDesigns = useMemo(() => generateStudioMarketData(), []);
 
-  const handleOpenInStudio = (design: StudioGarmentData, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleOpenInStudio = (design: StudioGarmentData, orientation: string = 'front') => {
     const params = new URLSearchParams({
       garment: design.garmentId,
       orientation: design.orientation,
@@ -467,7 +466,7 @@ export const MarketPage = () => {
                       className="flex-1 h-8 text-xs shadow-sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleOpenInStudio(garment);
+                        handleOpenInStudio(garment, 'front');
                       }}
                     >
                       <Palette className="h-3 w-3 mr-1" />
