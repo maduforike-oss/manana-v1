@@ -1,4 +1,4 @@
-import { Search, Heart, Bookmark, Filter, TrendingUp, Star, Eye, Download, Grid3X3, LayoutGrid, List, Play, Palette, Ruler, Layers, Info, ShoppingBag, Truck, X, ChevronRight, Package, Sparkles, User, Award, Users, Crown } from 'lucide-react';
+import { Search, Heart, Bookmark, Filter, TrendingUp, Star, Eye, Download, Grid3X3, LayoutGrid, List, Play, Palette, Ruler, Layers, Info, ShoppingBag, Truck, X, ChevronRight, Package, Sparkles, User, Award, Users, Crown, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,19 +9,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useMemo, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { generateStudioMarketData, StudioGarmentData, FILTER_PRESETS, PrintAreaSize } from '@/lib/studio/marketData';
 import { useAppStore } from '@/store/useAppStore';
 import { useLocalSaves, useLocalSearchHistory } from '@/hooks/useLocalSaves';
+import { useUnlockedDesigns } from '@/hooks/useUnlockedDesigns';
 import { SearchSuggestions } from '@/components/marketplace/SearchSuggestions';
 import { FiltersSheet } from '@/components/marketplace/FiltersSheet';
 import { QuickViewModal } from '@/components/marketplace/QuickViewModal';
+import { PurchaseGateModal } from '@/components/marketplace/PurchaseGateModal';
 
 export const MarketPage = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const { setActiveTab: setAppActiveTab } = useAppStore();
   const { ids: savedIds, toggle: toggleSave, isSaved } = useLocalSaves();
   const { addSearch } = useLocalSearchHistory();
+  const { isUnlocked } = useUnlockedDesigns();
   const [likedDesigns, setLikedDesigns] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('for-you');
@@ -30,7 +35,9 @@ export const MarketPage = () => {
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedDesign, setSelectedDesign] = useState<StudioGarmentData | null>(null);
+  const [purchaseGateDesign, setPurchaseGateDesign] = useState<StudioGarmentData | null>(null);
   const [showQuickView, setShowQuickView] = useState(false);
+  const [showPurchaseGate, setShowPurchaseGate] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   
   // Enhanced filters
@@ -47,24 +54,31 @@ export const MarketPage = () => {
   // Generate studio market data
   const studioDesigns = useMemo(() => generateStudioMarketData(), []);
 
-  const handleOpenInStudio = (design: StudioGarmentData, orientation: string = 'front') => {
-    const params = new URLSearchParams({
-      garment: design.garmentId,
-      orientation: design.orientation,
-      mmToPx: String(design.mmToPx),
-      safeWmm: String(design.safeArea.w),
-      safeHmm: String(design.safeArea.h),
-      view: design.orientation,
-      size: 'M'
-    }).toString();
-    
-    // Navigate to studio with garment preloaded
-    window.location.href = `/studio/editor?${params}`;
-    
-    toast({ 
-      title: "Opening Studio", 
-      description: `Loading ${design.name} in the design editor...`
-    });
+  const handleOpenInStudio = (design: StudioGarmentData) => {
+    if (isUnlocked(design.id)) {
+      // Design is unlocked, proceed to studio
+      const params = new URLSearchParams({
+        garment: design.garmentId,
+        orientation: design.orientation,
+        mmToPx: String(design.mmToPx),
+        safeWmm: String(design.safeArea.w),
+        safeHmm: String(design.safeArea.h),
+        view: design.orientation,
+        size: 'M',
+        design: design.id
+      }).toString();
+      
+      window.location.href = `/studio/editor?${params}`;
+      
+      toast({ 
+        title: "Opening Studio", 
+        description: `Loading ${design.name} in the design editor...`
+      });
+    } else {
+      // Design is locked, show purchase gate
+      setPurchaseGateDesign(design);
+      setShowPurchaseGate(true);
+    }
   };
 
   const handleDesignClick = (design: StudioGarmentData) => {
@@ -632,7 +646,14 @@ export const MarketPage = () => {
                         }}
                         className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg h-9 font-medium transition-all duration-200"
                       >
-                        Design This
+                        {isUnlocked(design.id) ? (
+                          <>Customize in Studio</>
+                        ) : (
+                          <>
+                            <Lock className="w-3 h-3 mr-1" />
+                            Purchase to Customize
+                          </>
+                        )}
                       </Button>
                       <div className="flex gap-2">
                         <Button 
@@ -729,8 +750,16 @@ export const MarketPage = () => {
           isOpen={showQuickView}
           onClose={() => setShowQuickView(false)}
           onOpenInStudio={handleOpenInStudio}
-          onSave={handleSaveDesign}
+          onSave={(designId) => handleSaveDesign(designId)}
           isSaved={selectedDesign ? isSaved(selectedDesign.id) : false}
+          isUnlocked={selectedDesign ? isUnlocked(selectedDesign.id) : false}
+        />
+        
+        {/* Purchase Gate Modal */}
+        <PurchaseGateModal
+          design={purchaseGateDesign}
+          open={showPurchaseGate}
+          onOpenChange={setShowPurchaseGate}
         />
       </div>
     </TooltipProvider>

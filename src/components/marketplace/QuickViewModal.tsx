@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Heart, Star, Truck, Info, Palette, Eye, Download, Share2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Heart, Star, Truck, Info, Palette, Eye, Download, Share2, ChevronLeft, ChevronRight, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -17,6 +17,7 @@ interface QuickViewModalProps {
   onOpenInStudio: (design: StudioGarmentData) => void;
   onSave: (designId: string) => void;
   isSaved: boolean;
+  isUnlocked: boolean;
 }
 
 export const QuickViewModal = ({ 
@@ -25,7 +26,8 @@ export const QuickViewModal = ({
   onClose, 
   onOpenInStudio, 
   onSave, 
-  isSaved 
+  isSaved,
+  isUnlocked
 }: QuickViewModalProps) => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [selectedColorVariant, setSelectedColorVariant] = useState(0);
@@ -328,8 +330,17 @@ export const QuickViewModal = ({
                   onClick={() => onOpenInStudio(design)}
                   className="flex-1 bg-primary hover:bg-primary/90 rounded-xl"
                 >
-                  <Palette className="h-4 w-4 mr-2" />
-                  Design This
+                  {isUnlocked ? (
+                    <>
+                      <Palette className="h-4 w-4 mr-2" />
+                      Customize in Studio
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="h-4 w-4 mr-2" />
+                      Purchase to Customize
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
