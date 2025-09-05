@@ -16,7 +16,6 @@ export const BottomNavigation = () => {
     { id: 'market' as const, label: 'Market', icon: Store },
     { id: 'community' as const, label: 'Community', icon: Users },
     { id: 'studio' as const, label: 'Studio', icon: Palette },
-    { id: 'orders' as const, label: 'Orders', icon: Package },
     { id: 'profile' as const, label: 'Profile', icon: User },
   ];
 
@@ -31,7 +30,6 @@ export const BottomNavigation = () => {
   
   const activeTab = pathname.startsWith("/studio") ? "studio" :
                    pathname.startsWith("/community") ? "community" :
-                   pathname.startsWith("/orders") ? "orders" :
                    pathname.startsWith("/profile") ? "profile" :
                    pathname === "/" ? storeActiveTab : "market";
 
@@ -42,10 +40,7 @@ export const BottomNavigation = () => {
     if (tabId === 'profile' && !location.pathname.startsWith('/profile/')) {
       // Only navigate if we're not already on a profile page
       navigate('/');
-    } else if (tabId === 'orders' && !location.pathname.startsWith('/orders/')) {
-      // Only navigate if we're not already on an orders page
-      navigate('/');
-    } else if (!location.pathname.startsWith('/profile/') && !location.pathname.startsWith('/orders/')) {
+    } else if (!location.pathname.startsWith('/profile/')) {
       // For other tabs, always go to root
       navigate('/');
     }
