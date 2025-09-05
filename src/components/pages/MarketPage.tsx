@@ -1,4 +1,4 @@
-import { Search, Heart, Bookmark, Filter, TrendingUp, Star, Eye, Download, Grid3X3, LayoutGrid, List } from 'lucide-react';
+import { Search, Heart, Bookmark, Filter, TrendingUp, Star, Eye, Download, Grid3X3, LayoutGrid, List, Play, Palette, Ruler, Layers, Info, ShoppingBag, Truck, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -6,118 +6,60 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
+import { generateStudioMarketData, StudioGarmentData, FILTER_PRESETS } from '@/lib/studio/marketData';
 
 export const MarketPage = () => {
   const { toast } = useToast();
-  const [likedDesigns, setLikedDesigns] = useState<number[]>([]);
-  const [savedDesigns, setSavedDesigns] = useState<number[]>([]);
+  const [likedDesigns, setLikedDesigns] = useState<string[]>([]);
+  const [savedDesigns, setSavedDesigns] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState('trending');
-  const [filterCategory, setFilterCategory] = useState('all');
   
-  const mockDesigns = [
-    { 
-      id: 1, 
-      name: 'Sunset Vibes Collection', 
-      creator: 'DesignPro', 
-      avatar: 'DP',
-      garment: 'T-Shirt', 
-      likes: 1234, 
-      views: 8920,
-      downloads: 456,
-      price: 15.99,
-      rating: 4.8,
-      tags: ['trendy', 'sunset', 'minimal'],
-      featured: true,
-      thumbnail: 'bg-gradient-to-br from-orange-400 to-pink-500'
-    },
-    { 
-      id: 2, 
-      name: 'Urban Street Art', 
-      creator: 'CityArt', 
-      avatar: 'CA',
-      garment: 'Hoodie', 
-      likes: 956, 
-      views: 5432,
-      downloads: 234,
-      price: 29.99,
-      rating: 4.9,
-      tags: ['urban', 'street', 'graffiti'],
-      featured: false,
-      thumbnail: 'bg-gradient-to-br from-gray-800 to-blue-600'
-    },
-    { 
-      id: 3, 
-      name: 'Minimal Geometric Logo', 
-      creator: 'CleanDesign', 
-      avatar: 'CD',
-      garment: 'Cap', 
-      likes: 567, 
-      views: 3210,
-      downloads: 123,
-      price: 18.99,
-      rating: 4.7,
-      tags: ['minimal', 'geometric', 'clean'],
-      featured: false,
-      thumbnail: 'bg-gradient-to-br from-indigo-500 to-purple-600'
-    },
-    { 
-      id: 4, 
-      name: 'Retro Wave Synthwave', 
-      creator: 'VintageVibes', 
-      avatar: 'VV',
-      garment: 'Long Sleeve', 
-      likes: 1890, 
-      views: 12340,
-      downloads: 789,
-      price: 22.99,
-      rating: 4.9,
-      tags: ['retro', 'synthwave', 'neon'],
-      featured: true,
-      thumbnail: 'bg-gradient-to-br from-purple-600 to-pink-600'
-    },
-    { 
-      id: 5, 
-      name: 'Nature\'s Harmony', 
-      creator: 'EcoDesign', 
-      avatar: 'ED',
-      garment: 'Tote Bag', 
-      likes: 743, 
-      views: 4567,
-      downloads: 298,
-      price: 12.99,
-      rating: 4.6,
-      tags: ['nature', 'eco', 'organic'],
-      featured: false,
-      thumbnail: 'bg-gradient-to-br from-green-500 to-emerald-600'
-    },
-    { 
-      id: 6, 
-      name: 'Cosmic Journey', 
-      creator: 'SpaceArt', 
-      avatar: 'SA',
-      garment: 'T-Shirt', 
-      likes: 2103, 
-      views: 15670,
-      downloads: 892,
-      price: 17.99,
-      rating: 4.8,
-      tags: ['cosmic', 'space', 'galaxy'],
-      featured: true,
-      thumbnail: 'bg-gradient-to-br from-blue-900 to-purple-900'
-    }
-  ];
+  // Enhanced filters
+  const [selectedGarmentTypes, setSelectedGarmentTypes] = useState<string[]>([]);
+  const [selectedBaseColors, setSelectedBaseColors] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedPrintAreaSize, setSelectedPrintAreaSize] = useState<string>('all');
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
+  const [showFilters, setShowFilters] = useState(false);
+  
+  // Generate studio market data
+  const studioDesigns = useMemo(() => generateStudioMarketData(), []);
 
-  const handleDesignClick = (designId: number) => {
-    console.log(`Opening design detail for ID: ${designId}`);
-    toast({ title: "Design Details", description: "Design detail page will open here" });
+  const handleOpenInStudio = (design: StudioGarmentData, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const params = new URLSearchParams({
+      garment: design.garmentId,
+      orientation: design.orientation,
+      mmToPx: String(design.mmToPx),
+      safeWmm: String(design.safeArea.w),
+      safeHmm: String(design.safeArea.h),
+      view: design.orientation,
+      size: 'M'
+    }).toString();
+    
+    // Navigate to studio with garment preloaded
+    window.location.href = `/studio/editor?${params}`;
+    
+    toast({ 
+      title: "Opening Studio", 
+      description: `Loading ${design.name} in the design editor...`
+    });
   };
 
-  const handleLikeDesign = (designId: number, e: React.MouseEvent) => {
+  const handleDesignClick = (design: StudioGarmentData) => {
+    toast({ 
+      title: "Design Details", 
+      description: `Viewing details for ${design.name}. Click "Open in Studio" to start designing!`
+    });
+  };
+
+  const handleLikeDesign = (designId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setLikedDesigns(prev => 
       prev.includes(designId) 
@@ -130,7 +72,7 @@ export const MarketPage = () => {
     });
   };
 
-  const handleSaveDesign = (designId: number, e: React.MouseEvent) => {
+  const handleSaveDesign = (designId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setSavedDesigns(prev => 
       prev.includes(designId) 
@@ -143,20 +85,59 @@ export const MarketPage = () => {
     });
   };
 
-  const handleFilter = () => {
-    toast({ title: "Filter", description: "Filter options will open here" });
+  const applyFilterPreset = (presetName: string) => {
+    const preset = FILTER_PRESETS[presetName as keyof typeof FILTER_PRESETS];
+    if (preset.garmentTypes) setSelectedGarmentTypes(preset.garmentTypes);
+    if (preset.baseColors) setSelectedBaseColors(preset.baseColors);
+    if (preset.tags) setSelectedTags(preset.tags);
+    if (preset.printAreaSize) setSelectedPrintAreaSize(preset.printAreaSize);
+    
+    toast({ title: "Filter Applied", description: `Applied ${presetName} filter preset` });
+  };
+
+  const clearAllFilters = () => {
+    setSelectedGarmentTypes([]);
+    setSelectedBaseColors([]);
+    setSelectedTags([]);
+    setSelectedPrintAreaSize('all');
+    setPriceRange([0, 100]);
+    setSearchQuery('');
   };
 
   const handleLoadMore = () => {
     toast({ title: "Loading", description: "Loading more designs..." });
   };
 
-  const filteredDesigns = mockDesigns.filter(design => {
+  const filteredDesigns = studioDesigns.filter(design => {
+    // Search filter
     const matchesSearch = design.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          design.creator.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         design.fabric.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          design.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesCategory = filterCategory === 'all' || design.garment.toLowerCase().includes(filterCategory.toLowerCase());
-    return matchesSearch && matchesCategory;
+    
+    // Garment type filter
+    const matchesGarmentType = selectedGarmentTypes.length === 0 || 
+                              selectedGarmentTypes.includes(design.garmentId);
+    
+    // Base color filter
+    const matchesBaseColor = selectedBaseColors.length === 0 || 
+                            selectedBaseColors.includes(design.baseColor);
+    
+    // Tags filter
+    const matchesTags = selectedTags.length === 0 || 
+                       selectedTags.some(tag => design.tags.includes(tag));
+    
+    // Print area size filter
+    const matchesPrintArea = selectedPrintAreaSize === 'all' || 
+      (selectedPrintAreaSize === 'large' && design.printArea.width >= 280 && design.printArea.height >= 380) ||
+      (selectedPrintAreaSize === 'medium' && design.printArea.width >= 200 && design.printArea.width < 280) ||
+      (selectedPrintAreaSize === 'small' && design.printArea.width < 200);
+    
+    // Price filter
+    const matchesPrice = design.price >= priceRange[0] && design.price <= priceRange[1];
+    
+    return matchesSearch && matchesGarmentType && matchesBaseColor && 
+           matchesTags && matchesPrintArea && matchesPrice;
   });
 
   const sortedDesigns = [...filteredDesigns].sort((a, b) => {
@@ -164,9 +145,11 @@ export const MarketPage = () => {
       case 'trending':
         return (b.likes + b.views / 10) - (a.likes + a.views / 10);
       case 'newest':
-        return b.id - a.id;
+        return b.id.localeCompare(a.id);
       case 'popular':
         return b.likes - a.likes;
+      case 'canvas-size':
+        return (b.printArea.width * b.printArea.height) - (a.printArea.width * a.printArea.height);
       case 'price-low':
         return a.price - b.price;
       case 'price-high':
@@ -176,321 +159,537 @@ export const MarketPage = () => {
     }
   });
 
-  const featuredDesigns = mockDesigns.filter(design => design.featured);
+  const featuredDesigns = studioDesigns.filter(design => design.featured);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
-      <div className="container mx-auto py-8 px-4 max-w-7xl">
-        {/* Hero Header */}
-        <div className="text-center mb-12">
-          <div className="relative">
-            <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent mb-4">
-              Design Market
-            </h1>
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 blur-3xl -z-10" />
+    <TooltipProvider>
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
+        <div className="container mx-auto py-8 px-4 max-w-7xl">
+          {/* Hero Header */}
+          <div className="text-center mb-12">
+            <div className="relative">
+              <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent mb-4">
+                Studio Market
+              </h1>
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 blur-3xl -z-10" />
+            </div>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Studio-ready garments with detailed specifications for professional design work
+            </p>
+            <div className="flex items-center justify-center gap-6 mt-6 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <Palette className="w-4 h-4 text-primary" />
+                <span>Print-Ready Canvases</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Ruler className="w-4 h-4 text-secondary" />
+                <span>Precise Specifications</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Layers className="w-4 h-4 text-accent" />
+                <span>300 DPI Quality</span>
+              </div>
+            </div>
           </div>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Discover stunning designs from our global community of creators
-          </p>
-          <div className="flex items-center justify-center gap-6 mt-6 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-primary" />
-              <span>50K+ Designs</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Star className="w-4 h-4 text-secondary" />
-              <span>Top Rated</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Download className="w-4 h-4 text-accent" />
-              <span>Instant Download</span>
-            </div>
-          </div>
-        </div>
 
-        {/* Featured Section */}
-        {featuredDesigns.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <Star className="w-6 h-6 text-primary" />
-              Featured Designs
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {featuredDesigns.slice(0, 3).map((design) => (
-                <Card 
-                  key={`featured-${design.id}`}
-                  onClick={() => handleDesignClick(design.id)}
-                  className="group cursor-pointer overflow-hidden border-2 border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-[0_0_30px_hsl(var(--primary)/0.3)]"
-                >
-                  <div className="relative">
-                    <div className={cn("aspect-[4/3] relative overflow-hidden", design.thumbnail)}>
-                      <div className="absolute inset-0 bg-black/20" />
-                      <div className="absolute top-3 left-3">
-                        <Badge className="bg-primary text-primary-foreground border-0">
-                          Featured
-                        </Badge>
-                      </div>
-                      <div className="absolute top-3 right-3 flex gap-2">
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
-                          onClick={(e) => handleLikeDesign(design.id, e)}
-                          className={cn(
-                            "w-9 h-9 p-0 bg-white/90 hover:bg-white backdrop-blur-sm transition-all",
-                            likedDesigns.includes(design.id) ? 'text-red-500' : 'text-gray-600 hover:text-red-500'
-                          )}
-                        >
-                          <Heart className={cn("w-4 h-4", likedDesigns.includes(design.id) && 'fill-current')} />
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
-                          onClick={(e) => handleSaveDesign(design.id, e)}
-                          className={cn(
-                            "w-9 h-9 p-0 bg-white/90 hover:bg-white backdrop-blur-sm transition-all",
-                            savedDesigns.includes(design.id) ? 'text-primary' : 'text-gray-600 hover:text-primary'
-                          )}
-                        >
-                          <Bookmark className={cn("w-4 h-4", savedDesigns.includes(design.id) && 'fill-current')} />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <CardContent className="p-6">
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex-1">
-                        <h3 className="font-bold text-xl group-hover:text-primary transition-colors line-clamp-1">
-                          {design.name}
-                        </h3>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Avatar className="w-5 h-5">
-                            <AvatarFallback className="text-xs">{design.avatar}</AvatarFallback>
-                          </Avatar>
-                          <span className="text-sm text-muted-foreground">by {design.creator}</span>
+          {/* Featured Studio-Ready Garments */}
+          {featuredDesigns.length > 0 && (
+            <div className="mb-12">
+              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                <Star className="w-6 h-6 text-primary" />
+                Featured Studio-Ready Garments
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {featuredDesigns.slice(0, 3).map((design) => (
+                  <Card 
+                    key={`featured-${design.id}`}
+                    onClick={() => handleDesignClick(design)}
+                    className="group cursor-pointer overflow-hidden border-2 border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-[0_0_30px_hsl(var(--primary)/0.3)]"
+                  >
+                    <div className="relative">
+                      <div className="aspect-[4/3] relative overflow-hidden bg-gradient-to-br from-muted to-muted/50">
+                        <img 
+                          src={design.thumbSrc} 
+                          alt={design.name}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                        <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-all" />
+                        
+                        {/* Studio-Ready Badges */}
+                        <div className="absolute top-3 left-3 flex flex-col gap-1">
+                          <Badge className="bg-primary text-primary-foreground border-0">
+                            Featured
+                          </Badge>
+                          {design.studioReady.slice(0, 2).map(badge => (
+                            <Badge key={badge} variant="secondary" className="text-xs">
+                              {badge}
+                            </Badge>
+                          ))}
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-bold text-xl text-primary">£{design.price}</div>
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                          <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                          {design.rating}
+                        
+                        {/* Action Buttons */}
+                        <div className="absolute top-3 right-3 flex gap-2">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                onClick={(e) => handleOpenInStudio(design, e)}
+                                className="w-9 h-9 p-0 bg-primary text-primary-foreground hover:bg-primary/90 backdrop-blur-sm transition-all"
+                              >
+                                <Play className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Open in Studio</TooltipContent>
+                          </Tooltip>
+                          
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            onClick={(e) => handleLikeDesign(design.id, e)}
+                            className={cn(
+                              "w-9 h-9 p-0 bg-white/90 hover:bg-white backdrop-blur-sm transition-all",
+                              likedDesigns.includes(design.id) ? 'text-red-500' : 'text-gray-600 hover:text-red-500'
+                            )}
+                          >
+                            <Heart className={cn("w-4 h-4", likedDesigns.includes(design.id) && 'fill-current')} />
+                          </Button>
                         </div>
                       </div>
                     </div>
                     
-                    <div className="flex items-center justify-between">
-                      <Badge variant="outline" className="border-primary/30 text-primary">
-                        {design.garment}
-                      </Badge>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Heart className="w-4 h-4" />
-                          {design.likes.toLocaleString()}
+                    <CardContent className="p-6">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1">
+                          <h3 className="font-bold text-xl group-hover:text-primary transition-colors line-clamp-1">
+                            {design.name}
+                          </h3>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Avatar className="w-5 h-5">
+                              <AvatarFallback className="text-xs">{design.avatar}</AvatarFallback>
+                            </Avatar>
+                            <span className="text-sm text-muted-foreground">by {design.creator}</span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Eye className="w-4 h-4" />
-                          {design.views.toLocaleString()}
+                        <div className="text-right">
+                          <div className="font-bold text-xl text-primary">£{design.price}</div>
+                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                            {design.rating.toFixed(1)}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Search & Filters */}
-        <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 border mb-8">
-          <div className="flex flex-col lg:flex-row gap-4">
-            {/* Search */}
-            <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input 
-                placeholder="Search designs, creators, or tags..." 
-                className="pl-12 h-12 text-base bg-background/50 border-border/50 focus:bg-background"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            
-            {/* Filters */}
-            <div className="flex gap-3">
-              <Select value={filterCategory} onValueChange={setFilterCategory}>
-                <SelectTrigger className="w-40 h-12 bg-background/50">
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  <SelectItem value="t-shirt">T-Shirts</SelectItem>
-                  <SelectItem value="hoodie">Hoodies</SelectItem>
-                  <SelectItem value="cap">Caps</SelectItem>
-                  <SelectItem value="tote">Tote Bags</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-40 h-12 bg-background/50">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="trending">Trending</SelectItem>
-                  <SelectItem value="newest">Newest</SelectItem>
-                  <SelectItem value="popular">Most Popular</SelectItem>
-                  <SelectItem value="price-low">Price: Low to High</SelectItem>
-                  <SelectItem value="price-high">Price: High to Low</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <div className="flex bg-background/50 rounded-lg border border-border/50">
-                <Button
-                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('grid')}
-                  className="h-12 px-4"
-                >
-                  <LayoutGrid className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant={viewMode === 'list' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('list')}
-                  className="h-12 px-4"
-                >
-                  <List className="w-4 h-4" />
-                </Button>
+                      
+                      {/* Studio Specs */}
+                      <div className="space-y-2 mb-4">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Ruler className="w-4 h-4" />
+                          <span>Print: {Math.round(design.printArea.width/25.4)}×{Math.round(design.printArea.height/25.4)}" | 300 DPI</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Palette className="w-4 h-4" />
+                          <span>{design.fabric} | {design.baseColor} base</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Truck className="w-4 h-4" />
+                          <span>Ships in {design.shippingDays}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex gap-1">
+                          {design.tags.slice(0, 2).map(tag => (
+                            <Badge key={tag} variant="outline" className="text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Heart className="w-4 h-4" />
+                            {design.likes.toLocaleString()}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Eye className="w-4 h-4" />
+                            {design.views.toLocaleString()}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             </div>
-          </div>
-        </div>
+          )}
 
-        {/* Results Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-2xl font-bold">All Designs</h2>
-            <p className="text-muted-foreground">
-              {sortedDesigns.length} designs found
-              {searchQuery && ` for "${searchQuery}"`}
+          {/* Filter Presets */}
+          <div className="mb-6">
+            <div className="flex flex-wrap gap-3">
+              {Object.keys(FILTER_PRESETS).map(presetName => (
+                <Button
+                  key={presetName}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => applyFilterPreset(presetName)}
+                  className="text-sm"
+                >
+                  {presetName}
+                </Button>
+              ))}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearAllFilters}
+                className="text-sm text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-4 h-4 mr-2" />
+                Clear All
+              </Button>
+            </div>
+          </div>
+
+          {/* Search & Filters */}
+          <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 border mb-8">
+            <div className="flex flex-col lg:flex-row gap-4">
+              {/* Search */}
+              <div className="flex-1 relative">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Input 
+                  placeholder="Search garments, fabrics, or specifications..." 
+                  className="pl-12 h-12 text-base bg-background/50 border-border/50 focus:bg-background"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              
+              {/* Filters */}
+              <div className="flex gap-3">
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-48 h-12 bg-background/50">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="trending">Trending</SelectItem>
+                    <SelectItem value="newest">Newest</SelectItem>
+                    <SelectItem value="popular">Most Popular</SelectItem>
+                    <SelectItem value="canvas-size">Canvas Size</SelectItem>
+                    <SelectItem value="price-low">Price: Low to High</SelectItem>
+                    <SelectItem value="price-high">Price: High to Low</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Button
+                  variant={showFilters ? 'default' : 'outline'}
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="h-12 px-4"
+                >
+                  <Filter className="w-4 h-4 mr-2" />
+                  Filters
+                  {(selectedGarmentTypes.length + selectedBaseColors.length + selectedTags.length) > 0 && (
+                    <Badge variant="secondary" className="ml-2">
+                      {selectedGarmentTypes.length + selectedBaseColors.length + selectedTags.length}
+                    </Badge>
+                  )}
+                </Button>
+
+                <div className="flex bg-background/50 rounded-lg border border-border/50">
+                  <Button
+                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('grid')}
+                    className="h-12 px-4"
+                  >
+                    <LayoutGrid className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === 'list' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('list')}
+                    className="h-12 px-4"
+                  >
+                    <List className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Advanced Filters Panel */}
+            {showFilters && (
+              <div className="mt-6 pt-6 border-t border-border/50">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {/* Garment Types */}
+                  <div>
+                    <label className="text-sm font-medium mb-3 block">Garment Type</label>
+                    <div className="space-y-2">
+                      {['t-shirt', 'hoodie', 'crewneck', 'polo', 'cap', 'tote'].map(type => (
+                        <label key={type} className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={selectedGarmentTypes.includes(type)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedGarmentTypes([...selectedGarmentTypes, type]);
+                              } else {
+                                setSelectedGarmentTypes(selectedGarmentTypes.filter(t => t !== type));
+                              }
+                            }}
+                            className="rounded border-border"
+                          />
+                          <span className="text-sm capitalize">{type.replace('-', ' ')}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Base Colors */}
+                  <div>
+                    <label className="text-sm font-medium mb-3 block">Base Color</label>
+                    <div className="space-y-2">
+                      {['light', 'dark', 'colored'].map(color => (
+                        <label key={color} className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={selectedBaseColors.includes(color)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedBaseColors([...selectedBaseColors, color]);
+                              } else {
+                                setSelectedBaseColors(selectedBaseColors.filter(c => c !== color));
+                              }
+                            }}
+                            className="rounded border-border"
+                          />
+                          <span className="text-sm capitalize">{color}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Print Area Size */}
+                  <div>
+                    <label className="text-sm font-medium mb-3 block">Print Area</label>
+                    <Select value={selectedPrintAreaSize} onValueChange={setSelectedPrintAreaSize}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Sizes</SelectItem>
+                        <SelectItem value="large">Large (10"+ wide)</SelectItem>
+                        <SelectItem value="medium">Medium (8-10")</SelectItem>
+                        <SelectItem value="small">Small (under 8")</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Tags */}
+                  <div>
+                    <label className="text-sm font-medium mb-3 block">Style Tags</label>
+                    <div className="space-y-2">
+                      {['minimalist', 'streetwear', 'premium', 'cotton', 'versatile'].map(tag => (
+                        <label key={tag} className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={selectedTags.includes(tag)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedTags([...selectedTags, tag]);
+                              } else {
+                                setSelectedTags(selectedTags.filter(t => t !== tag));
+                              }
+                            }}
+                            className="rounded border-border"
+                          />
+                          <span className="text-sm capitalize">{tag}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Results Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold">Studio-Ready Garments</h2>
+              <p className="text-muted-foreground">
+                {sortedDesigns.length} garments found
+                {searchQuery && ` for "${searchQuery}"`}
+              </p>
+            </div>
+            
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Info className="w-4 h-4 mr-2" />
+                  Quality Guide
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-sm">
+                <div className="space-y-2">
+                  <p className="font-medium">Studio-Ready Quality</p>
+                  <p className="text-sm">• 300 DPI print resolution</p>
+                  <p className="text-sm">• Precise safe area mapping</p>
+                  <p className="text-sm">• Professional mockup quality</p>
+                  <p className="text-sm">• Multiple print methods supported</p>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+
+          {/* Garment Grid/List */}
+          <div className={cn(
+            "gap-6 mb-12",
+            viewMode === 'grid' 
+              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" 
+              : "flex flex-col"
+          )}>
+            {sortedDesigns.map((design) => (
+              <Card 
+                key={design.id}
+                onClick={() => handleDesignClick(design)}
+                className={cn(
+                  "group cursor-pointer overflow-hidden border hover:shadow-lg transition-all duration-300 hover:border-primary/30",
+                  viewMode === 'list' && "flex flex-row"
+                )}
+              >
+                <div className={cn(
+                  "relative overflow-hidden",
+                  viewMode === 'grid' ? "aspect-[4/3]" : "w-48 h-32 flex-shrink-0"
+                )}>
+                  <img 
+                    src={design.thumbSrc} 
+                    alt={design.name}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-all" />
+                  
+                  {/* Studio Ready Badges */}
+                  <div className="absolute top-2 left-2">
+                    {design.studioReady.slice(0, 1).map(badge => (
+                      <Badge key={badge} variant="secondary" className="text-xs mb-1">
+                        {badge}
+                      </Badge>
+                    ))}
+                  </div>
+                  
+                  {/* Action Buttons */}
+                  <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          onClick={(e) => handleOpenInStudio(design, e)}
+                          className="w-8 h-8 p-0 bg-primary text-primary-foreground hover:bg-primary/90 backdrop-blur-sm"
+                        >
+                          <Play className="w-4 h-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Open in Studio</TooltipContent>
+                    </Tooltip>
+                    
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      onClick={(e) => handleLikeDesign(design.id, e)}
+                      className={cn(
+                        "w-8 h-8 p-0 bg-white/80 hover:bg-white backdrop-blur-sm transition-all",
+                        likedDesigns.includes(design.id) ? 'text-red-500' : 'text-gray-600 hover:text-red-500'
+                      )}
+                    >
+                      <Heart className={cn("w-4 h-4", likedDesigns.includes(design.id) && 'fill-current')} />
+                    </Button>
+                  </div>
+                </div>
+                
+                <CardContent className={cn("p-4", viewMode === 'list' && "flex-1")}>
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex-1">
+                      <h3 className={cn(
+                        "font-bold group-hover:text-primary transition-colors line-clamp-1",
+                        viewMode === 'grid' ? "text-lg" : "text-xl"
+                      )}>
+                        {design.name}
+                      </h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Avatar className="w-4 h-4">
+                          <AvatarFallback className="text-xs">{design.avatar}</AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm text-muted-foreground">by {design.creator}</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-bold text-lg text-primary">£{design.price}</div>
+                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                        <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                        {design.rating.toFixed(1)}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Studio Specifications */}
+                  <div className="space-y-1.5 mb-3">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Ruler className="w-3 h-3" />
+                      <span>Print: {Math.round(design.printArea.width/25.4)}×{Math.round(design.printArea.height/25.4)}" at 300 DPI</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Palette className="w-3 h-3" />
+                      <span>{design.baseColor} base | {design.availableOrientations.length} views</span>
+                    </div>
+                    {viewMode === 'list' && (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Truck className="w-3 h-3" />
+                        <span>Ships in {design.shippingDays}</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex gap-1">
+                      {design.tags.slice(0, viewMode === 'grid' ? 2 : 3).map(tag => (
+                        <Badge key={tag} variant="outline" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <Heart className="w-3 h-3" />
+                        <span className="text-xs">{design.likes > 999 ? `${(design.likes/1000).toFixed(1)}k` : design.likes}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Download className="w-3 h-3" />
+                        <span className="text-xs">{design.downloads}</span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Load More */}
+          <div className="text-center">
+            <Button 
+              onClick={handleLoadMore}
+              variant="outline" 
+              size="lg"
+              className="min-w-32"
+            >
+              <ShoppingBag className="w-4 h-4 mr-2" />
+              Load More Garments
+            </Button>
+            <p className="text-sm text-muted-foreground mt-2">
+              Showing {sortedDesigns.length} of {studioDesigns.length} studio-ready garments
             </p>
           </div>
         </div>
-
-        {/* Design Grid/List */}
-        <div className={cn(
-          "gap-6 mb-12",
-          viewMode === 'grid' 
-            ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" 
-            : "flex flex-col"
-        )}>
-          {sortedDesigns.map((design) => (
-            <Card 
-              key={design.id}
-              onClick={() => handleDesignClick(design.id)}
-              className={cn(
-                "group cursor-pointer overflow-hidden border hover:shadow-lg transition-all duration-300 hover:border-primary/30",
-                viewMode === 'list' && "flex flex-row"
-              )}
-            >
-              <div className={cn(
-                "relative overflow-hidden",
-                viewMode === 'grid' ? "aspect-[4/3]" : "w-48 h-32 flex-shrink-0",
-                design.thumbnail
-              )}>
-                <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-all" />
-                <div className="absolute top-3 right-3 flex gap-1">
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
-                    onClick={(e) => handleLikeDesign(design.id, e)}
-                    className={cn(
-                      "w-8 h-8 p-0 bg-white/80 hover:bg-white transition-all opacity-0 group-hover:opacity-100",
-                      likedDesigns.includes(design.id) ? 'text-red-500 opacity-100' : 'text-gray-600'
-                    )}
-                  >
-                    <Heart className={cn("w-4 h-4", likedDesigns.includes(design.id) && 'fill-current')} />
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
-                    onClick={(e) => handleSaveDesign(design.id, e)}
-                    className={cn(
-                      "w-8 h-8 p-0 bg-white/80 hover:bg-white transition-all opacity-0 group-hover:opacity-100",
-                      savedDesigns.includes(design.id) ? 'text-primary opacity-100' : 'text-gray-600'
-                    )}
-                  >
-                    <Bookmark className={cn("w-4 h-4", savedDesigns.includes(design.id) && 'fill-current')} />
-                  </Button>
-                </div>
-              </div>
-              
-              <CardContent className={cn("p-4", viewMode === 'list' && "flex-1")}>
-                <div className="flex justify-between items-start mb-2">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg group-hover:text-primary transition-colors line-clamp-1">
-                      {design.name}
-                    </h3>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Avatar className="w-4 h-4">
-                        <AvatarFallback className="text-xs">{design.avatar}</AvatarFallback>
-                      </Avatar>
-                      <span className="text-sm text-muted-foreground">by {design.creator}</span>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-bold text-primary">£{design.price}</div>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                      {design.rating}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-2 mb-3">
-                  {design.tags.slice(0, 2).map(tag => (
-                    <Badge key={tag} variant="secondary" className="text-xs">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <Badge variant="outline" className="border-muted">
-                    {design.garment}
-                  </Badge>
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Heart className="w-3 h-3" />
-                      {design.likes.toLocaleString()}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Eye className="w-3 h-3" />
-                      {design.views.toLocaleString()}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Download className="w-3 h-3" />
-                      {design.downloads}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Load More */}
-        <div className="text-center">
-          <Button 
-            variant="outline" 
-            size="lg" 
-            onClick={handleLoadMore}
-            className="px-8 py-6 text-base font-medium hover:bg-primary hover:text-primary-foreground transition-all duration-300"
-          >
-            Load More Designs
-            <TrendingUp className="w-4 h-4 ml-2" />
-          </Button>
-        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 };
