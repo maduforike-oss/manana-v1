@@ -49,24 +49,63 @@ export const BottomNavigation = () => {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border backdrop-blur-lg">
       <div className="flex items-center justify-around py-2 px-4 max-w-md mx-auto">
-        {tabs.slice(0, 2).map(({ id, label, icon: Icon }) => (
-          <button
-            key={id}
-            onClick={() => handleTabClick(id)}
-            className={cn(
-              "flex flex-col items-center gap-1 p-3 rounded-xl transition-all duration-300",
-              "min-w-0 flex-1 text-xs font-medium",
-              activeTab === id
-                ? "text-primary bg-primary/10 scale-105"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-            )}
-          >
-            <Icon className={cn("w-5 h-5 mb-1", activeTab === id ? "w-6 h-6" : "")} />
-            <span className={cn("truncate", activeTab === id ? "font-semibold" : "")}>
-              {label}
-            </span>
-          </button>
-        ))}
+        {/* Market */}
+        <button
+          onClick={() => handleTabClick('market')}
+          className={cn(
+            "flex flex-col items-center gap-1 p-3 rounded-xl transition-all duration-300",
+            "min-w-0 flex-1 text-xs font-medium",
+            activeTab === 'market'
+              ? "text-primary bg-primary/10 scale-105"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          )}
+        >
+          <Store className={cn("w-5 h-5 mb-1", activeTab === 'market' ? "w-6 h-6" : "")} />
+          <span className={cn("truncate", activeTab === 'market' ? "font-semibold" : "")}>
+            Market
+          </span>
+        </button>
+
+        {/* Community */}
+        <button
+          onClick={() => handleTabClick('community')}
+          className={cn(
+            "flex flex-col items-center gap-1 p-3 rounded-xl transition-all duration-300",
+            "min-w-0 flex-1 text-xs font-medium",
+            activeTab === 'community'
+              ? "text-primary bg-primary/10 scale-105"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          )}
+        >
+          <Users className={cn("w-5 h-5 mb-1", activeTab === 'community' ? "w-6 h-6" : "")} />
+          <span className={cn("truncate", activeTab === 'community' ? "font-semibold" : "")}>
+            Community
+          </span>
+        </button>
+
+        {/* Studio - Center position */}
+        <button
+          onClick={() => handleTabClick('studio')}
+          className={cn(
+            "flex flex-col items-center gap-1 p-3 rounded-xl transition-all duration-300",
+            "min-w-0 flex-1 text-xs font-medium",
+            activeTab === 'studio'
+              ? "text-primary bg-primary/10 scale-105"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          )}
+        >
+          {activeTab === 'studio' ? (
+            <div className="relative">
+              <Palette className="w-6 h-6 mb-1" />
+              <div className="absolute -inset-1 bg-gradient-to-r from-primary to-secondary rounded-full opacity-20 blur-sm" />
+            </div>
+          ) : (
+            <Palette className="w-5 h-5 mb-1" />
+          )}
+          <span className={cn("truncate", activeTab === 'studio' ? "font-semibold" : "")}>
+            Studio
+          </span>
+        </button>
         
         {/* Cart Button */}
         <button
@@ -95,31 +134,22 @@ export const BottomNavigation = () => {
           </span>
         </button>
 
-        {tabs.slice(2).map(({ id, label, icon: Icon }) => (
-          <button
-            key={id}
-            onClick={() => handleTabClick(id)}
-            className={cn(
-              "flex flex-col items-center gap-1 p-3 rounded-xl transition-all duration-300",
-              "min-w-0 flex-1 text-xs font-medium",
-              activeTab === id
-                ? "text-primary bg-primary/10 scale-105"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-            )}
-          >
-            {id === 'studio' && activeTab === id ? (
-              <div className="relative">
-                <Icon className="w-6 h-6 mb-1" />
-                <div className="absolute -inset-1 bg-gradient-to-r from-primary to-secondary rounded-full opacity-20 blur-sm" />
-              </div>
-            ) : (
-              <Icon className={cn("w-5 h-5 mb-1", activeTab === id ? "w-6 h-6" : "")} />
-            )}
-            <span className={cn("truncate", activeTab === id ? "font-semibold" : "")}>
-              {label}
-            </span>
-          </button>
-        ))}
+        {/* Profile */}
+        <button
+          onClick={() => handleTabClick('profile')}
+          className={cn(
+            "flex flex-col items-center gap-1 p-3 rounded-xl transition-all duration-300",
+            "min-w-0 flex-1 text-xs font-medium",
+            activeTab === 'profile'
+              ? "text-primary bg-primary/10 scale-105"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          )}
+        >
+          <User className={cn("w-5 h-5 mb-1", activeTab === 'profile' ? "w-6 h-6" : "")} />
+          <span className={cn("truncate", activeTab === 'profile' ? "font-semibold" : "")}>
+            Profile
+          </span>
+        </button>
       </div>
     </nav>
   );
