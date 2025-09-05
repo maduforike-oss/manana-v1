@@ -19,10 +19,13 @@ export const BottomNavigation = () => {
 
   // Determine active tab based on pathname
   const pathname = location.pathname;
+  const { activeTab: storeActiveTab } = useAppStore();
+  
   const activeTab = pathname.startsWith("/studio") ? "studio" :
                    pathname.startsWith("/community") ? "community" :
                    pathname.startsWith("/orders") ? "orders" :
-                   pathname.startsWith("/profile") ? "profile" : "market";
+                   pathname.startsWith("/profile") ? "profile" :
+                   pathname === "/" ? storeActiveTab : "market";
 
   const handleTabClick = (tabId: string) => {
     setActiveTab(tabId as any);
