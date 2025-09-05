@@ -1,4 +1,4 @@
-import { Search, Heart, Bookmark, Filter, TrendingUp, Star, Eye, Download, Grid3X3, LayoutGrid, List, Play, Palette, Ruler, Layers, Info, ShoppingBag, Truck, X, ChevronRight, Package, Sparkles, User, Award, Users, Crown, Lock } from 'lucide-react';
+import { Search, Heart, Bookmark, Filter, TrendingUp, Star, Eye, Download, Grid3X3, LayoutGrid, List, Play, Palette, Ruler, Layers, Info, ShoppingBag, Truck, X, ChevronRight, Package, Sparkles, User, Award, Users, Crown, Lock, ShoppingCart, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -15,6 +15,7 @@ import { generateStudioMarketData, StudioGarmentData, FILTER_PRESETS, PrintAreaS
 import { useAppStore } from '@/store/useAppStore';
 import { useLocalSaves, useLocalSearchHistory } from '@/hooks/useLocalSaves';
 import { useUnlockedDesigns } from '@/hooks/useUnlockedDesigns';
+import { useCart } from '@/hooks/useCart';
 import { SearchSuggestions } from '@/components/marketplace/SearchSuggestions';
 import { FiltersSheet } from '@/components/marketplace/FiltersSheet';
 import { QuickViewModal } from '@/components/marketplace/QuickViewModal';
@@ -27,6 +28,7 @@ export const MarketPage = () => {
   const { ids: savedIds, toggle: toggleSave, isSaved } = useLocalSaves();
   const { addSearch } = useLocalSearchHistory();
   const { isUnlocked } = useUnlockedDesigns();
+  const { cart } = useCart();
   const [likedDesigns, setLikedDesigns] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('for-you');
@@ -82,10 +84,7 @@ export const MarketPage = () => {
   };
 
   const handleDesignClick = (design: StudioGarmentData) => {
-    toast({ 
-      title: "Design Details", 
-      description: `Viewing details for ${design.name}. Click "Open in Studio" to start designing!`
-    });
+    navigate(`/item/${design.id}`);
   };
 
   const handleLikeDesign = (designId: string, e: React.MouseEvent) => {
@@ -265,14 +264,37 @@ export const MarketPage = () => {
                 </h1>
                 <p className="text-sm text-muted-foreground mt-1">Discover unique fashion designs</p>
               </div>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={handleProfileClick}
-                className="rounded-full h-10 w-10 p-0 hover:bg-primary/10 hover:border-primary/20 border border-transparent transition-all duration-300"
-              >
-                <User className="h-5 w-5 text-primary" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => navigate('/cart')}
+                  className="rounded-full h-10 w-10 p-0 hover:bg-primary/10 hover:border-primary/20 border border-transparent transition-all duration-300 relative"
+                >
+                  <ShoppingCart className="h-5 w-5 text-primary" />
+                  {cart.itemCount > 0 && (
+                    <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs">
+                      {cart.itemCount}
+                    </Badge>
+                  )}
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => navigate('/add-listing')}
+                  className="rounded-full h-10 w-10 p-0 hover:bg-primary/10 hover:border-primary/20 border border-transparent transition-all duration-300"
+                >
+                  <Plus className="h-5 w-5 text-primary" />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={handleProfileClick}
+                  className="rounded-full h-10 w-10 p-0 hover:bg-primary/10 hover:border-primary/20 border border-transparent transition-all duration-300"
+                >
+                  <User className="h-5 w-5 text-primary" />
+                </Button>
+              </div>
             </div>
 
             {/* Enhanced Search Bar with Suggestions */}

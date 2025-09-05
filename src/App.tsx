@@ -14,6 +14,9 @@ import UserProfile from "./pages/UserProfile";
 import { StudioPage } from "./components/pages/StudioPage";
 import StudioEditor from "./pages/StudioEditor";
 import StudioPro from "./pages/StudioPro";
+import ItemDetail from "./pages/ItemDetail";
+import Cart from "./pages/Cart";
+import AddListing from "./pages/AddListing";
 import Checkout from "./pages/Checkout";
 import CheckoutSuccess from "./pages/CheckoutSuccess";
 
@@ -31,6 +34,9 @@ const App = () => (
             <Route path="/studio" element={<StudioPro />} />
             <Route path="/studio/editor" element={<StudioEditor />} />
             <Route path="/studio/legacy" element={<StudioPage />} />
+            <Route path="/item/:id" element={<ItemDetail />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/add-listing" element={<AddListing />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/checkout/success" element={<CheckoutSuccess />} />
             <Route path="/orders/:id" element={<OrderDetails />} />
