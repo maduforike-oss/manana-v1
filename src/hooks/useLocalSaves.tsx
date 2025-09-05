@@ -22,7 +22,7 @@ export function useLocalSaves() {
     localStorage.removeItem("marketplace-saves");
   };
 
-  return { ids, toggle, clear, isLiked: (id: string) => ids.includes(id) };
+  return { ids, toggle, clear, isSaved: (id: string) => ids.includes(id) };
 }
 
 export function useLocalSearchHistory() {

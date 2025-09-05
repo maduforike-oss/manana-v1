@@ -20,7 +20,7 @@ import { QuickViewModal } from '@/components/marketplace/QuickViewModal';
 export const MarketPage = () => {
   const { toast } = useToast();
   const { setActiveTab: setAppActiveTab } = useAppStore();
-  const { ids: savedIds, toggle: toggleSave } = useLocalSaves();
+  const { ids: savedIds, toggle: toggleSave, isSaved } = useLocalSaves();
   const { addSearch } = useLocalSearchHistory();
   const [likedDesigns, setLikedDesigns] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -157,7 +157,7 @@ export const MarketPage = () => {
     
     // For "Saved" tab, only show saved designs
     if (activeTab === 'saved') {
-      return savedIds.includes(design.id) && matchesSearch && matchesGarmentType && 
+      return isSaved(design.id) && matchesSearch && matchesGarmentType && 
              matchesBaseColor && matchesTags && matchesPrice;
     }
     
@@ -730,7 +730,7 @@ export const MarketPage = () => {
           onClose={() => setShowQuickView(false)}
           onOpenInStudio={handleOpenInStudio}
           onSave={handleSaveDesign}
-          isSaved={selectedDesign ? savedIds.includes(selectedDesign.id) : false}
+          isSaved={selectedDesign ? isSaved(selectedDesign.id) : false}
         />
       </div>
     </TooltipProvider>
