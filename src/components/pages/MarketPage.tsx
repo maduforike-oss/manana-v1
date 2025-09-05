@@ -87,9 +87,11 @@ export const MarketPage = () => {
 
   const applyFilterPreset = (presetName: string) => {
     const preset = FILTER_PRESETS[presetName as keyof typeof FILTER_PRESETS];
-    if (preset.garmentTypes) setSelectedGarmentTypes(preset.garmentTypes);
-    if (preset.baseColors) setSelectedBaseColors(preset.baseColors);
-    if (preset.tags) setSelectedTags(preset.tags);
+    // Fix TS2345: spread readonly arrays to mutable state
+    if (preset.garmentTypes) setSelectedGarmentTypes([...preset.garmentTypes]);
+    if (preset.baseColors) setSelectedBaseColors([...preset.baseColors]);
+    if (preset.tags) setSelectedTags([...preset.tags]);
+    // Fix TS2339: guard optional property
     if (preset.printAreaSize) setSelectedPrintAreaSize(preset.printAreaSize);
     
     toast({ title: "Filter Applied", description: `Applied ${presetName} filter preset` });

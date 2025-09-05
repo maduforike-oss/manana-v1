@@ -232,27 +232,39 @@ function getShippingEstimate(category: string): string {
   return estimates[category] || '3-5 days';
 }
 
-// Filter presets for quick selection
-export const FILTER_PRESETS = {
+// Define stable Preset type
+export type PrintAreaSize = "S" | "M" | "L";
+export type Preset = {
+  garmentTypes: readonly string[];
+  baseColors: readonly string[];
+  tags: readonly string[];
+  printAreaSize?: PrintAreaSize; // optional across presets
+};
+
+// Filter presets for quick selection - typed as Record<string, Preset>
+export const FILTER_PRESETS: Record<string, Preset> = {
   'Streetwear Pack': {
     garmentTypes: ['t-shirt', 'hoodie', 'cap'],
     baseColors: ['dark'],
-    tags: ['streetwear', 'urban']
+    tags: ['streetwear', 'urban'],
+    printAreaSize: 'L'
   },
   'Monochrome Bases': {
     garmentTypes: ['t-shirt', 'hoodie', 'crewneck'],
     baseColors: ['light', 'dark'],
-    tags: ['minimalist']
+    tags: ['minimalist'],
+    printAreaSize: 'M'
   },
   'Logo-Friendly': {
     garmentTypes: ['t-shirt', 'hoodie'],
     baseColors: ['light'],
     tags: ['branding'],
-    printAreaSize: 'large'
+    printAreaSize: 'L'
   },
   'Professional Set': {
     garmentTypes: ['polo', 'button-shirt'],
     baseColors: ['light', 'colored'],
     tags: ['corporate', 'business']
+    // printAreaSize intentionally omitted to show optional handling
   }
-} as const;
+};
