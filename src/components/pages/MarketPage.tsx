@@ -17,6 +17,7 @@ export const MarketPage = () => {
   const [likedDesigns, setLikedDesigns] = useState<string[]>([]);
   const [savedDesigns, setSavedDesigns] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState('for-you');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState('trending');
   
@@ -179,66 +180,88 @@ export const MarketPage = () => {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/50 to-muted/30">
-        {/* Modern Header with Breadcrumb */}
-        <div className="border-b border-border/60 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-          <div className="container mx-auto px-6 py-4">
-            <div className="flex flex-col gap-4">
-              {/* Breadcrumb & Title */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <span>Home</span>
-                    <ChevronRight className="h-4 w-4 mx-2" />
-                    <span className="text-foreground font-medium">Market</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Sparkles className="h-4 w-4 text-primary" />
-                  <span className="font-medium">Studio-Ready Quality</span>
-                </div>
-              </div>
-              
-              <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-                <div>
-                  <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
-                    Premium Garment Collection
-                  </h1>
-                  <p className="text-muted-foreground mt-1 text-sm lg:text-base">
-                    Professional blanks optimized for print-on-demand success
-                  </p>
-                </div>
-                
-                {/* Advanced Search */}
-                <div className="relative w-full lg:w-80">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by name, style, or material..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 h-10 bg-background/80 border-border/60 focus:border-primary/50"
-                  />
-                </div>
-              </div>
+      <div className="min-h-screen bg-background">
+        {/* eBay-style Header */}
+        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border/60">
+          <div className="container mx-auto px-4 py-3">
+            {/* Search Bar */}
+            <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search for anything"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 pr-12 h-11 text-base rounded-full bg-muted/50 border-border/60 focus:border-primary/50"
+              />
+              <Button size="sm" className="absolute right-1 top-1/2 transform -translate-y-1/2 rounded-full h-9 px-4">
+                Search
+              </Button>
+            </div>
+
+            {/* eBay-style Tab Navigation */}
+            <div className="flex items-center gap-0 border-b border-border/40 -mb-px">
+              <Button
+                variant="ghost"
+                className={cn(
+                  "rounded-none border-b-2 border-transparent h-10 px-4 text-sm font-medium",
+                  activeTab === 'for-you' 
+                    ? "border-primary text-primary bg-primary/5" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                )}
+                onClick={() => setActiveTab('for-you')}
+              >
+                For you
+              </Button>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "rounded-none border-b-2 border-transparent h-10 px-4 text-sm font-medium",
+                  activeTab === 'deals' 
+                    ? "border-primary text-primary bg-primary/5" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                )}
+                onClick={() => setActiveTab('deals')}
+              >
+                Deals
+              </Button>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "rounded-none border-b-2 border-transparent h-10 px-4 text-sm font-medium",
+                  activeTab === 'selling' 
+                    ? "border-primary text-primary bg-primary/5" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                )}
+                onClick={() => setActiveTab('selling')}
+              >
+                Selling
+              </Button>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "rounded-none border-b-2 border-transparent h-10 px-4 text-sm font-medium",
+                  activeTab === 'saved' 
+                    ? "border-primary text-primary bg-primary/5" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                )}
+                onClick={() => setActiveTab('saved')}
+              >
+                Saved
+              </Button>
             </div>
           </div>
         </div>
 
-        <div className="container mx-auto px-6 py-6">
-          {/* Quick Filter Tags */}
-          <div className="flex flex-wrap items-center gap-3 mb-6">
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-muted-foreground">Quick Filters:</span>
-            </div>
+        <div className="container mx-auto px-4 py-4">
+          {/* eBay-style Category Pills */}
+          <div className="flex items-center gap-3 mb-4 overflow-x-auto scrollbar-hide pb-2">
             <Button
               variant={activeFilterPreset === null ? "default" : "outline"}
               size="sm"
               onClick={() => clearAllFilters()}
-              className="h-8 text-xs"
+              className="h-8 text-xs rounded-full whitespace-nowrap"
             >
-              <X className="h-3 w-3 mr-1" />
-              All Items
+              All
             </Button>
             {Object.keys(FILTER_PRESETS).map((presetName) => (
               <Button
@@ -246,17 +269,107 @@ export const MarketPage = () => {
                 variant={activeFilterPreset === presetName ? "default" : "outline"}
                 size="sm"
                 onClick={() => applyFilterPreset(presetName)}
-                className="h-8 text-xs"
+                className="h-8 text-xs rounded-full whitespace-nowrap"
               >
                 {presetName}
               </Button>
             ))}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowFilters(!showFilters)}
+              className="h-8 text-xs rounded-full whitespace-nowrap"
+            >
+              <Filter className="h-3 w-3 mr-1" />
+              Filters
+            </Button>
           </div>
 
-          {/* Advanced Filter Panel */}
-          <Card className="mb-6 border-border/60 bg-card/50">
-            <div className="p-4">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          {/* Deals for You Section */}
+          {activeTab === 'for-you' && (
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-foreground">Deals for you</h2>
+                <Button variant="ghost" size="sm" className="text-primary">
+                  See all
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                {sortedDesigns.slice(0, 4).map((design) => (
+                  <Card key={design.id} className="overflow-hidden border border-border/60 hover:shadow-md transition-all duration-200">
+                    <div className="relative aspect-square">
+                      <img 
+                        src={design.thumbSrc} 
+                        alt={design.name}
+                        className="w-full h-full object-cover"
+                      />
+                      <Badge className="absolute top-2 left-2 bg-red-500 text-white text-xs">
+                        Deal
+                      </Badge>
+                    </div>
+                    <div className="p-3">
+                      <p className="text-sm font-medium text-foreground truncate">{design.name}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-lg font-bold text-foreground">${design.price}</span>
+                        <span className="text-sm text-muted-foreground line-through">${(design.price * 1.3).toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Recently Viewed (eBay style) */}
+          {activeTab === 'for-you' && (
+            <div className="mb-6">
+              <h2 className="text-lg font-semibold text-foreground mb-4">Recently viewed</h2>
+              <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
+                {sortedDesigns.slice(4, 10).map((design) => (
+                  <Card key={design.id} className="overflow-hidden border border-border/60 hover:shadow-md transition-all duration-200">
+                    <div className="relative aspect-square">
+                      <img 
+                        src={design.thumbSrc} 
+                        alt={design.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="p-2">
+                      <p className="text-xs text-foreground truncate">{design.name}</p>
+                      <p className="text-sm font-bold text-foreground">${design.price}</p>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Popular Categories */}
+          {activeTab === 'for-you' && (
+            <div className="mb-6">
+              <h2 className="text-lg font-semibold text-foreground mb-4">Popular categories</h2>
+              <div className="grid grid-cols-3 lg:grid-cols-6 gap-4">
+                {uniqueGarmentTypes.slice(0, 6).map((type) => (
+                  <Button
+                    key={type}
+                    variant="outline"
+                    className="h-20 flex-col gap-2 text-xs"
+                    onClick={() => setSelectedGarmentTypes([type])}
+                  >
+                    <Package className="h-6 w-6" />
+                    {type.charAt(0).toUpperCase() + type.slice(1).replace('-', ' ')}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Collapsible Advanced Filters */}
+          {showFilters && (
+            <Card className="mb-6 border-border/60 bg-card/50">
+              <div className="p-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 
                 {/* Garment Type */}
                 <div className="space-y-2">
@@ -381,6 +494,7 @@ export const MarketPage = () => {
               </div>
             </div>
           </Card>
+          )}
 
           {/* Results Bar */}
           <div className="flex items-center justify-between mb-6 py-3 px-4 bg-muted/30 rounded-lg border border-border/40">
