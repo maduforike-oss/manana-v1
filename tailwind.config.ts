@@ -49,6 +49,16 @@ export default {
 					'accent-purple': 'hsl(var(--studio-accent-purple))',
 					'accent-orange': 'hsl(var(--studio-accent-orange))'
 				},
+				manana: {
+					coral: 'hsl(var(--manana-coral))',
+					'coral-light': 'hsl(var(--manana-coral-light))',
+					'coral-dark': 'hsl(var(--manana-coral-dark))',
+					sage: 'hsl(var(--manana-sage))',
+					'sage-light': 'hsl(var(--manana-sage-light))',
+					'sage-dark': 'hsl(var(--manana-sage-dark))',
+					cream: 'hsl(var(--manana-cream))',
+					charcoal: 'hsl(var(--manana-charcoal))'
+				},
 				destructive: {
 					DEFAULT: 'hsl(var(--destructive))',
 					foreground: 'hsl(var(--destructive-foreground))'
@@ -134,7 +144,9 @@ export default {
 				'studio': 'var(--shadow-studio)',
 				'neon': 'var(--shadow-neon)',
 				'panel': 'var(--shadow-panel)',
-				'tool': 'var(--shadow-tool)'
+				'tool': 'var(--shadow-tool)',
+				'fashion': 'var(--shadow-fashion)',
+				'editorial': 'var(--shadow-editorial)'
 			}
 		}
 	},

@@ -61,6 +61,16 @@
     --studio-accent-purple: 280 75% 60%;
     --studio-accent-orange: 25 95% 55%;
 
+    /* Signature Manana Fashion Colors */
+    --manana-coral: 11 89% 64%;
+    --manana-coral-light: 11 89% 74%;
+    --manana-coral-dark: 11 89% 54%;
+    --manana-sage: 150 20% 70%;
+    --manana-sage-light: 150 20% 80%;
+    --manana-sage-dark: 150 20% 60%;
+    --manana-cream: 45 30% 95%;
+    --manana-charcoal: 210 15% 20%;
+
     /* Enhanced Shadows */
     --shadow-primary: 0 8px 32px hsl(var(--primary) / 0.2);
     --shadow-glow: 0 0 40px hsl(var(--primary-glow) / 0.3);
@@ -69,6 +79,8 @@
     --shadow-neon: 0 0 20px hsl(var(--studio-glow) / 0.4);
     --shadow-panel: 0 4px 24px hsl(230 25% 5% / 0.3);
     --shadow-tool: 0 2px 8px hsl(230 25% 5% / 0.2);
+    --shadow-fashion: 0 8px 40px hsl(var(--manana-coral) / 0.15);
+    --shadow-editorial: 0 16px 64px hsl(var(--manana-charcoal) / 0.1);
 
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
