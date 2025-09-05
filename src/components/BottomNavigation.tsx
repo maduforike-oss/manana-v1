@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { useEffect } from 'react';
 
 export const BottomNavigation = () => {
-  const { activeTab, setActiveTab } = useAppStore();
+  const { setActiveTab } = useAppStore();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -17,15 +17,12 @@ export const BottomNavigation = () => {
     { id: 'profile' as const, label: 'Profile', icon: User },
   ];
 
-  // Sync activeTab with current route
-  useEffect(() => {
-    const path = location.pathname;
-    if (path.startsWith('/profile')) {
-      if (activeTab !== 'profile') setActiveTab('profile');
-    } else if (path.startsWith('/orders')) {
-      if (activeTab !== 'orders') setActiveTab('orders');
-    }
-  }, [location.pathname, activeTab, setActiveTab]);
+  // Determine active tab based on pathname
+  const pathname = location.pathname;
+  const activeTab = pathname.startsWith("/studio") ? "studio" :
+                   pathname.startsWith("/community") ? "community" :
+                   pathname.startsWith("/orders") ? "orders" :
+                   pathname.startsWith("/profile") ? "profile" : "market";
 
   const handleTabClick = (tabId: string) => {
     setActiveTab(tabId as any);
