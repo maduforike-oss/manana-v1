@@ -1,4 +1,4 @@
-import { Search, Heart, Bookmark, Filter, TrendingUp, Star, Eye, Download, Grid3X3, LayoutGrid, List, Play, Palette, Ruler, Layers, Info, ShoppingBag, Truck, X } from 'lucide-react';
+import { Search, Heart, Bookmark, Filter, TrendingUp, Star, Eye, Download, Grid3X3, LayoutGrid, List, Play, Palette, Ruler, Layers, Info, ShoppingBag, Truck, X, ChevronRight, Package, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,7 +10,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useToast } from '@/hooks/use-toast';
 import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { generateStudioMarketData, StudioGarmentData, FILTER_PRESETS } from '@/lib/studio/marketData';
+import { generateStudioMarketData, StudioGarmentData, FILTER_PRESETS, PrintAreaSize } from '@/lib/studio/marketData';
 
 export const MarketPage = () => {
   const { toast } = useToast();
@@ -24,7 +24,8 @@ export const MarketPage = () => {
   const [selectedGarmentTypes, setSelectedGarmentTypes] = useState<string[]>([]);
   const [selectedBaseColors, setSelectedBaseColors] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [selectedPrintAreaSize, setSelectedPrintAreaSize] = useState<string>('all');
+  const [selectedPrintAreaSize, setSelectedPrintAreaSize] = useState<PrintAreaSize | null>(null);
+  const [activeFilterPreset, setActiveFilterPreset] = useState<string | null>(null);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
   const [showFilters, setShowFilters] = useState(false);
   
@@ -94,6 +95,7 @@ export const MarketPage = () => {
     // Fix TS2339: guard optional property
     if (preset.printAreaSize) setSelectedPrintAreaSize(preset.printAreaSize);
     
+    setActiveFilterPreset(presetName);
     toast({ title: "Filter Applied", description: `Applied ${presetName} filter preset` });
   };
 
@@ -101,9 +103,10 @@ export const MarketPage = () => {
     setSelectedGarmentTypes([]);
     setSelectedBaseColors([]);
     setSelectedTags([]);
-    setSelectedPrintAreaSize('all');
+    setSelectedPrintAreaSize(null);
     setPriceRange([0, 100]);
     setSearchQuery('');
+    setActiveFilterPreset(null);
   };
 
   const handleLoadMore = () => {
@@ -130,10 +133,10 @@ export const MarketPage = () => {
                        selectedTags.some(tag => design.tags.includes(tag));
     
     // Print area size filter
-    const matchesPrintArea = selectedPrintAreaSize === 'all' || 
-      (selectedPrintAreaSize === 'large' && design.printArea.width >= 280 && design.printArea.height >= 380) ||
-      (selectedPrintAreaSize === 'medium' && design.printArea.width >= 200 && design.printArea.width < 280) ||
-      (selectedPrintAreaSize === 'small' && design.printArea.width < 200);
+    const matchesPrintArea = !selectedPrintAreaSize || 
+      (selectedPrintAreaSize === 'L' && design.printArea.width >= 280 && design.printArea.height >= 380) ||
+      (selectedPrintAreaSize === 'M' && design.printArea.width >= 200 && design.printArea.width < 280) ||
+      (selectedPrintAreaSize === 'S' && design.printArea.width < 200);
     
     // Price filter
     const matchesPrice = design.price >= priceRange[0] && design.price <= priceRange[1];
@@ -163,533 +166,409 @@ export const MarketPage = () => {
 
   const featuredDesigns = studioDesigns.filter(design => design.featured);
 
+  // Create mock data for the new designs
+  const mockGarments = sortedDesigns.map((design, index) => ({
+    ...design,
+    studioReady: design.studioReady || ['High DPI', 'Large Print Area', 'Dark Base'],
+    dpi: 300,
+    shippingEstimate: design.shippingDays || '3-5 days'
+  }));
+
+  const uniqueGarmentTypes = [...new Set(mockGarments.map(g => g.garmentId))];
+  const uniqueTags = [...new Set(mockGarments.flatMap(g => g.tags))];
+
+
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
-        <div className="container mx-auto py-8 px-4 max-w-7xl">
-          {/* Hero Header */}
-          <div className="text-center mb-12">
-            <div className="relative">
-              <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent mb-4">
-                Studio Market
-              </h1>
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 blur-3xl -z-10" />
-            </div>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Studio-ready garments with detailed specifications for professional design work
-            </p>
-            <div className="flex items-center justify-center gap-6 mt-6 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Palette className="w-4 h-4 text-primary" />
-                <span>Print-Ready Canvases</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Ruler className="w-4 h-4 text-secondary" />
-                <span>Precise Specifications</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Layers className="w-4 h-4 text-accent" />
-                <span>300 DPI Quality</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Featured Studio-Ready Garments */}
-          {featuredDesigns.length > 0 && (
-            <div className="mb-12">
-              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                <Star className="w-6 h-6 text-primary" />
-                Featured Studio-Ready Garments
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {featuredDesigns.slice(0, 3).map((design) => (
-                  <Card 
-                    key={`featured-${design.id}`}
-                    onClick={() => handleDesignClick(design)}
-                    className="group cursor-pointer overflow-hidden border-2 border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-[0_0_30px_hsl(var(--primary)/0.3)]"
-                  >
-                    <div className="relative">
-                      <div className="aspect-[4/3] relative overflow-hidden bg-gradient-to-br from-muted to-muted/50">
-                        <img 
-                          src={design.thumbSrc} 
-                          alt={design.name}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                        />
-                        <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-all" />
-                        
-                        {/* Studio-Ready Badges */}
-                        <div className="absolute top-3 left-3 flex flex-col gap-1">
-                          <Badge className="bg-primary text-primary-foreground border-0">
-                            Featured
-                          </Badge>
-                          {design.studioReady.slice(0, 2).map(badge => (
-                            <Badge key={badge} variant="secondary" className="text-xs">
-                              {badge}
-                            </Badge>
-                          ))}
-                        </div>
-                        
-                        {/* Action Buttons */}
-                        <div className="absolute top-3 right-3 flex gap-2">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button 
-                                size="sm" 
-                                variant="ghost" 
-                                onClick={(e) => handleOpenInStudio(design, e)}
-                                className="w-9 h-9 p-0 bg-primary text-primary-foreground hover:bg-primary/90 backdrop-blur-sm transition-all"
-                              >
-                                <Play className="w-4 h-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Open in Studio</TooltipContent>
-                          </Tooltip>
-                          
-                          <Button 
-                            size="sm" 
-                            variant="ghost" 
-                            onClick={(e) => handleLikeDesign(design.id, e)}
-                            className={cn(
-                              "w-9 h-9 p-0 bg-white/90 hover:bg-white backdrop-blur-sm transition-all",
-                              likedDesigns.includes(design.id) ? 'text-red-500' : 'text-gray-600 hover:text-red-500'
-                            )}
-                          >
-                            <Heart className={cn("w-4 h-4", likedDesigns.includes(design.id) && 'fill-current')} />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <CardContent className="p-6">
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex-1">
-                          <h3 className="font-bold text-xl group-hover:text-primary transition-colors line-clamp-1">
-                            {design.name}
-                          </h3>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Avatar className="w-5 h-5">
-                              <AvatarFallback className="text-xs">{design.avatar}</AvatarFallback>
-                            </Avatar>
-                            <span className="text-sm text-muted-foreground">by {design.creator}</span>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-bold text-xl text-primary">£{design.price}</div>
-                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                            {design.rating.toFixed(1)}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Studio Specs */}
-                      <div className="space-y-2 mb-4">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Ruler className="w-4 h-4" />
-                          <span>Print: {Math.round(design.printArea.width/25.4)}×{Math.round(design.printArea.height/25.4)}" | 300 DPI</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Palette className="w-4 h-4" />
-                          <span>{design.fabric} | {design.baseColor} base</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Truck className="w-4 h-4" />
-                          <span>Ships in {design.shippingDays}</span>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <div className="flex gap-1">
-                          {design.tags.slice(0, 2).map(tag => (
-                            <Badge key={tag} variant="outline" className="text-xs">
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <Heart className="w-4 h-4" />
-                            {design.likes.toLocaleString()}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Eye className="w-4 h-4" />
-                            {design.views.toLocaleString()}
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Filter Presets */}
-          <div className="mb-6">
-            <div className="flex flex-wrap gap-3">
-              {Object.keys(FILTER_PRESETS).map(presetName => (
-                <Button
-                  key={presetName}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => applyFilterPreset(presetName)}
-                  className="text-sm"
-                >
-                  {presetName}
-                </Button>
-              ))}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearAllFilters}
-                className="text-sm text-muted-foreground hover:text-foreground"
-              >
-                <X className="w-4 h-4 mr-2" />
-                Clear All
-              </Button>
-            </div>
-          </div>
-
-          {/* Search & Filters */}
-          <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 border mb-8">
-            <div className="flex flex-col lg:flex-row gap-4">
-              {/* Search */}
-              <div className="flex-1 relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input 
-                  placeholder="Search garments, fabrics, or specifications..." 
-                  className="pl-12 h-12 text-base bg-background/50 border-border/50 focus:bg-background"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+      <div className="min-h-screen bg-gradient-to-br from-background via-background/50 to-muted/30">
+        {/* Modern Header with Breadcrumb */}
+        <div className="border-b border-border/60 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+          <div className="container mx-auto px-6 py-4">
+            <div className="flex flex-col gap-4">
+              {/* Breadcrumb & Title */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <span>Home</span>
+                    <ChevronRight className="h-4 w-4 mx-2" />
+                    <span className="text-foreground font-medium">Market</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <span className="font-medium">Studio-Ready Quality</span>
+                </div>
               </div>
               
-              {/* Filters */}
-              <div className="flex gap-3">
-                <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-48 h-12 bg-background/50">
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="trending">Trending</SelectItem>
-                    <SelectItem value="newest">Newest</SelectItem>
-                    <SelectItem value="popular">Most Popular</SelectItem>
-                    <SelectItem value="canvas-size">Canvas Size</SelectItem>
-                    <SelectItem value="price-low">Price: Low to High</SelectItem>
-                    <SelectItem value="price-high">Price: High to Low</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Button
-                  variant={showFilters ? 'default' : 'outline'}
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="h-12 px-4"
-                >
-                  <Filter className="w-4 h-4 mr-2" />
-                  Filters
-                  {(selectedGarmentTypes.length + selectedBaseColors.length + selectedTags.length) > 0 && (
-                    <Badge variant="secondary" className="ml-2">
-                      {selectedGarmentTypes.length + selectedBaseColors.length + selectedTags.length}
-                    </Badge>
-                  )}
-                </Button>
-
-                <div className="flex bg-background/50 rounded-lg border border-border/50">
-                  <Button
-                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setViewMode('grid')}
-                    className="h-12 px-4"
-                  >
-                    <LayoutGrid className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant={viewMode === 'list' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setViewMode('list')}
-                    className="h-12 px-4"
-                  >
-                    <List className="w-4 h-4" />
-                  </Button>
+              <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+                <div>
+                  <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
+                    Premium Garment Collection
+                  </h1>
+                  <p className="text-muted-foreground mt-1 text-sm lg:text-base">
+                    Professional blanks optimized for print-on-demand success
+                  </p>
+                </div>
+                
+                {/* Advanced Search */}
+                <div className="relative w-full lg:w-80">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by name, style, or material..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 h-10 bg-background/80 border-border/60 focus:border-primary/50"
+                  />
                 </div>
               </div>
             </div>
+          </div>
+        </div>
 
-            {/* Advanced Filters Panel */}
-            {showFilters && (
-              <div className="mt-6 pt-6 border-t border-border/50">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {/* Garment Types */}
-                  <div>
-                    <label className="text-sm font-medium mb-3 block">Garment Type</label>
-                    <div className="space-y-2">
-                      {['t-shirt', 'hoodie', 'crewneck', 'polo', 'cap', 'tote'].map(type => (
-                        <label key={type} className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            checked={selectedGarmentTypes.includes(type)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedGarmentTypes([...selectedGarmentTypes, type]);
-                              } else {
-                                setSelectedGarmentTypes(selectedGarmentTypes.filter(t => t !== type));
-                              }
-                            }}
-                            className="rounded border-border"
-                          />
-                          <span className="text-sm capitalize">{type.replace('-', ' ')}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Base Colors */}
-                  <div>
-                    <label className="text-sm font-medium mb-3 block">Base Color</label>
-                    <div className="space-y-2">
-                      {['light', 'dark', 'colored'].map(color => (
-                        <label key={color} className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            checked={selectedBaseColors.includes(color)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedBaseColors([...selectedBaseColors, color]);
-                              } else {
-                                setSelectedBaseColors(selectedBaseColors.filter(c => c !== color));
-                              }
-                            }}
-                            className="rounded border-border"
-                          />
-                          <span className="text-sm capitalize">{color}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Print Area Size */}
-                  <div>
-                    <label className="text-sm font-medium mb-3 block">Print Area</label>
-                    <Select value={selectedPrintAreaSize} onValueChange={setSelectedPrintAreaSize}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Sizes</SelectItem>
-                        <SelectItem value="large">Large (10"+ wide)</SelectItem>
-                        <SelectItem value="medium">Medium (8-10")</SelectItem>
-                        <SelectItem value="small">Small (under 8")</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Tags */}
-                  <div>
-                    <label className="text-sm font-medium mb-3 block">Style Tags</label>
-                    <div className="space-y-2">
-                      {['minimalist', 'streetwear', 'premium', 'cotton', 'versatile'].map(tag => (
-                        <label key={tag} className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            checked={selectedTags.includes(tag)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedTags([...selectedTags, tag]);
-                              } else {
-                                setSelectedTags(selectedTags.filter(t => t !== tag));
-                              }
-                            }}
-                            className="rounded border-border"
-                          />
-                          <span className="text-sm capitalize">{tag}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+        <div className="container mx-auto px-6 py-6">
+          {/* Quick Filter Tags */}
+          <div className="flex flex-wrap items-center gap-3 mb-6">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-muted-foreground">Quick Filters:</span>
+            </div>
+            <Button
+              variant={activeFilterPreset === null ? "default" : "outline"}
+              size="sm"
+              onClick={() => clearAllFilters()}
+              className="h-8 text-xs"
+            >
+              <X className="h-3 w-3 mr-1" />
+              All Items
+            </Button>
+            {Object.keys(FILTER_PRESETS).map((presetName) => (
+              <Button
+                key={presetName}
+                variant={activeFilterPreset === presetName ? "default" : "outline"}
+                size="sm"
+                onClick={() => applyFilterPreset(presetName)}
+                className="h-8 text-xs"
+              >
+                {presetName}
+              </Button>
+            ))}
           </div>
 
-          {/* Results Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-bold">Studio-Ready Garments</h2>
-              <p className="text-muted-foreground">
-                {sortedDesigns.length} garments found
-                {searchQuery && ` for "${searchQuery}"`}
+          {/* Advanced Filter Panel */}
+          <Card className="mb-6 border-border/60 bg-card/50">
+            <div className="p-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                
+                {/* Garment Type */}
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Type</label>
+                  <Select value={selectedGarmentTypes[0] || ''} onValueChange={(value) => setSelectedGarmentTypes(value ? [value] : [])}>
+                    <SelectTrigger className="h-9 text-xs border-border/60">
+                      <SelectValue placeholder="All types" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Types</SelectItem>
+                      {uniqueGarmentTypes.map(type => (
+                        <SelectItem key={type} value={type}>
+                          {type.charAt(0).toUpperCase() + type.slice(1).replace('-', ' ')}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Base Color */}
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Base</label>
+                  <Select value={selectedBaseColors[0] || ''} onValueChange={(value) => setSelectedBaseColors(value ? [value] : [])}>
+                    <SelectTrigger className="h-9 text-xs border-border/60">
+                      <SelectValue placeholder="All colors" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Colors</SelectItem>
+                      <SelectItem value="light">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-gray-100 border"></div>
+                          Light
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="dark">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-gray-800"></div>
+                          Dark
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="colored">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-primary"></div>
+                          Colored
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Style */}
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Style</label>
+                  <Select value={selectedTags[0] || ''} onValueChange={(value) => setSelectedTags(value ? [value] : [])}>
+                    <SelectTrigger className="h-9 text-xs border-border/60">
+                      <SelectValue placeholder="All styles" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Styles</SelectItem>
+                      {uniqueTags.map(tag => (
+                        <SelectItem key={tag} value={tag}>
+                          {tag.charAt(0).toUpperCase() + tag.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Print Area */}
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Print Area</label>
+                  <Select value={selectedPrintAreaSize || ''} onValueChange={(value) => setSelectedPrintAreaSize(value as PrintAreaSize || null)}>
+                    <SelectTrigger className="h-9 text-xs border-border/60">
+                      <SelectValue placeholder="All sizes" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Sizes</SelectItem>
+                      <SelectItem value="S">Small (8×10")</SelectItem>
+                      <SelectItem value="M">Medium (10×12")</SelectItem>
+                      <SelectItem value="L">Large (12×16")</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Price Range */}
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Price</label>
+                  <Select value={`${priceRange[0]}-${priceRange[1]}`} onValueChange={(value) => {
+                    const [min, max] = value.split('-').map(Number);
+                    setPriceRange([min, max]);
+                  }}>
+                    <SelectTrigger className="h-9 text-xs border-border/60">
+                      <SelectValue placeholder="All prices" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0-100">All Prices</SelectItem>
+                      <SelectItem value="0-15">Under $15</SelectItem>
+                      <SelectItem value="15-25">$15 - $25</SelectItem>
+                      <SelectItem value="25-35">$25 - $35</SelectItem>
+                      <SelectItem value="35-100">$35+</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Sort */}
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Sort</label>
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="h-9 text-xs border-border/60">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="trending">🔥 Trending</SelectItem>
+                      <SelectItem value="newest">🆕 Newest</SelectItem>
+                      <SelectItem value="popular">⭐ Most Popular</SelectItem>
+                      <SelectItem value="price-low">💰 Price: Low to High</SelectItem>
+                      <SelectItem value="price-high">💎 Price: High to Low</SelectItem>
+                      <SelectItem value="canvas-size">📐 Canvas Size</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Results Bar */}
+          <div className="flex items-center justify-between mb-6 py-3 px-4 bg-muted/30 rounded-lg border border-border/40">
+            <div className="flex items-center gap-4">
+              <p className="text-sm font-medium">
+                <span className="text-primary font-bold">{sortedDesigns.length}</span> 
+                <span className="text-muted-foreground"> of {studioDesigns.length} products</span>
               </p>
+              {(selectedGarmentTypes.length > 0 || selectedBaseColors.length > 0 || selectedTags.length > 0) && (
+                <Button variant="ghost" size="sm" onClick={clearAllFilters} className="h-6 text-xs">
+                  <X className="h-3 w-3 mr-1" />
+                  Clear filters
+                </Button>
+              )}
             </div>
             
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Info className="w-4 h-4 mr-2" />
-                  Quality Guide
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent className="max-w-sm">
-                <div className="space-y-2">
-                  <p className="font-medium">Studio-Ready Quality</p>
-                  <p className="text-sm">• 300 DPI print resolution</p>
-                  <p className="text-sm">• Precise safe area mapping</p>
-                  <p className="text-sm">• Professional mockup quality</p>
-                  <p className="text-sm">• Multiple print methods supported</p>
-                </div>
-              </TooltipContent>
-            </Tooltip>
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-primary" />
+              <span className="text-xs text-muted-foreground font-medium">Updated 2 hours ago</span>
+            </div>
           </div>
 
-          {/* Garment Grid/List */}
-          <div className={cn(
-            "gap-6 mb-12",
-            viewMode === 'grid' 
-              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" 
-              : "flex flex-col"
-          )}>
-            {sortedDesigns.map((design) => (
+          {/* Product Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {mockGarments.map((garment) => (
               <Card 
-                key={design.id}
-                onClick={() => handleDesignClick(design)}
-                className={cn(
-                  "group cursor-pointer overflow-hidden border hover:shadow-lg transition-all duration-300 hover:border-primary/30",
-                  viewMode === 'list' && "flex flex-row"
-                )}
+                key={garment.id} 
+                className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 border-border/60 hover:border-primary/30 bg-card/80 backdrop-blur-sm overflow-hidden"
               >
-                <div className={cn(
-                  "relative overflow-hidden",
-                  viewMode === 'grid' ? "aspect-[4/3]" : "w-48 h-32 flex-shrink-0"
-                )}>
-                  <img 
-                    src={design.thumbSrc} 
-                    alt={design.name}
-                    className="w-full h-full object-cover"
+                {/* Image Container */}
+                <div className="aspect-square relative overflow-hidden bg-gradient-to-br from-muted/20 to-muted/40">
+                  <img
+                    src={garment.thumbSrc}
+                    alt={garment.name}
+                    className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
                     loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-all" />
                   
-                  {/* Studio Ready Badges */}
-                  <div className="absolute top-2 left-2">
-                    {design.studioReady.slice(0, 1).map(badge => (
-                      <Badge key={badge} variant="secondary" className="text-xs mb-1">
+                  {/* Overlay Labels */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  
+                  {/* Top Badges */}
+                  <div className="absolute top-3 left-3 flex flex-col gap-1">
+                    {garment.featured && (
+                      <Badge className="bg-primary text-primary-foreground text-xs font-semibold shadow-lg">
+                        ⭐ Featured
+                      </Badge>
+                    )}
+                    {garment.studioReady?.slice(0, 2).map((badge, index) => (
+                      <Badge 
+                        key={index}
+                        variant="secondary" 
+                        className="text-xs bg-background/90 backdrop-blur-sm border-border/60 shadow-sm"
+                      >
                         {badge}
                       </Badge>
                     ))}
                   </div>
-                  
-                  {/* Action Buttons */}
-                  <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
-                          onClick={(e) => handleOpenInStudio(design, e)}
-                          className="w-8 h-8 p-0 bg-primary text-primary-foreground hover:bg-primary/90 backdrop-blur-sm"
-                        >
-                          <Play className="w-4 h-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Open in Studio</TooltipContent>
-                    </Tooltip>
-                    
+
+                  {/* Price Tag */}
+                  <div className="absolute top-3 right-3">
+                    <div className="bg-card/95 backdrop-blur-sm border border-border/60 rounded-lg px-2 py-1 shadow-sm">
+                      <span className="text-sm font-bold text-primary">${garment.price}</span>
+                    </div>
+                  </div>
+
+                  {/* Quick Actions Overlay */}
+                  <div className="absolute inset-x-3 bottom-3 flex gap-2 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
                     <Button 
                       size="sm" 
-                      variant="ghost" 
-                      onClick={(e) => handleLikeDesign(design.id, e)}
-                      className={cn(
-                        "w-8 h-8 p-0 bg-white/80 hover:bg-white backdrop-blur-sm transition-all",
-                        likedDesigns.includes(design.id) ? 'text-red-500' : 'text-gray-600 hover:text-red-500'
-                      )}
+                      variant="secondary" 
+                      className="flex-1 h-8 text-xs bg-background/90 hover:bg-background backdrop-blur-sm border-border/60"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDesignClick(garment);
+                      }}
                     >
-                      <Heart className={cn("w-4 h-4", likedDesigns.includes(design.id) && 'fill-current')} />
+                      <Eye className="h-3 w-3 mr-1" />
+                      View
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      className="flex-1 h-8 text-xs shadow-sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenInStudio(garment);
+                      }}
+                    >
+                      <Palette className="h-3 w-3 mr-1" />
+                      Design
                     </Button>
                   </div>
                 </div>
-                
-                <CardContent className={cn("p-4", viewMode === 'list' && "flex-1")}>
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex-1">
-                      <h3 className={cn(
-                        "font-bold group-hover:text-primary transition-colors line-clamp-1",
-                        viewMode === 'grid' ? "text-lg" : "text-xl"
-                      )}>
-                        {design.name}
+
+                {/* Content */}
+                <CardContent className="p-4 space-y-3">
+                  {/* Header */}
+                  <div className="space-y-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                        {garment.name}
                       </h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Avatar className="w-4 h-4">
-                          <AvatarFallback className="text-xs">{design.avatar}</AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm text-muted-foreground">by {design.creator}</span>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                        <span className="text-xs font-medium">{garment.rating}</span>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="font-bold text-lg text-primary">£{design.price}</div>
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                        {design.rating.toFixed(1)}
+                    <p className="text-xs text-muted-foreground capitalize">
+                      {garment.garmentId.replace('-', ' ')} • {garment.fabric}
+                    </p>
+                  </div>
+
+                  {/* Technical Specs Grid */}
+                  <div className="grid grid-cols-2 gap-3 py-2 border-t border-border/40">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full bg-primary/60"></div>
+                        <span className="text-xs text-muted-foreground font-medium">Print Area</span>
                       </div>
+                      <p className="text-xs font-semibold text-foreground pl-3">
+                        {Math.round(garment.printArea.width/25.4)}×{Math.round(garment.printArea.height/25.4)}" • {garment.dpi} DPI
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1">
+                        <div className={`w-2 h-2 rounded-full ${
+                          garment.baseColor === 'light' ? 'bg-gray-200 border border-gray-300' :
+                          garment.baseColor === 'dark' ? 'bg-gray-800' : 'bg-primary/60'
+                        }`}></div>
+                        <span className="text-xs text-muted-foreground font-medium">Base Color</span>
+                      </div>
+                      <p className="text-xs font-semibold text-foreground capitalize pl-3">
+                        {garment.baseColor} base
+                      </p>
                     </div>
                   </div>
-                  
-                  {/* Studio Specifications */}
-                  <div className="space-y-1.5 mb-3">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Ruler className="w-3 h-3" />
-                      <span>Print: {Math.round(design.printArea.width/25.4)}×{Math.round(design.printArea.height/25.4)}" at 300 DPI</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Palette className="w-3 h-3" />
-                      <span>{design.baseColor} base | {design.availableOrientations.length} views</span>
-                    </div>
-                    {viewMode === 'list' && (
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Truck className="w-3 h-3" />
-                        <span>Ships in {design.shippingDays}</span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex gap-1">
-                      {design.tags.slice(0, viewMode === 'grid' ? 2 : 3).map(tag => (
-                        <Badge key={tag} variant="outline" className="text-xs">
+
+                  {/* Tags */}
+                  {garment.tags && garment.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {garment.tags.slice(0, 2).map((tag, index) => (
+                        <Badge 
+                          key={index} 
+                          variant="outline" 
+                          className="text-xs px-2 py-0 h-5 border-border/60 text-muted-foreground"
+                        >
                           {tag}
                         </Badge>
                       ))}
+                      {garment.tags.length > 2 && (
+                        <Badge variant="outline" className="text-xs px-2 py-0 h-5 border-border/60 text-muted-foreground">
+                          +{garment.tags.length - 2}
+                        </Badge>
+                      )}
                     </div>
-                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Heart className="w-3 h-3" />
-                        <span className="text-xs">{design.likes > 999 ? `${(design.likes/1000).toFixed(1)}k` : design.likes}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Download className="w-3 h-3" />
-                        <span className="text-xs">{design.downloads}</span>
-                      </div>
-                    </div>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
             ))}
           </div>
 
-          {/* Load More */}
-          <div className="text-center">
-            <Button 
-              onClick={handleLoadMore}
-              variant="outline" 
-              size="lg"
-              className="min-w-32"
-            >
-              <ShoppingBag className="w-4 h-4 mr-2" />
-              Load More Garments
-            </Button>
-            <p className="text-sm text-muted-foreground mt-2">
-              Showing {sortedDesigns.length} of {studioDesigns.length} studio-ready garments
-            </p>
-          </div>
+          {/* Empty State */}
+          {mockGarments.length === 0 && (
+            <Card className="p-12 text-center border-border/60 bg-card/50">
+              <div className="space-y-6">
+                <div className="w-20 h-20 mx-auto bg-gradient-to-br from-muted to-muted/60 rounded-full flex items-center justify-center">
+                  <Package className="h-10 w-10 text-muted-foreground" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-semibold">No products found</h3>
+                  <p className="text-muted-foreground max-w-md mx-auto">
+                    We couldn't find any garments matching your criteria. Try adjusting your filters or search terms.
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button variant="outline" onClick={clearAllFilters}>
+                    <X className="h-4 w-4 mr-2" />
+                    Clear All Filters
+                  </Button>
+                  <Button variant="secondary">
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    Browse Trending
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          )}
         </div>
       </div>
     </TooltipProvider>
