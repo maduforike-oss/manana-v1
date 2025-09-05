@@ -8,29 +8,41 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { generateStudioMarketData, StudioGarmentData, FILTER_PRESETS, PrintAreaSize } from '@/lib/studio/marketData';
 import { useAppStore } from '@/store/useAppStore';
+import { useLocalSaves, useLocalSearchHistory } from '@/hooks/useLocalSaves';
+import { SearchSuggestions } from '@/components/marketplace/SearchSuggestions';
+import { FiltersSheet } from '@/components/marketplace/FiltersSheet';
+import { QuickViewModal } from '@/components/marketplace/QuickViewModal';
 
 export const MarketPage = () => {
   const { toast } = useToast();
   const { setActiveTab: setAppActiveTab } = useAppStore();
+  const { ids: savedIds, toggle: toggleSave } = useLocalSaves();
+  const { addSearch } = useLocalSearchHistory();
   const [likedDesigns, setLikedDesigns] = useState<string[]>([]);
-  const [savedDesigns, setSavedDesigns] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('for-you');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState('trending');
+  const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedDesign, setSelectedDesign] = useState<StudioGarmentData | null>(null);
+  const [showQuickView, setShowQuickView] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   
   // Enhanced filters
-  const [selectedGarmentTypes, setSelectedGarmentTypes] = useState<string[]>([]);
-  const [selectedBaseColors, setSelectedBaseColors] = useState<string[]>([]);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [selectedPrintAreaSize, setSelectedPrintAreaSize] = useState<PrintAreaSize | null>(null);
+  const [filters, setFilters] = useState({
+    garmentTypes: [] as string[],
+    baseColors: [] as string[],
+    tags: [] as string[],
+    priceRange: [0, 100] as [number, number],
+    inStock: false,
+    size: [] as string[]
+  });
   const [activeFilterPreset, setActiveFilterPreset] = useState<string | null>(null);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
-  const [showFilters, setShowFilters] = useState(false);
   
   // Generate studio market data
   const studioDesigns = useMemo(() => generateStudioMarketData(), []);
@@ -75,38 +87,55 @@ export const MarketPage = () => {
     });
   };
 
-  const handleSaveDesign = (designId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setSavedDesigns(prev => 
-      prev.includes(designId) 
-        ? prev.filter(id => id !== designId)
-        : [...prev, designId]
-    );
+  const handleSaveDesign = (designId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    toggleSave(designId);
     toast({ 
-      title: savedDesigns.includes(designId) ? "Unsaved" : "Saved", 
-      description: `Design ${savedDesigns.includes(designId) ? 'removed from' : 'added to'} your collection` 
+      title: savedIds.includes(designId) ? "Saved" : "Unsaved", 
+      description: `Design ${savedIds.includes(designId) ? 'added to' : 'removed from'} your collection` 
     });
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    if (query.trim()) {
+      addSearch(query);
+    }
+    setShowSearchSuggestions(false);
+  };
+
+  const handleViewDesign = (design: StudioGarmentData) => {
+    setSelectedDesign(design);
+    setShowQuickView(true);
   };
 
   const applyFilterPreset = (presetName: string) => {
     const preset = FILTER_PRESETS[presetName as keyof typeof FILTER_PRESETS];
-    if (preset.garmentTypes) setSelectedGarmentTypes([...preset.garmentTypes]);
-    if (preset.baseColors) setSelectedBaseColors([...preset.baseColors]);
-    if (preset.tags) setSelectedTags([...preset.tags]);
-    if (preset.printAreaSize) setSelectedPrintAreaSize(preset.printAreaSize);
-    
+    const newFilters = {
+      garmentTypes: preset.garmentTypes ? [...preset.garmentTypes] : [],
+      baseColors: preset.baseColors ? [...preset.baseColors] : [],
+      tags: preset.tags ? [...preset.tags] : [],
+      priceRange: [0, 100] as [number, number],
+      inStock: false,
+      size: []
+    };
+    setFilters(newFilters);
     setActiveFilterPreset(presetName);
     toast({ title: "Filter Applied", description: `Applied ${presetName} filter preset` });
   };
 
   const clearAllFilters = () => {
-    setSelectedGarmentTypes([]);
-    setSelectedBaseColors([]);
-    setSelectedTags([]);
-    setSelectedPrintAreaSize(null);
-    setPriceRange([0, 100]);
+    setFilters({
+      garmentTypes: [],
+      baseColors: [],
+      tags: [],
+      priceRange: [0, 100],
+      inStock: false,
+      size: []
+    });
     setSearchQuery('');
     setActiveFilterPreset(null);
+    toast({ title: "Filters Cleared", description: "All filters have been reset" });
   };
 
   const filteredDesigns = studioDesigns.filter(design => {
@@ -115,24 +144,25 @@ export const MarketPage = () => {
                          design.fabric.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          design.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
     
-    const matchesGarmentType = selectedGarmentTypes.length === 0 || 
-                              selectedGarmentTypes.includes(design.garmentId);
+    const matchesGarmentType = filters.garmentTypes.length === 0 || 
+                              filters.garmentTypes.includes(design.garmentId);
     
-    const matchesBaseColor = selectedBaseColors.length === 0 || 
-                            selectedBaseColors.includes(design.baseColor);
+    const matchesBaseColor = filters.baseColors.length === 0 || 
+                            filters.baseColors.includes(design.baseColor);
     
-    const matchesTags = selectedTags.length === 0 || 
-                       selectedTags.some(tag => design.tags.includes(tag));
+    const matchesTags = filters.tags.length === 0 || 
+                       filters.tags.some(tag => design.tags.includes(tag));
     
-    const matchesPrintArea = !selectedPrintAreaSize || 
-      (selectedPrintAreaSize === 'L' && design.printArea.width >= 280 && design.printArea.height >= 380) ||
-      (selectedPrintAreaSize === 'M' && design.printArea.width >= 200 && design.printArea.width < 280) ||
-      (selectedPrintAreaSize === 'S' && design.printArea.width < 200);
+    const matchesPrice = design.price >= filters.priceRange[0] && design.price <= filters.priceRange[1];
     
-    const matchesPrice = design.price >= priceRange[0] && design.price <= priceRange[1];
+    // For "Saved" tab, only show saved designs
+    if (activeTab === 'saved') {
+      return savedIds.includes(design.id) && matchesSearch && matchesGarmentType && 
+             matchesBaseColor && matchesTags && matchesPrice;
+    }
     
     return matchesSearch && matchesGarmentType && matchesBaseColor && 
-           matchesTags && matchesPrintArea && matchesPrice;
+           matchesTags && matchesPrice;
   });
 
   const sortedDesigns = [...filteredDesigns].sort((a, b) => {
@@ -169,6 +199,36 @@ export const MarketPage = () => {
     setAppActiveTab('profile');
   };
 
+  // Active filters count
+  const activeFiltersCount = filters.garmentTypes.length + filters.baseColors.length + 
+                           filters.tags.length + filters.size.length +
+                           (filters.inStock ? 1 : 0) +
+                           (filters.priceRange[0] > 0 || filters.priceRange[1] < 100 ? 1 : 0);
+
+  // Close search suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchInputRef.current && !searchInputRef.current.contains(event.target as Node)) {
+        setShowSearchSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // URL sync for sort
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (sortBy !== 'trending') {
+      params.set('sort', sortBy);
+    } else {
+      params.delete('sort');
+    }
+    const newUrl = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`;
+    window.history.replaceState({}, '', newUrl);
+  }, [sortBy]);
+
   // Mock trending designers data
   const trendingDesigners = [
     { id: '1', name: 'Elena Martinez', avatar: '', followers: '12.4K', badge: 'Top Creator', specialty: 'Minimalist' },
@@ -201,18 +261,36 @@ export const MarketPage = () => {
               </Button>
             </div>
 
-            {/* Refined Search Bar */}
-            <div className="relative mb-6">
+            {/* Enhanced Search Bar with Suggestions */}
+            <div className="relative mb-6" ref={searchInputRef}>
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 placeholder="Search designs, creators, styles..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setShowSearchSuggestions(true)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSearch(searchQuery);
+                  }
+                }}
                 className="pl-12 pr-16 h-12 text-base rounded-2xl bg-manana-cream/30 border-border/30 focus:border-primary/50 transition-all duration-300 focus:bg-background/80 focus:shadow-fashion"
               />
-              <Button size="sm" className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-xl h-8 px-4 bg-primary hover:bg-primary/90 transition-all duration-300 shadow-sm">
+              <Button 
+                size="sm" 
+                onClick={() => handleSearch(searchQuery)}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-xl h-8 px-4 bg-primary hover:bg-primary/90 transition-all duration-300 shadow-sm"
+              >
                 Search
               </Button>
+              
+              {/* Search Suggestions */}
+              <SearchSuggestions
+                isOpen={showSearchSuggestions}
+                onClose={() => setShowSearchSuggestions(false)}
+                onSelectSuggestion={handleSearch}
+                searchQuery={searchQuery}
+              />
             </div>
 
             {/* Elegant Tab Navigation */}
@@ -273,11 +351,19 @@ export const MarketPage = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setShowFilters(!showFilters)}
-              className="h-9 px-4 text-sm rounded-full whitespace-nowrap border-border/40 hover:border-primary/30 hover:bg-primary/5"
+              onClick={() => setShowFilters(true)}
+              className={cn(
+                "h-9 px-4 text-sm rounded-full whitespace-nowrap border-border/40 hover:border-primary/30 hover:bg-primary/5 relative",
+                activeFiltersCount > 0 && "border-primary bg-primary/10 text-primary"
+              )}
             >
               <Filter className="h-4 w-4 mr-2" />
               Filters
+              {activeFiltersCount > 0 && (
+                <Badge variant="secondary" className="ml-2 bg-primary text-primary-foreground text-xs h-5 px-2">
+                  {activeFiltersCount}
+                </Badge>
+              )}
             </Button>
           </div>
 
@@ -326,7 +412,7 @@ export const MarketPage = () => {
                           className="h-9 w-9 p-0 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-full border border-white/20 transition-all duration-300"
                           onClick={(e) => handleSaveDesign(design.id, e)}
                         >
-                          <Bookmark className={cn("h-4 w-4 transition-all duration-300", savedDesigns.includes(design.id) ? "fill-manana-sage text-manana-sage scale-110" : "text-white")} />
+                          <Bookmark className={cn("h-4 w-4 transition-all duration-300", savedIds.includes(design.id) ? "fill-manana-sage text-manana-sage scale-110" : "text-white")} />
                         </Button>
                       </div>
                       <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-4 group-hover:translate-y-0">
@@ -458,15 +544,29 @@ export const MarketPage = () => {
           <div className="mb-8">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-xl font-bold text-foreground">Explore Designs</h2>
-                <p className="text-sm text-muted-foreground mt-1">{sortedDesigns.length} unique pieces available</p>
+                <h2 className="text-xl font-bold text-foreground">
+                  {activeTab === 'saved' ? 'Your Saved Designs' : 'Explore Designs'}
+                </h2>
+                <div className="flex items-center gap-4 mt-1">
+                  <p className="text-sm text-muted-foreground">
+                    {sortedDesigns.length} {activeTab === 'saved' ? 'saved' : 'unique'} pieces available
+                  </p>
+                  {sortBy !== 'trending' && (
+                    <Badge variant="outline" className="text-xs">
+                      Sorted by: {sortBy === 'newest' ? 'Newest' : 
+                                sortBy === 'popular' ? 'Most Liked' :
+                                sortBy === 'price-low' ? 'Price: Low to High' :
+                                sortBy === 'price-high' ? 'Price: High to Low' : 'Trending'}
+                    </Badge>
+                  )}
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-40 border-border/40 rounded-xl">
+                  <SelectTrigger className="w-40 border-border/40 rounded-xl bg-background">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-background border-border/50">
                     <SelectItem value="trending">Trending</SelectItem>
                     <SelectItem value="newest">Newest</SelectItem>
                     <SelectItem value="popular">Most Liked</SelectItem>
@@ -477,12 +577,33 @@ export const MarketPage = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {sortedDesigns.map((design) => (
+            {sortedDesigns.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/50 flex items-center justify-center">
+                  <Search className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">No designs found</h3>
+                <p className="text-muted-foreground mb-4">
+                  {activeTab === 'saved' 
+                    ? "You haven't saved any designs yet. Start exploring and save your favorites!"
+                    : "Try adjusting your filters or search terms"
+                  }
+                </p>
+                <Button 
+                  variant="outline" 
+                  onClick={clearAllFilters}
+                  className="rounded-xl"
+                >
+                  Clear Filters
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {sortedDesigns.map((design) => (
                 <Card 
                   key={design.id} 
                   className="overflow-hidden border-0 hover:shadow-editorial transition-all duration-500 cursor-pointer group bg-gradient-to-br from-background to-manana-cream/10"
-                  onClick={() => handleDesignClick(design)}
+                  onClick={() => handleViewDesign(design)}
                 >
                   <div className="relative aspect-[3/4] overflow-hidden">
                     <img 
@@ -518,13 +639,22 @@ export const MarketPage = () => {
                           variant="outline"
                           size="sm"
                           onClick={(e) => handleSaveDesign(design.id, e)}
-                          className="flex-1 bg-white/90 hover:bg-white border-white/50 text-manana-charcoal rounded-lg h-8 text-xs"
+                          className={cn(
+                            "flex-1 rounded-lg h-8 text-xs transition-all duration-200",
+                            savedIds.includes(design.id) 
+                              ? "bg-primary/90 hover:bg-primary border-primary text-primary-foreground" 
+                              : "bg-white/90 hover:bg-white border-white/50 text-manana-charcoal"
+                          )}
                         >
-                          Save
+                          {savedIds.includes(design.id) ? 'Saved' : 'Save'}
                         </Button>
                         <Button 
                           variant="outline"
                           size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewDesign(design);
+                          }}
                           className="flex-1 bg-white/90 hover:bg-white border-white/50 text-manana-charcoal rounded-lg h-8 text-xs"
                         >
                           View
@@ -566,20 +696,42 @@ export const MarketPage = () => {
                     </div>
                   </div>
                 </Card>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Load More */}
-          <div className="text-center py-8">
-            <Button 
-              variant="outline" 
-              className="rounded-xl px-8 py-3 border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300"
-            >
-              Load More Designs
-            </Button>
-          </div>
+          {/* Load More - only show if we have results */}
+          {sortedDesigns.length > 0 && (
+            <div className="text-center py-8">
+              <Button 
+                variant="outline" 
+                className="rounded-xl px-8 py-3 border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300"
+              >
+                Load More Designs
+              </Button>
+            </div>
+          )}
         </div>
+
+        {/* Filters Sheet */}
+        <FiltersSheet
+          isOpen={showFilters}
+          onOpenChange={setShowFilters}
+          filters={filters}
+          onFiltersChange={setFilters}
+          onClearAll={clearAllFilters}
+        />
+
+        {/* Quick View Modal */}
+        <QuickViewModal
+          design={selectedDesign}
+          isOpen={showQuickView}
+          onClose={() => setShowQuickView(false)}
+          onOpenInStudio={handleOpenInStudio}
+          onSave={handleSaveDesign}
+          isSaved={selectedDesign ? savedIds.includes(selectedDesign.id) : false}
+        />
       </div>
     </TooltipProvider>
   );
