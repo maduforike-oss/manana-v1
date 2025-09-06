@@ -1,0 +1,16 @@
+{
+  "name": "Manana - Custom Clothing Design Studio",
+  "short_name": "Manana",
+  "description": "Create stunning custom clothing designs with professional tools",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#FF2D75",
+  "icons": [
+    {
+      "src": "/brand/manana-logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

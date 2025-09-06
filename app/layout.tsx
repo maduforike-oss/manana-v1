@@ -17,7 +17,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="min-h-screen grid grid-rows-[auto,1fr]">
           <header className="border-b">
             <div className="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
-              <Link href="/" className="text-xl font-semibold">Manana</Link>
+              <Link href="/" className="flex items-center gap-2">
+                <img src="/brand/manana-logo.png" alt="Manana" className="w-8 h-8" />
+                <span className="text-xl font-semibold">Manana</span>
+              </Link>
               <nav className="flex gap-6 text-sm">
                 <Link href="/dashboard" className="hover:underline">Dashboard</Link>
                 <Link href="/designs" className="hover:underline">Designs</Link>
