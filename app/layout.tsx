@@ -15,22 +15,58 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className={`${inter.className} bg-background text-foreground`}>
         <div className="min-h-screen grid grid-rows-[auto,1fr]">
-          <header className="glass-nav sticky top-0 z-50">
-            <div className="mx-auto max-w-7xl px-6 py-6 flex items-center justify-between">
-              <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-all duration-300 hover:scale-105">
-                <img src="/brand/manana-logo.png" alt="Manana" className="w-10 h-10" />
-                <span className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Manana</span>
+          <header className="apple-nav-header">
+            <div className="apple-nav-content">
+              <Link href="/" className="apple-nav-logo">
+                <img src="/brand/manana-logo.png" alt="Manana" className="w-8 h-8 transition-transform duration-300 group-hover:scale-110" />
+                <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent transition-all duration-300 group-hover:tracking-wide">Manana</span>
               </Link>
-              <nav className="flex gap-8 text-sm">
-                <Link href="/dashboard" className="text-foreground/80 hover:text-primary transition-all duration-300 font-medium px-4 py-2 rounded-xl hover:bg-glass-light/50">Dashboard</Link>
-                <Link href="/designs" className="text-foreground/80 hover:text-primary transition-all duration-300 font-medium px-4 py-2 rounded-xl hover:bg-glass-light/50">Designs</Link>
-                <Link href="/orders" className="text-foreground/80 hover:text-primary transition-all duration-300 font-medium px-4 py-2 rounded-xl hover:bg-glass-light/50">Orders</Link>
-                <Link href="/profile" className="text-foreground/80 hover:text-primary transition-all duration-300 font-medium px-4 py-2 rounded-xl hover:bg-glass-light/50">Profile</Link>
+              <nav className="apple-nav-links">
+                <Link href="/dashboard" className="apple-nav-link">
+                  <span>Dashboard</span>
+                </Link>
+                <Link href="/designs" className="apple-nav-link">
+                  <span>Designs</span>
+                </Link>
+                <Link href="/orders" className="apple-nav-link">
+                  <span>Orders</span>
+                </Link>
+                <Link href="/profile" className="apple-nav-link">
+                  <span>Profile</span>
+                </Link>
               </nav>
             </div>
           </header>
           <main className="mx-auto max-w-7xl w-full p-6 sm:p-8 lg:p-12">{children}</main>
         </div>
+        
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            let lastScrollY = window.scrollY;
+            let isScrollingDown = false;
+            
+            window.addEventListener('scroll', () => {
+              const currentScrollY = window.scrollY;
+              const header = document.querySelector('.apple-nav-header');
+              
+              if (currentScrollY > lastScrollY && currentScrollY > 60) {
+                // Scrolling down
+                if (!isScrollingDown) {
+                  isScrollingDown = true;
+                  header?.classList.add('nav-compact');
+                }
+              } else {
+                // Scrolling up
+                if (isScrollingDown) {
+                  isScrollingDown = false;
+                  header?.classList.remove('nav-compact');
+                }
+              }
+              
+              lastScrollY = currentScrollY;
+            });
+          `
+        }} />
       </body>
     </html>
   )

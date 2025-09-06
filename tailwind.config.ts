@@ -152,6 +152,10 @@ export default {
 				'2xl': '40px',
 				'3xl': '64px'
 			},
+			fontSize: {
+				'2xs': ['0.625rem', { lineHeight: '0.75rem' }],
+				xs: ['0.75rem', { lineHeight: '1rem' }],
+			},
 			keyframes: {
 				'accordion-down': {
 					from: { height: '0', opacity: '0' },
