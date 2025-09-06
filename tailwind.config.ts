@@ -123,6 +123,9 @@ export default {
 				'md': 'var(--radius-md)',
 				'lg': 'var(--radius-lg)',
 				'xl': 'var(--radius-xl)',
+				'2xl': 'var(--radius-2xl)',
+				'3xl': 'var(--radius-3xl)',
+				'4xl': 'var(--radius-4xl)',
 				'full': 'var(--radius-full)'
 			},
 			spacing: {
@@ -134,7 +137,10 @@ export default {
 				'2xl': '3rem',
 				'3xl': '4rem',
 				'4xl': '6rem',
-				'5xl': '8rem'
+				'5xl': '8rem',
+				'6xl': '10rem',
+				'7xl': '12rem',
+				'8xl': '16rem'
 			},
 			backdropBlur: {
 				'xs': '2px',
@@ -197,10 +203,8 @@ export default {
 				'secondary': 'var(--shadow-secondary)',
 				'subtle': 'var(--shadow-subtle)',
 				'elevated': 'var(--shadow-elevated)',
-				'studio': 'var(--shadow-studio)',
-				'neon': 'var(--shadow-neon)',
-				'panel': 'var(--shadow-panel)',
-				'tool': 'var(--shadow-tool)'
+				'floating': 'var(--shadow-floating)',
+				'modal': 'var(--shadow-modal)'
 			},
 			transitionTimingFunction: {
 				'bounce': 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',

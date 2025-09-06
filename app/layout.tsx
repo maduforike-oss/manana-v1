@@ -16,20 +16,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${inter.className} bg-background text-foreground`}>
         <div className="min-h-screen grid grid-rows-[auto,1fr]">
           <header className="glass-nav sticky top-0 z-50">
-            <div className="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
-              <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                <img src="/brand/manana-logo.png" alt="Manana" className="w-8 h-8" />
-                <span className="text-xl font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Manana</span>
+            <div className="mx-auto max-w-7xl px-6 py-6 flex items-center justify-between">
+              <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-all duration-300 hover:scale-105">
+                <img src="/brand/manana-logo.png" alt="Manana" className="w-10 h-10" />
+                <span className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Manana</span>
               </Link>
-              <nav className="flex gap-6 text-sm">
-                <Link href="/dashboard" className="text-text-light hover:text-primary transition-colors">Dashboard</Link>
-                <Link href="/designs" className="text-text-light hover:text-primary transition-colors">Designs</Link>
-                <Link href="/orders" className="text-text-light hover:text-primary transition-colors">Orders</Link>
-                <Link href="/profile" className="text-text-light hover:text-primary transition-colors">Profile</Link>
+              <nav className="flex gap-8 text-sm">
+                <Link href="/dashboard" className="text-foreground/80 hover:text-primary transition-all duration-300 font-medium px-4 py-2 rounded-xl hover:bg-glass-light/50">Dashboard</Link>
+                <Link href="/designs" className="text-foreground/80 hover:text-primary transition-all duration-300 font-medium px-4 py-2 rounded-xl hover:bg-glass-light/50">Designs</Link>
+                <Link href="/orders" className="text-foreground/80 hover:text-primary transition-all duration-300 font-medium px-4 py-2 rounded-xl hover:bg-glass-light/50">Orders</Link>
+                <Link href="/profile" className="text-foreground/80 hover:text-primary transition-all duration-300 font-medium px-4 py-2 rounded-xl hover:bg-glass-light/50">Profile</Link>
               </nav>
             </div>
           </header>
-          <main className="mx-auto max-w-6xl w-full p-4 sm:p-6 lg:p-8">{children}</main>
+          <main className="mx-auto max-w-7xl w-full p-6 sm:p-8 lg:p-12">{children}</main>
         </div>
       </body>
     </html>
