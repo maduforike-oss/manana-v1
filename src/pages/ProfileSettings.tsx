@@ -130,7 +130,7 @@ export const ProfileSettings = () => {
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold">Profile Settings</h1>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Profile Settings</h1>
               <p className="text-sm text-muted-foreground">Manage your account information and preferences</p>
             </div>
           </div>

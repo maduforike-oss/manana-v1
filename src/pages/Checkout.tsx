@@ -38,7 +38,7 @@ export default function Checkout() {
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-2xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold mb-2">Checkout</h1>
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">Checkout</h1>
           <p className="text-muted-foreground">Complete your purchase to unlock design customization</p>
         </div>
 

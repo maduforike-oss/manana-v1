@@ -5,7 +5,7 @@ import { ThemeProvider } from './components/ThemeProvider'
 import './utils/setApiKey' // Auto-set API key
 
 createRoot(document.getElementById("root")!).render(
-  <ThemeProvider defaultTheme="light" storageKey="studio-theme">
+  <ThemeProvider defaultTheme="system" storageKey="manana-theme">
     <App />
   </ThemeProvider>
 );

@@ -47,7 +47,7 @@ export const StudioHub = () => {
           <div>
             <div className="flex items-center gap-3 mb-2">
               <Palette className="w-8 h-8 text-primary" />
-              <h1 className="text-4xl font-bold text-foreground">Design Studio</h1>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Design Studio</h1>
             </div>
             <p className="text-lg text-muted-foreground">
               Create amazing apparel designs with our professional tools

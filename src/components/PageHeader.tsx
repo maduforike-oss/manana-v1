@@ -32,7 +32,7 @@ export const PageHeader = ({ title, subtitle, onBack, activeTab }: PageHeaderPro
         <ArrowLeft className="w-4 h-4" />
       </Button>
       <div>
-        <h1 className="text-2xl font-bold">{title}</h1>
+        <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">{title}</h1>
         {subtitle && (
           <p className="text-sm text-muted-foreground">{subtitle}</p>
         )}

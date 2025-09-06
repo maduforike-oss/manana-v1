@@ -111,7 +111,7 @@ export default function FollowersPage() {
           <ArrowLeft className="w-4 h-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold">Connections</h1>
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Connections</h1>
           <p className="text-sm text-muted-foreground">Manage your followers and following</p>
         </div>
       </div>

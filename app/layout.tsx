@@ -2,6 +2,8 @@ import "./globals.css"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import Link from "next/link"
+import { ThemeProvider } from "@/components/ThemeProvider"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -12,33 +14,38 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className="scroll-smooth">
       <body className={`${inter.className} bg-background text-foreground`}>
-        <div className="min-h-screen grid grid-rows-[auto,1fr]">
-          <header className="apple-nav-header">
-            <div className="apple-nav-content">
-              <Link href="/" className="apple-nav-logo">
-                <img src="/brand/manana-logo.png" alt="Manana" className="w-8 h-8 transition-transform duration-300 group-hover:scale-110" />
-                <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent transition-all duration-300 group-hover:tracking-wide">Manana</span>
-              </Link>
-              <nav className="apple-nav-links">
-                <Link href="/dashboard" className="apple-nav-link">
-                  <span>Dashboard</span>
+        <ThemeProvider defaultTheme="system" storageKey="manana-theme">
+          <div className="min-h-screen grid grid-rows-[auto,1fr]">
+            <header className="apple-nav-header">
+              <div className="apple-nav-content">
+                <Link href="/" className="apple-nav-logo group">
+                  <img src="/brand/manana-logo.png" alt="Manana" className="w-8 h-8 transition-transform duration-300 group-hover:scale-110" />
+                  <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent transition-all duration-300 group-hover:tracking-wide">Manana</span>
                 </Link>
-                <Link href="/designs" className="apple-nav-link">
-                  <span>Designs</span>
-                </Link>
-                <Link href="/orders" className="apple-nav-link">
-                  <span>Orders</span>
-                </Link>
-                <Link href="/profile" className="apple-nav-link">
-                  <span>Profile</span>
-                </Link>
-              </nav>
-            </div>
-          </header>
-          <main className="mx-auto max-w-7xl w-full p-6 sm:p-8 lg:p-12">{children}</main>
-        </div>
+                <nav className="apple-nav-links">
+                  <Link href="/dashboard" className="apple-nav-link">
+                    <span>Dashboard</span>
+                  </Link>
+                  <Link href="/designs" className="apple-nav-link">
+                    <span>Designs</span>
+                  </Link>
+                  <Link href="/orders" className="apple-nav-link">
+                    <span>Orders</span>
+                  </Link>
+                  <Link href="/profile" className="apple-nav-link">
+                    <span>Profile</span>
+                  </Link>
+                  <div className="ml-4">
+                    <ThemeToggle />
+                  </div>
+                </nav>
+              </div>
+            </header>
+            <main className="mx-auto max-w-7xl w-full p-6 sm:p-8 lg:p-12">{children}</main>
+          </div>
+        </ThemeProvider>
         
         <script dangerouslySetInnerHTML={{
           __html: `
