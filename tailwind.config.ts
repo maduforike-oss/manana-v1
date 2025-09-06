@@ -24,16 +24,48 @@ export default {
 				ring: 'hsl(var(--ring))',
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
+				
+				/* Manana Brand Colors */
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
 					foreground: 'hsl(var(--primary-foreground))',
-					glow: 'hsl(var(--primary-glow))'
+					glow: 'hsl(var(--primary-glow))',
+					light: 'hsl(var(--primary-light))',
+					dark: 'hsl(var(--primary-dark))'
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
 					foreground: 'hsl(var(--secondary-foreground))',
-					glow: 'hsl(var(--secondary-glow))'
+					glow: 'hsl(var(--secondary-glow))',
+					light: 'hsl(var(--secondary-light))',
+					dark: 'hsl(var(--secondary-dark))'
 				},
+				
+				/* Text Colors */
+				text: {
+					dark: 'hsl(var(--text-dark))',
+					light: 'hsl(var(--text-light))',
+					muted: 'hsl(var(--text-muted))',
+					subtle: 'hsl(var(--text-subtle))'
+				},
+				
+				/* Surface Colors */
+				surface: {
+					DEFAULT: 'hsl(var(--surface))',
+					elevated: 'hsl(var(--surface-elevated))',
+					subtle: 'hsl(var(--surface-subtle))',
+					muted: 'hsl(var(--surface-muted))'
+				},
+				
+				/* Glass Effects */
+				glass: {
+					light: 'hsl(var(--glass-light))',
+					medium: 'hsl(var(--glass-medium))',
+					strong: 'hsl(var(--glass-strong))',
+					border: 'hsl(var(--glass-border))'
+				},
+				
+				/* Legacy Support */
 				workspace: {
 					DEFAULT: 'hsl(var(--workspace))',
 					foreground: 'hsl(var(--workspace-foreground))',
@@ -48,13 +80,6 @@ export default {
 					'accent-cyan': 'hsl(var(--studio-accent-cyan))',
 					'accent-purple': 'hsl(var(--studio-accent-purple))',
 					'accent-orange': 'hsl(var(--studio-accent-orange))'
-				},
-				manana: {
-					sage: 'hsl(var(--manana-sage))',
-					'sage-light': 'hsl(var(--manana-sage-light))',
-					'sage-dark': 'hsl(var(--manana-sage-dark))',
-					cream: 'hsl(var(--manana-cream))',
-					charcoal: 'hsl(var(--manana-charcoal))'
 				},
 				destructive: {
 					DEFAULT: 'hsl(var(--destructive))',
@@ -86,14 +111,40 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
+				
+				/* Brand Legacy */
 				brand: {
-					pink: "#FF2D75"
+					pink: 'hsl(var(--primary))'
 				}
 			},
 			borderRadius: {
-				lg: 'var(--radius)',
-				md: 'calc(var(--radius) - 2px)',
-				sm: 'calc(var(--radius) - 4px)'
+				'sm': 'var(--radius-sm)',
+				DEFAULT: 'var(--radius)',
+				'md': 'var(--radius-md)',
+				'lg': 'var(--radius-lg)',
+				'xl': 'var(--radius-xl)',
+				'full': 'var(--radius-full)'
+			},
+			spacing: {
+				'xs': '0.25rem',
+				'sm': '0.5rem',
+				'md': '1rem',
+				'lg': '1.5rem',
+				'xl': '2rem',
+				'2xl': '3rem',
+				'3xl': '4rem',
+				'4xl': '6rem',
+				'5xl': '8rem'
+			},
+			backdropBlur: {
+				'xs': '2px',
+				'sm': '4px',
+				DEFAULT: '8px',
+				'md': '12px',
+				'lg': '16px',
+				'xl': '24px',
+				'2xl': '40px',
+				'3xl': '64px'
 			},
 			keyframes: {
 				'accordion-down': {
@@ -141,12 +192,19 @@ export default {
 				'rotate-gradient': 'rotate-gradient 8s ease-in-out infinite'
 			},
 			boxShadow: {
+				'glass': 'var(--shadow-glass)',
+				'brand': 'var(--shadow-brand)',
+				'secondary': 'var(--shadow-secondary)',
+				'subtle': 'var(--shadow-subtle)',
+				'elevated': 'var(--shadow-elevated)',
 				'studio': 'var(--shadow-studio)',
 				'neon': 'var(--shadow-neon)',
 				'panel': 'var(--shadow-panel)',
-				'tool': 'var(--shadow-tool)',
-				'fashion': 'var(--shadow-fashion)',
-				'editorial': 'var(--shadow-editorial)'
+				'tool': 'var(--shadow-tool)'
+			},
+			transitionTimingFunction: {
+				'bounce': 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+				'smooth': 'cubic-bezier(0.4, 0, 0.2, 1)'
 			}
 		}
 	},

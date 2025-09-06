@@ -15,17 +15,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className={`${inter.className} bg-background text-foreground`}>
         <div className="min-h-screen grid grid-rows-[auto,1fr]">
-          <header className="border-b">
+          <header className="glass-nav sticky top-0 z-50">
             <div className="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
-              <Link href="/" className="flex items-center gap-2">
+              <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                 <img src="/brand/manana-logo.png" alt="Manana" className="w-8 h-8" />
-                <span className="text-xl font-semibold">Manana</span>
+                <span className="text-xl font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Manana</span>
               </Link>
               <nav className="flex gap-6 text-sm">
-                <Link href="/dashboard" className="hover:underline">Dashboard</Link>
-                <Link href="/designs" className="hover:underline">Designs</Link>
-                <Link href="/orders" className="hover:underline">Orders</Link>
-                <Link href="/profile" className="hover:underline">Profile</Link>
+                <Link href="/dashboard" className="text-text-light hover:text-primary transition-colors">Dashboard</Link>
+                <Link href="/designs" className="text-text-light hover:text-primary transition-colors">Designs</Link>
+                <Link href="/orders" className="text-text-light hover:text-primary transition-colors">Orders</Link>
+                <Link href="/profile" className="text-text-light hover:text-primary transition-colors">Profile</Link>
               </nav>
             </div>
           </header>
