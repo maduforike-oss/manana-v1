@@ -99,7 +99,7 @@ const Index = () => {
       {announcer}
       
       <div 
-        className="flex-1 overflow-hidden"
+        className="flex-1 overflow-hidden modern-scroll will-change-scroll prevent-layout-shift"
         ref={mainContentRef}
         id="main-content"
         tabIndex={-1}

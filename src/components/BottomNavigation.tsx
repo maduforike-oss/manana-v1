@@ -55,7 +55,7 @@ export const BottomNavigation = () => {
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
                   "flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all duration-200 min-w-[60px] min-h-[50px] relative group",
-                  "hover:bg-muted/20 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background",
+                  "hover:bg-muted/20 active:scale-95 focus:outline-none focus-visible:outline-none focus-visible:ring-0",
                   isActive 
                     ? "text-primary" 
                     : "text-muted-foreground hover:text-foreground"

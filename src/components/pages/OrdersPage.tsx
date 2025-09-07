@@ -4,12 +4,15 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Heading } from '@/components/ui/heading';
+import { OrderCardSkeleton } from '@/components/marketplace/OrderCardSkeleton';
 import { useToast } from '@/hooks/use-toast';
 import { useAppStore } from '@/store/useAppStore';
+import { useState, useMemo } from 'react';
 
 export const OrdersPage = () => {
   const { toast } = useToast();
   const { setActiveTab } = useAppStore();
+  const [isLoading, setIsLoading] = useState(false);
   
   const mockOrders = [
     {
@@ -127,7 +130,12 @@ export const OrdersPage = () => {
 
         {/* Modern Orders List */}
         <div className="space-y-6">
-          {mockOrders.map((order) => (
+          {isLoading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <OrderCardSkeleton key={i} />
+            ))
+          ) : (
+            mockOrders.map((order) => (
             <Card key={order.id} className="group border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-card/80 backdrop-blur-sm overflow-hidden">
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -267,7 +275,8 @@ export const OrdersPage = () => {
                 </div>
               </div>
             </Card>
-          ))}
+            ))
+          )}
         </div>
 
         {/* Enhanced Empty State */}

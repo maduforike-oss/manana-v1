@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo, lazy, Suspense } from 'react';
 import { Filter, Grid, List, SortAsc, ShoppingCart, Sparkles, TrendingUp, Package, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,11 +11,21 @@ import { PurchaseGateModal } from '@/components/marketplace/PurchaseGateModal';
 import { SearchWithSuggestions } from '@/components/marketplace/SearchWithSuggestions';
 import { ProductCard } from '@/components/marketplace/ProductCard';
 import { EmptyState } from '@/components/marketplace/EmptyState';
+import { ProductCardSkeleton } from '@/components/marketplace/ProductCardSkeleton';
 import { useMarketplace } from '@/hooks/useMarketplace';
 import { useCart } from '@/hooks/useCart';
+import { useVirtualScroll } from '@/hooks/useVirtualScroll';
+import { useImageOptimization } from '@/hooks/useImageOptimization';
+import { useCache } from '@/hooks/useCache';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { StudioGarmentData } from '@/lib/studio/marketData';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+
+// Lazy load components for better performance
+const LazyFiltersSheet = lazy(() => import('@/components/marketplace/FiltersSheet').then(m => ({ default: m.FiltersSheet })));
+const LazyQuickViewModal = lazy(() => import('@/components/marketplace/QuickViewModal').then(m => ({ default: m.QuickViewModal })));
+const LazyPurchaseGateModal = lazy(() => import('@/components/marketplace/PurchaseGateModal').then(m => ({ default: m.PurchaseGateModal })));
 
 export function MarketPage() {
   // State management
@@ -55,6 +65,16 @@ export function MarketPage() {
 
   const { addToCart, cart } = useCart();
   const { toast } = useToast();
+  const { getOptimizedImageUrl, preloadImage } = useImageOptimization();
+  const cache = useCache<StudioGarmentData[]>();
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Infinite scroll for better performance
+  const { loadMoreRef } = useInfiniteScroll({
+    hasMore,
+    isLoading,
+    onLoadMore: loadMore,
+  });
 
   // Get current tab data
   const getCurrentTabData = () => {
@@ -325,34 +345,40 @@ export function MarketPage() {
                       ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" 
                       : "space-y-4"
                   )}>
-                    {allDesigns.map((design) => (
-                      <ProductCard
-                        key={design.id}
-                        design={design}
-                        viewMode={viewMode}
-                        isSaved={isSaved(design.id)}
-                        isUnlocked={isUnlocked(design.id)}
-                        onSave={handleSaveDesign}
-                        onQuickView={handleQuickView}
-                        onOpenInStudio={handleOpenInStudio}
-                        onAddToCart={handleAddToCart}
-                        onShare={handleShare}
-                      />
-                    ))}
+                    {isLoading ? (
+                      Array.from({ length: 12 }).map((_, i) => (
+                        <ProductCardSkeleton key={i} />
+                      ))
+                    ) : (
+                      allDesigns.map((design) => (
+                        <ProductCard
+                          key={design.id}
+                          design={{
+                            ...design,
+                            thumbSrc: getOptimizedImageUrl(design.thumbSrc, { format: 'webp', fallback: design.thumbSrc })
+                          }}
+                          viewMode={viewMode}
+                          isSaved={isSaved(design.id)}
+                          isUnlocked={isUnlocked(design.id)}
+                          onSave={handleSaveDesign}
+                          onQuickView={handleQuickView}
+                          onOpenInStudio={handleOpenInStudio}
+                          onAddToCart={handleAddToCart}
+                          onShare={handleShare}
+                        />
+                      ))
+                    )}
                   </div>
 
-                  {hasMore && (
-                    <div className="text-center pt-8">
-                      <Button
-                        onClick={loadMore}
-                        variant="outline"
-                        size="lg"
-                        className="rounded-xl px-8"
-                      >
-                        Load More Designs
-                      </Button>
-                    </div>
-                  )}
+                  {/* Infinite scroll trigger */}
+                  <div ref={loadMoreRef} className="h-20 flex items-center justify-center">
+                    {hasMore && isLoading && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full" />
+                        Loading more designs...
+                      </div>
+                    )}
+                  </div>
                 </>
               )}
             </TabsContent>
@@ -374,7 +400,10 @@ export function MarketPage() {
                     {getCurrentTabData().map((design) => (
                       <ProductCard
                         key={design.id}
-                        design={design}
+                        design={{
+                          ...design,
+                          thumbSrc: getOptimizedImageUrl(design.thumbSrc, { format: 'webp', fallback: design.thumbSrc })
+                        }}
                         viewMode={viewMode}
                         isSaved={isSaved(design.id)}
                         isUnlocked={isUnlocked(design.id)}
@@ -394,37 +423,39 @@ export function MarketPage() {
       </div>
 
       {/* Modals */}
-      <FiltersSheet 
-        isOpen={showFilters}
-        onOpenChange={setShowFilters}
-        filters={activeFilters}
-        onFiltersChange={handleFiltersChange}
-        onClearAll={clearFilters}
-      />
+      <Suspense fallback={<div />}>
+        <LazyFiltersSheet 
+          isOpen={showFilters}
+          onOpenChange={setShowFilters}
+          filters={activeFilters}
+          onFiltersChange={handleFiltersChange}
+          onClearAll={clearFilters}
+        />
 
-      <QuickViewModal
-        design={selectedDesign}
-        isOpen={showQuickView}
-        onClose={() => {
-          setShowQuickView(false);
-          setSelectedDesign(null);
-        }}
-        onOpenInStudio={handleOpenInStudio}
-        onSave={handleSaveDesign}
-        isSaved={selectedDesign ? isSaved(selectedDesign.id) : false}
-        isUnlocked={selectedDesign ? isUnlocked(selectedDesign.id) : false}
-      />
-
-      <PurchaseGateModal
-        design={selectedDesign}
-        open={showPurchaseGate}
-        onOpenChange={(open) => {
-          if (!open) {
-            setShowPurchaseGate(false);
+        <LazyQuickViewModal
+          design={selectedDesign}
+          isOpen={showQuickView}
+          onClose={() => {
+            setShowQuickView(false);
             setSelectedDesign(null);
-          }
-        }}
-      />
+          }}
+          onOpenInStudio={handleOpenInStudio}
+          onSave={handleSaveDesign}
+          isSaved={selectedDesign ? isSaved(selectedDesign.id) : false}
+          isUnlocked={selectedDesign ? isUnlocked(selectedDesign.id) : false}
+        />
+
+        <LazyPurchaseGateModal
+          design={selectedDesign}
+          open={showPurchaseGate}
+          onOpenChange={(open) => {
+            if (!open) {
+              setShowPurchaseGate(false);
+              setSelectedDesign(null);
+            }
+          }}
+        />
+      </Suspense>
     </div>
   );
 }

@@ -474,10 +474,13 @@
   animation: shimmer 1.5s infinite;
 }
 
-/* Modern Scrollbars */
+  /* Modern Scrollbars */
 .modern-scroll {
   scrollbar-width: thin;
   scrollbar-color: hsl(var(--muted)) transparent;
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .modern-scroll::-webkit-scrollbar {
@@ -495,6 +498,26 @@
 
 .modern-scroll::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Performance improvements */
+.will-change-scroll {
+  will-change: scroll-position;
+}
+
+.will-change-transform {
+  will-change: transform;
+}
+
+.gpu-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Layout shift prevention */
+.prevent-layout-shift {
+  contain: layout style paint;
 }
 
 /* Masonry Grid Layout for Studio */
