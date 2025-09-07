@@ -29,11 +29,17 @@ export const BottomNavigation = () => {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex flex-col items-center gap-2 px-4 py-3 rounded-2xl transition-all duration-300 min-w-[72px] min-h-[72px]",
+                  "flex flex-col items-center gap-2 px-4 py-3 rounded-2xl transition-all duration-500 min-w-[72px] min-h-[72px] relative overflow-hidden",
                   isActive
-                    ? "bg-gradient-to-br from-primary/15 to-secondary/10 text-primary scale-110 shadow-lg shadow-primary/20"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/30 hover:scale-105"
+                    ? "text-primary scale-105"
+                    : "text-muted-foreground hover:text-foreground hover:scale-105"
                 )}
+                style={isActive ? {
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 8px 32px rgba(0, 0, 0, 0.1)'
+                } : {}}
                 aria-label={`Navigate to ${tab.label}`}
               >
                 <div className="relative">
