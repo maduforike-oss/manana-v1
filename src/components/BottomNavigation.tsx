@@ -42,7 +42,7 @@ export const BottomNavigation = () => {
       role="navigation"
       aria-label="Main navigation"
     >
-      <div className="px-4 py-2 pb-safe">
+      <div className="px-2 sm:px-4 py-2 pb-safe">{/* Responsive padding */}
         <div className="flex items-center justify-around max-w-md mx-auto">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
@@ -54,7 +54,7 @@ export const BottomNavigation = () => {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all duration-200 min-w-[60px] min-h-[50px] relative group",
+                  "flex flex-col items-center gap-0.5 sm:gap-1 px-2 sm:px-3 py-2 rounded-xl transition-all duration-200 min-w-[56px] sm:min-w-[60px] min-h-[48px] sm:min-h-[50px] relative group touch:min-w-[60px] touch:min-h-[52px]",
                   "hover:bg-muted/20 active:scale-95 focus:outline-none focus-visible:outline-none focus-visible:ring-0",
                   isActive 
                     ? "text-primary" 
@@ -66,13 +66,13 @@ export const BottomNavigation = () => {
               >
                 {/* Clean indicator for active state */}
                 {isActive && (
-                  <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full opacity-80" />
+                  <div className="absolute -top-0.5 sm:-top-1 left-1/2 transform -translate-x-1/2 w-6 sm:w-8 h-0.5 bg-primary rounded-full opacity-80" />
                 )}
                 
                 <div className="relative">
                   <Icon 
                     className={cn(
-                      "w-6 h-6 transition-all duration-200", // Increased from w-5 h-5 for better tap targets
+                      "w-5 h-5 sm:w-6 sm:h-6 transition-all duration-200 touch:w-6 touch:h-6",
                       isActive && "scale-110"
                     )} 
                     aria-hidden="true"
@@ -88,7 +88,7 @@ export const BottomNavigation = () => {
                 </div>
                 
                 <span className={cn(
-                  "text-xs font-medium transition-all duration-200",
+                  "text-[10px] sm:text-xs font-medium transition-all duration-200",
                   isActive ? "opacity-100 font-semibold" : "opacity-60"
                 )}>
                   {tab.label}

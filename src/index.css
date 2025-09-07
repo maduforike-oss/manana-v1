@@ -520,6 +520,134 @@
   contain: layout style paint;
 }
 
+/* Cross-device optimizations */
+.responsive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 640px) {
+  .responsive-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 0.75rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .responsive-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .touch-optimized {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.75rem;
+  }
+  
+  button, [role="button"], .interactive {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Tablet-specific layouts */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .tablet-optimized {
+    padding: 1rem 2rem;
+  }
+  
+  .tablet-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+  }
+}
+
+/* Desktop sidebar layout */
+@media (min-width: 1024px) {
+  .desktop-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr 320px;
+    gap: 2rem;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+  
+  .desktop-main {
+    min-height: 0; /* Allow scrolling */
+  }
+  
+  .desktop-sidebar {
+    position: sticky;
+    top: 2rem;
+    height: fit-content;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+  }
+}
+
+/* Landscape mobile optimizations */
+@media (max-height: 500px) and (orientation: landscape) {
+  .landscape-optimized {
+    flex-direction: row;
+    height: auto;
+    padding: 0.5rem;
+  }
+  
+  .landscape-nav {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+  }
+}
+
+/* Pinch-to-zoom support */
+.zoomable {
+  touch-action: pinch-zoom;
+  user-select: none;
+}
+
+/* Image responsiveness */
+.responsive-image {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+@media (max-width: 640px) {
+  .responsive-image {
+    image-rendering: auto;
+  }
+}
+
+/* Avatar responsiveness */
+.responsive-avatar {
+  border-radius: 50%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Dark mode toggle sizing */
+.theme-toggle {
+  min-height: 40px;
+  min-width: 40px;
+  padding: 8px;
+}
+
+@media (max-width: 640px) {
+  .theme-toggle {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 10px;
+  }
+}
+
 /* Masonry Grid Layout for Studio */
 .masonry-grid {
   columns: 1;

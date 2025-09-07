@@ -49,9 +49,9 @@ export function ProductCard({
     return (
       <Card className="group hover:shadow-lg transition-all duration-300 border-border/30 bg-background/50 backdrop-blur-sm">
         <CardContent className="p-0">
-          <div className="flex h-32">
+          <div className="flex h-28 sm:h-32 md:h-36">{/* Responsive height */}
             {/* Image */}
-            <div className="relative w-32 h-32 flex-shrink-0">
+            <div className="relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 flex-shrink-0">{/* Responsive image size */}
               {!imageLoaded && (
                 <Skeleton className="absolute inset-0 rounded-l-lg" />
               )}
@@ -74,7 +74,7 @@ export function ProductCard({
             </div>
 
             {/* Content */}
-            <div className="flex-1 p-4 flex justify-between">
+            <div className="flex-1 p-3 sm:p-4 flex justify-between">{/* Responsive padding */}
               <div className="space-y-2 flex-1">
                 <div className="flex items-start justify-between">
                   <div>
@@ -118,12 +118,12 @@ export function ProductCard({
               </div>
 
               {/* Actions */}
-              <div className="flex flex-col gap-2 ml-4">
+              <div className="flex flex-col gap-1 sm:gap-2 ml-2 sm:ml-4">{/* Smaller gaps on mobile */}
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => onSave(design.id)}
-                  className={cn("h-8 w-8 p-0", isSaved && "bg-primary/10 border-primary text-primary")}
+                  className={cn("h-7 w-7 sm:h-8 sm:w-8 p-0 touch:h-11 touch:w-11", isSaved && "bg-primary/10 border-primary text-primary")}
                 >
                   <Heart className={cn("h-3 w-3", isSaved && "fill-current")} />
                 </Button>
@@ -131,14 +131,14 @@ export function ProductCard({
                   variant="outline"
                   size="sm"
                   onClick={() => onQuickView(design)}
-                  className="h-8 w-8 p-0"
+                  className="h-7 w-7 sm:h-8 sm:w-8 p-0 touch:h-11 touch:w-11"
                 >
                   <Eye className="h-3 w-3" />
                 </Button>
                 <Button
                   size="sm"
                   onClick={() => onOpenInStudio(design)}
-                  className="h-8 px-3 bg-primary hover:bg-primary/90"
+                  className="h-7 sm:h-8 px-2 sm:px-3 bg-primary hover:bg-primary/90 touch:h-11 touch:px-4"
                 >
                   {isUnlocked ? <Palette className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
                 </Button>
@@ -155,7 +155,7 @@ export function ProductCard({
       <CardContent className="p-0">
         {/* Image Container */}
         <div 
-          className="relative aspect-[4/5] overflow-hidden cursor-pointer"
+          className="relative aspect-[3/4] sm:aspect-[4/5] overflow-hidden cursor-pointer"
           onClick={() => onQuickView(design)}
           onMouseEnter={() => setShowSwatches(true)}
           onMouseLeave={() => setShowSwatches(false)}
@@ -255,26 +255,26 @@ export function ProductCard({
         </div>
 
         {/* Content */}
-        <div className="p-4 space-y-3">
+        <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">{/* Responsive padding and spacing */}
           {/* Header */}
           <div className="space-y-2">
             <div className="flex items-start justify-between">
               <h3 
-                className="font-semibold text-foreground group-hover:text-primary transition-colors duration-200 line-clamp-2 cursor-pointer text-sm leading-tight"
+                className="font-semibold text-foreground group-hover:text-primary transition-colors duration-200 line-clamp-2 cursor-pointer text-xs sm:text-sm leading-tight"
                 onClick={() => onQuickView(design)}
               >
                 {design.name}
               </h3>
-              <span className="text-lg font-bold text-primary">${design.price}</span>
+              <span className="text-sm sm:text-lg font-bold text-primary">${design.price}</span>{/* Responsive price */}
             </div>
 
             <div className="flex items-center gap-2">
-              <Avatar className="h-5 w-5">
+              <Avatar className="h-4 w-4 sm:h-5 sm:w-5">{/* Responsive avatar */}
                 <AvatarFallback className="text-xs bg-primary/10 text-primary">
                   {design.avatar}
                 </AvatarFallback>
               </Avatar>
-              <span className="text-sm text-muted-foreground truncate">{design.creator}</span>
+              <span className="text-xs sm:text-sm text-muted-foreground truncate">{design.creator}</span>{/* Responsive text */}
             </div>
           </div>
 
@@ -338,7 +338,7 @@ export function ProductCard({
           {/* Action Button */}
           <Button
             onClick={() => onOpenInStudio(design)}
-            className="w-full bg-primary hover:bg-primary/90 text-sm h-9 rounded-lg"
+            className="w-full bg-primary hover:bg-primary/90 text-xs sm:text-sm h-8 sm:h-9 rounded-lg touch:h-12"
           >
             {isUnlocked ? (
               <>

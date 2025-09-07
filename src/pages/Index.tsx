@@ -6,6 +6,8 @@ import { MarketPage } from '@/components/pages/MarketPage';
 import { CommunityPage } from '@/components/pages/CommunityPage';
 import { OrdersPage } from '@/components/pages/OrdersPage';
 import { ProfilePage } from '@/components/pages/ProfilePage';
+import { DesktopSidebar } from '@/components/DesktopSidebar';
+import { DesktopActivityPanel } from '@/components/DesktopActivityPanel';
 import { SkipToContent } from '@/components/SkipToContent';
 import { OnboardingWalkthrough } from '@/components/OnboardingWalkthrough';
 import { useRouteSync } from '@/hooks/useNavigation';
@@ -93,23 +95,44 @@ const Index = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-background text-foreground">
+    <div className="flex flex-col lg:block h-screen bg-background text-foreground">
       <SkipToContent />
       <OnboardingWalkthrough />
       {announcer}
       
-      <div 
-        className="flex-1 overflow-hidden modern-scroll will-change-scroll prevent-layout-shift"
-        ref={mainContentRef}
-        id="main-content"
-        tabIndex={-1}
-        role="main"
-        aria-label="Main content"
-      >
-        {renderPage()}
+      {/* Desktop Layout */}
+      <div className="hidden lg:block desktop-layout h-full p-4">
+        <DesktopSidebar />
+        
+        <div 
+          className="desktop-main overflow-hidden modern-scroll will-change-scroll prevent-layout-shift"
+          ref={mainContentRef}
+          id="main-content"
+          tabIndex={-1}
+          role="main"
+          aria-label="Main content"
+        >
+          {renderPage()}
+        </div>
+        
+        <DesktopActivityPanel />
       </div>
       
-      <BottomNavigation />
+      {/* Mobile/Tablet Layout */}
+      <div className="lg:hidden flex flex-col h-full">
+        <div 
+          className="flex-1 overflow-hidden modern-scroll will-change-scroll prevent-layout-shift"
+          ref={mainContentRef}
+          id="main-content"
+          tabIndex={-1}
+          role="main"
+          aria-label="Main content"
+        >
+          {renderPage()}
+        </div>
+        
+        <BottomNavigation />
+      </div>
     </div>
   );
 };

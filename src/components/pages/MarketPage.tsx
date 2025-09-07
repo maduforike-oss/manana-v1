@@ -189,7 +189,7 @@ export function MarketPage() {
         </div>
       </BrandHeader>
 
-      <div className="container mx-auto px-4 py-6 space-y-8 max-h-screen overflow-y-auto">
+      <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 space-y-6 sm:space-y-8 max-h-screen overflow-y-auto">
         {/* Hero Search Section */}
         <div className="text-center space-y-6">
           <div className="space-y-4">
@@ -220,27 +220,31 @@ export function MarketPage() {
         {/* Navigation Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-md pb-4 border-b border-border/20">
-            <TabsList className="grid w-full grid-cols-6 h-12 bg-muted/30 backdrop-blur-sm rounded-2xl">
-              <TabsTrigger value="all" className="rounded-xl">All</TabsTrigger>
-              <TabsTrigger value="trending" className="rounded-xl">
-                <TrendingUp className="h-4 w-4 mr-2" />
-                Trending
+            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 h-12 bg-muted/30 backdrop-blur-sm rounded-2xl gap-1">
+              <TabsTrigger value="all" className="rounded-xl text-xs sm:text-sm">All</TabsTrigger>
+              <TabsTrigger value="trending" className="rounded-xl text-xs sm:text-sm">
+                <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Trending</span>
               </TabsTrigger>
-              <TabsTrigger value="new" className="rounded-xl">New</TabsTrigger>
-              <TabsTrigger value="deals" className="rounded-xl">
-                <Package className="h-4 w-4 mr-2" />
-                Deals
+              <TabsTrigger value="new" className="rounded-xl text-xs sm:text-sm">New</TabsTrigger>
+              {/* Second row on mobile */}
+              <TabsTrigger value="deals" className="rounded-xl text-xs sm:text-sm col-span-1 sm:col-span-1">
+                <Package className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Deals</span>
               </TabsTrigger>
-              <TabsTrigger value="saved" className="rounded-xl">
-                <Heart className="h-4 w-4 mr-2" />
-                Saved
+              <TabsTrigger value="saved" className="rounded-xl text-xs sm:text-sm">
+                <Heart className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Saved</span>
               </TabsTrigger>
-              <TabsTrigger value="community" className="rounded-xl">Community</TabsTrigger>
+              <TabsTrigger value="community" className="rounded-xl text-xs sm:text-sm">
+                <span className="hidden sm:inline">Community</span>
+                <span className="sm:hidden">More</span>
+              </TabsTrigger>
             </TabsList>
 
-            {/* Filters and Controls */}
-            <div className="flex items-center justify-between pt-4">
-              <div className="flex items-center gap-4">
+            {/* Filters and Controls - Stack on mobile */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-4 gap-4 sm:gap-0">
+              <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
                 <Button
                   onClick={() => setShowFilters(true)}
                   variant="outline"
@@ -270,7 +274,7 @@ export function MarketPage() {
                 )}
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                 {/* Sort Dropdown */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -340,10 +344,10 @@ export function MarketPage() {
               ) : (
                 <>
                   <div className={cn(
-                    "gap-6",
+                    "gap-3 sm:gap-4 lg:gap-6",
                     viewMode === 'grid' 
-                      ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" 
-                      : "space-y-4"
+                      ? "grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6"
+                      : "space-y-3 sm:space-y-4"
                   )}>
                     {isLoading ? (
                       Array.from({ length: 12 }).map((_, i) => (
@@ -370,15 +374,6 @@ export function MarketPage() {
                     )}
                   </div>
 
-                  {/* Infinite scroll trigger */}
-                  <div ref={loadMoreRef} className="h-20 flex items-center justify-center">
-                    {hasMore && isLoading && (
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full" />
-                        Loading more designs...
-                      </div>
-                    )}
-                  </div>
                 </>
               )}
             </TabsContent>
@@ -420,6 +415,16 @@ export function MarketPage() {
             ))}
           </div>
         </Tabs>
+
+        {/* Infinite scroll trigger */}
+        <div ref={loadMoreRef} className="h-20 flex items-center justify-center">
+          {hasMore && isLoading && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full" />
+              Loading more designs...
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Modals */}

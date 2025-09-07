@@ -36,13 +36,13 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "glass-modal fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-6 p-8 duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",
+        "glass-modal fixed left-[50%] top-[50%] z-50 grid w-[95vw] sm:w-full max-w-sm sm:max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 sm:gap-6 p-4 sm:p-8 duration-300 max-h-[85vh] overflow-y-auto data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",
         className
       )}
       {...props}
     >
       {children}
-      <DialogPrimitive.Close className="absolute right-6 top-6 rounded-xl opacity-70 ring-offset-background transition-all duration-300 hover:opacity-100 hover:bg-glass-light/50 p-2 focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:pointer-events-none">
+      <DialogPrimitive.Close className="absolute right-3 top-3 sm:right-6 sm:top-6 rounded-xl opacity-70 ring-offset-background transition-all duration-300 hover:opacity-100 hover:bg-glass-light/50 p-1.5 sm:p-2 focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:pointer-events-none touch:p-3">{/* Responsive close button */}
         <X className="h-4 w-4" />
         <span className="sr-only">Close</span>
       </DialogPrimitive.Close>
