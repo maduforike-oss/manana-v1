@@ -252,54 +252,54 @@ export const MarketPage = () => {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-background">
-        {/* Fashion-forward Header */}
-        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border/40">
-          <div className="container mx-auto px-6 py-4">
-            {/* Top bar with refined spacing */}
-            <div className="flex items-center justify-between mb-6">
+      <div className="min-h-screen bg-background modern-scroll">
+        {/* Clean, minimal header */}
+        <div className="sticky top-0 z-40 glass-nav">
+          <div className="container mx-auto px-4 py-3">
+            {/* Simplified top bar */}
+            <div className="flex items-center justify-between mb-4">
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                   Marketplace
                 </h1>
-                <p className="text-sm text-muted-foreground mt-1">Discover unique fashion designs</p>
+                <p className="text-sm text-muted-foreground">Discover unique fashion designs</p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <Button 
                   variant="ghost" 
-                  size="sm"
+                  size="icon"
                   onClick={() => navigate('/cart')}
-                  className="rounded-full h-10 w-10 p-0 hover:bg-primary/10 hover:border-primary/20 border border-transparent transition-all duration-300 relative"
+                  className="relative hover:-translate-y-0.5 transition-all duration-200"
                 >
-                  <ShoppingCart className="h-5 w-5 text-primary" />
+                  <ShoppingCart className="h-4 w-4" />
                   {cart.itemCount > 0 && (
-                    <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs">
+                    <Badge className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center p-0 text-xs">
                       {cart.itemCount}
                     </Badge>
                   )}
                 </Button>
                 <Button 
                   variant="ghost" 
-                  size="sm"
+                  size="icon"
                   onClick={() => navigate('/add-listing')}
-                  className="rounded-full h-10 w-10 p-0 hover:bg-primary/10 hover:border-primary/20 border border-transparent transition-all duration-300"
+                  className="hover:-translate-y-0.5 transition-all duration-200"
                 >
-                  <Plus className="h-5 w-5 text-primary" />
+                  <Plus className="h-4 w-4" />
                 </Button>
                 <Button 
                   variant="ghost" 
-                  size="sm"
+                  size="icon"
                   onClick={handleProfileClick}
-                  className="rounded-full h-10 w-10 p-0 hover:bg-primary/10 hover:border-primary/20 border border-transparent transition-all duration-300"
+                  className="hover:-translate-y-0.5 transition-all duration-200"
                 >
-                  <User className="h-5 w-5 text-primary" />
+                  <User className="h-4 w-4" />
                 </Button>
               </div>
             </div>
 
-            {/* Enhanced Search Bar with Suggestions */}
-            <div className="relative mb-6" ref={searchInputRef}>
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            {/* Clean search bar */}
+            <div className="relative mb-4" ref={searchInputRef}>
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search designs, creators, styles..."
                 value={searchQuery}
@@ -310,12 +310,12 @@ export const MarketPage = () => {
                     handleSearch(searchQuery);
                   }
                 }}
-                className="pl-12 pr-16 h-12 text-base rounded-2xl bg-manana-cream/30 border-border/30 focus:border-primary/50 transition-all duration-300 focus:bg-background/80 focus:shadow-fashion"
+                className="pl-10 pr-20 bg-background/50 border-border/30 focus:bg-background transition-all duration-200"
               />
               <Button 
                 size="sm" 
                 onClick={() => handleSearch(searchQuery)}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-xl h-8 px-4 bg-primary hover:bg-primary/90 transition-all duration-300 shadow-sm"
+                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 px-3 text-xs"
               >
                 Search
               </Button>
@@ -329,8 +329,8 @@ export const MarketPage = () => {
               />
             </div>
 
-            {/* Elegant Tab Navigation */}
-            <div className="flex items-center gap-1 bg-muted/30 rounded-2xl p-1 w-fit">
+            {/* Minimal tab navigation */}
+            <div className="flex items-center gap-1 bg-muted/30 rounded-lg p-1 w-fit">
               {[
                 { key: 'for-you', label: 'For You', icon: Sparkles },
                 { key: 'deals', label: 'Deals', icon: Star },
@@ -342,14 +342,14 @@ export const MarketPage = () => {
                   variant="ghost"
                   size="sm"
                   className={cn(
-                    "rounded-xl h-9 px-4 text-sm font-medium transition-all duration-300 flex items-center gap-2",
+                    "rounded-md h-8 px-3 text-xs font-medium transition-all duration-200 flex items-center gap-1.5",
                     activeTab === key 
-                      ? "bg-primary text-primary-foreground shadow-sm" 
-                      : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+                      ? "bg-primary text-primary-foreground shadow-sm -translate-y-0.5" 
+                      : "text-muted-foreground hover:text-foreground hover:bg-background/50 hover:-translate-y-0.5"
                   )}
                   onClick={() => setActiveTab(key)}
                 >
-                  <Icon className="h-4 w-4" />
+                  <Icon className="h-3 w-3" />
                   {label}
                 </Button>
               ))}
@@ -357,16 +357,16 @@ export const MarketPage = () => {
           </div>
         </div>
 
-        <div className="container mx-auto px-6 py-6 max-h-[calc(100vh-14rem)] overflow-y-auto scrollbar-hide">
-          {/* Refined Category Pills */}
-          <div className="flex items-center gap-3 mb-8 overflow-x-auto scrollbar-hide pb-2">
+        <div className="container mx-auto px-4 py-4 max-h-[calc(100vh-12rem)] overflow-y-auto modern-scroll">
+          {/* Clean category filters */}
+          <div className="flex items-center gap-2 mb-6 overflow-x-auto modern-scroll pb-2">
             <Button
               variant={activeFilterPreset === null ? "default" : "outline"}
               size="sm"
               onClick={() => clearAllFilters()}
-              className="h-9 px-4 text-sm rounded-full whitespace-nowrap bg-primary hover:bg-primary/90"
+              className="h-8 px-3 text-xs rounded-full whitespace-nowrap"
             >
-              All Categories
+              All
             </Button>
             {Object.keys(FILTER_PRESETS).map((presetName) => (
               <Button
@@ -374,12 +374,7 @@ export const MarketPage = () => {
                 variant={activeFilterPreset === presetName ? "default" : "outline"}
                 size="sm"
                 onClick={() => applyFilterPreset(presetName)}
-                className={cn(
-                  "h-9 px-4 text-sm rounded-full whitespace-nowrap transition-all duration-300",
-                  activeFilterPreset === presetName
-                    ? "bg-primary hover:bg-primary/90"
-                    : "border-border/40 hover:border-primary/30 hover:bg-primary/5"
-                )}
+                className="h-8 px-3 text-xs rounded-full whitespace-nowrap"
               >
                 {presetName}
               </Button>
@@ -389,14 +384,14 @@ export const MarketPage = () => {
               size="sm"
               onClick={() => setShowFilters(true)}
               className={cn(
-                "h-9 px-4 text-sm rounded-full whitespace-nowrap border-border/40 hover:border-primary/30 hover:bg-primary/5 relative",
-                activeFiltersCount > 0 && "border-primary bg-primary/10 text-primary"
+                "h-8 px-3 text-xs rounded-full whitespace-nowrap relative",
+                activeFiltersCount > 0 && "border-primary bg-primary/5 text-primary"
               )}
             >
-              <Filter className="h-4 w-4 mr-2" />
+              <Filter className="h-3 w-3 mr-1.5" />
               Filters
               {activeFiltersCount > 0 && (
-                <Badge variant="secondary" className="ml-2 bg-primary text-primary-foreground text-xs h-5 px-2">
+                <Badge variant="secondary" className="ml-1.5 bg-primary text-primary-foreground text-xs h-4 px-1.5">
                   {activeFiltersCount}
                 </Badge>
               )}

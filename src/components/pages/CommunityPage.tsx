@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
+import { cn } from '@/lib/utils';
 
 export const CommunityPage = () => {
   const { toast } = useToast();
@@ -102,19 +103,19 @@ export const CommunityPage = () => {
   };
 
   return (
-    <div className="h-full bg-background overflow-auto">
-      <div className="container mx-auto py-6 px-4 max-w-2xl">
-        {/* Header */}
+    <div className="h-full bg-background overflow-auto modern-scroll">
+      <div className="container mx-auto py-4 px-4 max-w-2xl">
+        {/* Minimal header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">Community</h1>
-          <p className="text-muted-foreground">Connect with designers and share your creativity</p>
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">Community</h1>
+          <p className="text-muted-foreground text-sm">Connect with designers and share your creativity</p>
         </div>
 
-        {/* Create Post */}
-        <Card className="p-4 mb-6">
+        {/* Clean post creation */}
+        <Card className="p-4 mb-6 animate-fade-in">
           <div className="flex gap-3">
-            <Avatar>
-              <AvatarFallback className="bg-gradient-to-r from-primary to-secondary text-white">
+            <Avatar className="w-8 h-8">
+              <AvatarFallback className="bg-gradient-to-r from-primary/20 to-secondary/20 text-xs">
                 You
               </AvatarFallback>
             </Avatar>
@@ -123,13 +124,14 @@ export const CommunityPage = () => {
                 value={postContent}
                 onChange={(e) => setPostContent(e.target.value)}
                 placeholder="Share your latest design or ask for feedback..."
-                className="w-full h-20 p-3 border border-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full h-16 p-3 border border-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all duration-200 text-sm"
               />
               <div className="flex justify-end">
                 <Button 
                   onClick={handleCreatePost}
                   disabled={!postContent.trim()}
                   size="sm"
+                  className="h-8 px-4 text-xs"
                 >
                   Post
                 </Button>
@@ -138,72 +140,75 @@ export const CommunityPage = () => {
           </div>
         </Card>
 
-        {/* Posts Feed */}
-        <div className="space-y-6">
-          {mockPosts.map((post) => (
-            <Card key={post.id} onClick={() => handlePostClick(post.id)} className="p-6 cursor-pointer hover:shadow-md transition-shadow">
+        {/* Clean posts feed */}
+        <div className="space-y-4">
+          {mockPosts.map((post, index) => (
+            <Card key={post.id} onClick={() => handlePostClick(post.id)} className="p-4 cursor-pointer hover:shadow-md transition-all duration-200 animate-fade-in" style={{ animationDelay: `${index * 100}ms` }}>
               {/* Post Header */}
-              <div className="flex items-center gap-3 mb-4">
-                <Avatar>
+              <div className="flex items-center gap-3 mb-3">
+                <Avatar className="w-8 h-8">
                   {post.user?.avatar ? (
                     <img src={post.user.avatar} alt={post.user.name} />
                   ) : (
-                    <AvatarFallback className="bg-gradient-to-r from-primary/20 to-secondary/20">
+                    <AvatarFallback className="bg-gradient-to-r from-primary/10 to-secondary/10 text-xs">
                       {post.user?.name?.split(' ').map(n => n[0]).join('') || 'U'}
                     </AvatarFallback>
                   )}
                 </Avatar>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <h4 className="font-semibold">{post.user?.name || 'Anonymous'}</h4>
+                    <h4 className="font-medium text-sm">{post.user?.name || 'Anonymous'}</h4>
                     {post.trending && (
-                      <Badge className="bg-gradient-to-r from-primary to-secondary text-white">
+                      <Badge className="bg-gradient-to-r from-primary to-secondary text-white text-xs px-2 py-0.5">
                         <TrendingUp className="w-3 h-3 mr-1" />
                         Trending
                       </Badge>
                     )}
                   </div>
-                  <p className="text-sm text-muted-foreground">{formatTimeAgo(post.createdAt)}</p>
+                  <p className="text-xs text-muted-foreground">{formatTimeAgo(post.createdAt)}</p>
                 </div>
               </div>
 
               {/* Post Content */}
-              <p className="mb-4">{post.content}</p>
+              <p className="mb-3 text-sm">{post.content}</p>
 
               {/* Post Image */}
               {post.image && (
-                <div className="mb-4 aspect-video bg-gradient-to-br from-primary/10 to-secondary/10 rounded-lg flex items-center justify-center">
-                  <div className="w-24 h-24 bg-gradient-to-r from-primary to-secondary rounded-lg opacity-50" />
+                <div className="mb-3 aspect-video bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg flex items-center justify-center content-frame">
+                  <div className="w-16 h-16 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-lg" />
                 </div>
               )}
 
               {/* Post Actions */}
-              <div className="flex items-center gap-4 pt-4 border-t border-border">
+              <div className="flex items-center gap-4 pt-3 border-t border-border/50">
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={(e) => { e.stopPropagation(); handleLikePost(post.id); }}
-                  className={`flex items-center gap-2 ${post.isLiked ? 'text-red-500' : ''}`}
+                  className={cn(
+                    "flex items-center gap-1.5 text-xs h-8 px-2 hover:-translate-y-0.5 transition-all duration-200",
+                    post.isLiked ? 'text-red-500 feedback-bounce' : ''
+                  )}
                 >
-                  <Heart className={`w-4 h-4 ${post.isLiked ? 'fill-current' : ''}`} />
+                  <Heart className={cn("w-3 h-3", post.isLiked ? 'fill-current' : '')} />
                   {post.likes}
                 </Button>
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={(e) => { e.stopPropagation(); handleCommentPost(post.id); }}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-1.5 text-xs h-8 px-2 hover:-translate-y-0.5 transition-all duration-200"
                 >
-                  <MessageCircle className="w-4 h-4" />
+                  <MessageCircle className="w-3 h-3" />
                   {post.comments}
                 </Button>
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={(e) => { e.stopPropagation(); handleSharePost(post.id); }}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-1.5 text-xs h-8 px-2 hover:-translate-y-0.5 transition-all duration-200"
                 >
-                  <Share2 className="w-4 h-4" />
+                  <Share2 className="w-3 h-3" />
                   Share
                 </Button>
               </div>
@@ -212,8 +217,8 @@ export const CommunityPage = () => {
         </div>
 
         {/* Load More */}
-        <div className="text-center mt-8">
-          <Button variant="outline" size="lg" onClick={handleLoadMore}>
+        <div className="text-center mt-6">
+          <Button variant="outline" onClick={handleLoadMore} className="hover:-translate-y-0.5 transition-all duration-200">
             Load More Posts
           </Button>
         </div>
