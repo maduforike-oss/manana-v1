@@ -89,7 +89,9 @@ export function MarketPage() {
       return;
     }
     
-    window.location.href = `/studio/editor?design=${design.id}`;
+    // Use proper navigation instead of window.location.href
+    window.history.pushState({}, '', `/studio/editor?design=${design.id}`);
+    window.dispatchEvent(new PopStateEvent('popstate'));
   };
 
   const handleSaveDesign = (designId: string) => {

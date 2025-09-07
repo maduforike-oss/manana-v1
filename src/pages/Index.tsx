@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import { StudioPage } from '@/components/pages/StudioPage';
@@ -6,10 +6,20 @@ import { MarketPage } from '@/components/pages/MarketPage';
 import { CommunityPage } from '@/components/pages/CommunityPage';
 import { OrdersPage } from '@/components/pages/OrdersPage';
 import { ProfilePage } from '@/components/pages/ProfilePage';
+import { SkipToContent } from '@/components/SkipToContent';
+import { OnboardingWalkthrough } from '@/components/OnboardingWalkthrough';
+import { useRouteSync } from '@/hooks/useNavigation';
+import { useAccessibilityAnnouncer } from '@/components/AccessibilityAnnouncer';
 
 
 const Index = () => {
   const { activeTab, setUser } = useAppStore();
+  const scrollPositions = useRef<Record<string, number>>({});
+  const mainContentRef = useRef<HTMLDivElement>(null);
+  const { announcer, announce } = useAccessibilityAnnouncer();
+  
+  // Sync navigation with routes
+  useRouteSync();
 
   // Initialize mock user for demo
   useEffect(() => {
@@ -34,6 +44,37 @@ const Index = () => {
     });
   }, [setUser]);
 
+  // Save scroll position when switching tabs
+  useEffect(() => {
+    return () => {
+      if (mainContentRef.current) {
+        scrollPositions.current[activeTab] = mainContentRef.current.scrollTop;
+      }
+    };
+  }, [activeTab]);
+
+  // Restore scroll position when tab changes
+  useEffect(() => {
+    if (mainContentRef.current) {
+      const savedPosition = scrollPositions.current[activeTab] || 0;
+      setTimeout(() => {
+        if (mainContentRef.current) {
+          mainContentRef.current.scrollTop = savedPosition;
+        }
+      }, 100);
+    }
+    
+    // Announce page change for screen readers
+    const tabLabels = {
+      market: 'Marketplace',
+      community: 'Community',
+      studio: 'Design Studio', 
+      orders: 'Orders',
+      profile: 'Profile'
+    };
+    announce(`Navigated to ${tabLabels[activeTab]}`);
+  }, [activeTab, announce]);
+
   const renderPage = () => {
     switch (activeTab) {
       case 'market':
@@ -52,10 +93,22 @@ const Index = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen">
-      <div className="flex-1 overflow-hidden">
+    <div className="flex flex-col h-screen bg-background text-foreground">
+      <SkipToContent />
+      <OnboardingWalkthrough />
+      {announcer}
+      
+      <div 
+        className="flex-1 overflow-hidden"
+        ref={mainContentRef}
+        id="main-content"
+        tabIndex={-1}
+        role="main"
+        aria-label="Main content"
+      >
         {renderPage()}
       </div>
+      
       <BottomNavigation />
     </div>
   );

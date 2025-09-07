@@ -3,6 +3,8 @@ import { cn } from '@/lib/utils';
 import { ShoppingCart, Users, Palette, User, Store } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 
 const tabs = [
   { id: 'market' as const, label: 'Market', icon: Store },
@@ -14,15 +16,38 @@ const tabs = [
 
 export const BottomNavigation = () => {
   const { activeTab, setActiveTab } = useAppStore();
+  const location = useLocation();
+
+  // Sync tab highlighting with current route
+  useEffect(() => {
+    const path = location.pathname;
+    if (path.startsWith('/studio')) {
+      setActiveTab('studio');
+    } else if (path.startsWith('/profile')) {
+      setActiveTab('profile');
+    } else if (path.startsWith('/orders')) {
+      setActiveTab('orders');
+    } else if (path.startsWith('/community')) {
+      setActiveTab('community');
+    } else if (path === '/' && activeTab === 'studio') {
+      // Keep current tab when on root
+    } else if (path === '/') {
+      setActiveTab('market');
+    }
+  }, [location.pathname, setActiveTab]);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 glass-nav border-t border-border/10 safe-area-pb">
+    <nav 
+      className="fixed bottom-0 left-0 right-0 z-50 glass-nav border-t border-border/10 safe-area-pb"
+      role="navigation"
+      aria-label="Main navigation"
+    >
       <div className="px-4 py-2 pb-safe">
         <div className="flex items-center justify-around max-w-md mx-auto">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             const Icon = tab.icon;
-            const showBadge = false; // TODO: Add cart functionality
+            const showBadge = tab.id === 'orders' ? true : false; // TODO: Add cart functionality
 
             return (
               <button
@@ -30,12 +55,14 @@ export const BottomNavigation = () => {
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
                   "flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all duration-200 min-w-[60px] min-h-[50px] relative group",
-                  "hover:bg-muted/20 active:scale-95",
+                  "hover:bg-muted/20 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background",
                   isActive 
                     ? "text-primary" 
                     : "text-muted-foreground hover:text-foreground"
                 )}
                 aria-label={`Navigate to ${tab.label}`}
+                aria-current={isActive ? 'page' : undefined}
+                data-tab={tab.id}
               >
                 {/* Clean indicator for active state */}
                 {isActive && (
@@ -43,15 +70,19 @@ export const BottomNavigation = () => {
                 )}
                 
                 <div className="relative">
-                  <Icon className={cn(
-                    "w-5 h-5 transition-all duration-200",
-                    isActive && "scale-110"
-                  )} />
+                  <Icon 
+                    className={cn(
+                      "w-6 h-6 transition-all duration-200", // Increased from w-5 h-5 for better tap targets
+                      isActive && "scale-110"
+                    )} 
+                    aria-hidden="true"
+                  />
                   {showBadge && (
                     <Badge 
-                      className="absolute -top-1 -right-1 min-w-[16px] h-[16px] text-xs p-0 flex items-center justify-center bg-primary text-primary-foreground border border-background rounded-full"
+                      className="absolute -top-1 -right-1 min-w-[18px] h-[18px] text-xs p-0 flex items-center justify-center bg-destructive text-destructive-foreground border border-background rounded-full"
+                      aria-label="2 items"
                     >
-                      0
+                      2
                     </Badge>
                   )}
                 </div>
