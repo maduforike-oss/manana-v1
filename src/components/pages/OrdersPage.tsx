@@ -2,6 +2,7 @@ import { Package, Truck, CheckCircle, Clock, Calendar, ShoppingBag, Palette } fr
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Heading } from '@/components/ui/heading';
 import { useToast } from '@/hooks/use-toast';
 import { useAppStore } from '@/store/useAppStore';
 
@@ -89,9 +90,9 @@ export const OrdersPage = () => {
                 <Package className="w-8 h-8 text-primary" />
               </div>
               <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
+                <Heading as="h1" size="h1" variant="gradient">
                   Your Orders ✨
-                </h1>
+                </Heading>
                 <p className="text-muted-foreground text-lg">Track your creative journey & custom pieces</p>
               </div>
             </div>
@@ -123,9 +124,9 @@ export const OrdersPage = () => {
                         <div className="p-2 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-lg">
                           <Package className="w-5 h-5 text-primary" />
                         </div>
-                        <h3 className="font-bold text-xl bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+                        <Heading as="h3" size="h4" variant="default">
                           {order.design}
-                        </h3>
+                        </Heading>
                         <Badge 
                           variant={getStatusVariant(order.status)} 
                           className="flex items-center gap-1 px-3 py-1 rounded-full shadow-sm"
@@ -263,9 +264,9 @@ export const OrdersPage = () => {
                 <div className="p-4 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-xl w-fit mx-auto mb-6">
                   <Package className="w-12 h-12 text-primary" />
                 </div>
-                <h3 className="text-2xl font-bold mb-3 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                <Heading as="h3" size="h2" variant="gradient">
                   Your creative journey starts here! ✨
-                </h3>
+                </Heading>
                 <p className="text-muted-foreground mb-8 text-lg max-w-md mx-auto">
                   Ready to bring your ideas to life? Create your first custom design and watch the magic happen!
                 </p>

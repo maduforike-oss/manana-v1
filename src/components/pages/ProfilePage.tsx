@@ -95,7 +95,7 @@ export const ProfilePage = () => {
               </Avatar>
               
               <div className="flex-1 min-w-0">
-                <h1 className="text-xl sm:text-2xl font-bold truncate">{mockUser.name}</h1>
+                <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent truncate">{mockUser.name}</h1>
                 <p className="text-muted-foreground text-sm sm:text-base truncate">{mockUser.email}</p>
               </div>
             </div>

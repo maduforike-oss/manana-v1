@@ -9,12 +9,11 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "btn-primary rounded-xl shadow-brand hover:shadow-floating hover:scale-[1.02] active:scale-[0.98]",
-        secondary: "btn-secondary rounded-xl shadow-secondary hover:shadow-floating hover:scale-[1.02] active:scale-[0.98]",
-        glass: "btn-glass rounded-xl hover:scale-[1.02] active:scale-[0.98]",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl shadow-subtle hover:shadow-elevated hover:scale-[1.02] active:scale-[0.98]",
-        outline: "border-2 border-glass-border/40 bg-glass-light/50 backdrop-blur-md hover:bg-glass-medium hover:border-primary/30 text-foreground rounded-xl hover:scale-[1.02] active:scale-[0.98]",
-        ghost: "hover:bg-glass-light/60 hover:text-foreground rounded-xl hover:scale-[1.02] active:scale-[0.98]",
+        default: "bg-gradient-to-r from-primary to-secondary text-primary-foreground rounded-xl shadow-primary hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]",
+        secondary: "bg-secondary text-secondary-foreground rounded-xl shadow-secondary hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]",
+        outline: "border-2 border-border bg-background hover:bg-muted hover:border-primary/30 text-foreground rounded-xl hover:scale-[1.02] active:scale-[0.98]",
+        ghost: "hover:bg-primary/10 hover:text-primary rounded-xl hover:scale-[1.02] active:scale-[0.98]",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {

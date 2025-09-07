@@ -124,23 +124,15 @@ export default {
 				'lg': 'var(--radius-lg)',
 				'xl': 'var(--radius-xl)',
 				'2xl': 'var(--radius-2xl)',
-				'3xl': 'var(--radius-3xl)',
-				'4xl': 'var(--radius-4xl)',
-				'full': 'var(--radius-full)'
 			},
 			spacing: {
-				'xs': '0.25rem',
-				'sm': '0.5rem',
-				'md': '1rem',
-				'lg': '1.5rem',
-				'xl': '2rem',
-				'2xl': '3rem',
-				'3xl': '4rem',
-				'4xl': '6rem',
-				'5xl': '8rem',
-				'6xl': '10rem',
-				'7xl': '12rem',
-				'8xl': '16rem'
+				'xs': 'var(--spacing-xs)',
+				'sm': 'var(--spacing-sm)',
+				'md': 'var(--spacing-md)',
+				'lg': 'var(--spacing-lg)',
+				'xl': 'var(--spacing-xl)',
+				'2xl': 'var(--spacing-2xl)',
+				'3xl': 'var(--spacing-3xl)',
 			},
 			backdropBlur: {
 				'xs': '2px',
@@ -198,13 +190,15 @@ export default {
 				'rotate-gradient': 'rotate-gradient 8s ease-in-out infinite'
 			},
 			boxShadow: {
-				'glass': 'var(--shadow-glass)',
-				'brand': 'var(--shadow-brand)',
+				'sm': 'var(--shadow-sm)',
+				DEFAULT: 'var(--shadow-md)',
+				'md': 'var(--shadow-md)',
+				'lg': 'var(--shadow-lg)',
+				'xl': 'var(--shadow-xl)',
+				'primary': 'var(--shadow-primary)',
 				'secondary': 'var(--shadow-secondary)',
-				'subtle': 'var(--shadow-subtle)',
-				'elevated': 'var(--shadow-elevated)',
-				'floating': 'var(--shadow-floating)',
-				'modal': 'var(--shadow-modal)'
+				'glow': 'var(--shadow-glow)',
+				'fashion': 'var(--shadow-fashion)'
 			},
 			transitionTimingFunction: {
 				'bounce': 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',

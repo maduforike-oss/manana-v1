@@ -1,8 +1,7 @@
-import { Store, Users, Palette, Package, User, ShoppingCart } from 'lucide-react';
+import { Store, Users, Palette, User, ShoppingCart } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { useEffect } from 'react';
 import { useCart } from '@/hooks/useCart';
 import { Badge } from '@/components/ui/badge';
 
@@ -47,7 +46,7 @@ export const BottomNavigation = () => {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border backdrop-blur-lg">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 border-t border-border backdrop-blur-xl">
       <div className="flex items-center justify-around py-2 px-4 max-w-md mx-auto">
         {/* Market */}
         <button

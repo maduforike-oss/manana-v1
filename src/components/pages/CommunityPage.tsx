@@ -106,7 +106,7 @@ export const CommunityPage = () => {
       <div className="container mx-auto py-6 px-4 max-w-2xl">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Community</h1>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">Community</h1>
           <p className="text-muted-foreground">Connect with designers and share your creativity</p>
         </div>
 
