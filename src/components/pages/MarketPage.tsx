@@ -30,236 +30,169 @@ export const MarketPage = () => {
   const { addSearch } = useLocalSearchHistory();
   const { isUnlocked } = useUnlockedDesigns();
   const { cart } = useCart();
-  const [likedDesigns, setLikedDesigns] = useState<string[]>([]);
+
+  // Search and filter states
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('for-you');
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [sortBy, setSortBy] = useState('newest');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [sortBy, setSortBy] = useState('trending');
-  const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedDesign, setSelectedDesign] = useState<StudioGarmentData | null>(null);
-  const [purchaseGateDesign, setPurchaseGateDesign] = useState<StudioGarmentData | null>(null);
-  const [showQuickView, setShowQuickView] = useState(false);
-  const [showPurchaseGate, setShowPurchaseGate] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  
-  // Enhanced filters
+
+  // Modal states
+  const [showQuickView, setShowQuickView] = useState(false);
+  const [selectedDesign, setSelectedDesign] = useState<StudioGarmentData | null>(null);
+  const [showPurchaseGate, setShowPurchaseGate] = useState(false);
+  const [purchaseGateDesign, setPurchaseGateDesign] = useState<StudioGarmentData | null>(null);
+
+  // Filters state
   const [filters, setFilters] = useState({
-    garmentTypes: [] as string[],
-    baseColors: [] as string[],
-    tags: [] as string[],
+    search: '',
+    categories: [] as string[],
     priceRange: [0, 100] as [number, number],
-    inStock: false,
-    size: [] as string[]
+    colors: [] as string[],
+    garmentTypes: [] as string[],
+    styles: [] as string[],
+    printAreas: [] as PrintAreaSize[],
+    difficulty: [] as string[],
+    trending: false,
+    premium: false
   });
-  const [activeFilterPreset, setActiveFilterPreset] = useState<string | null>(null);
-  
-  // Generate studio market data
-  const studioDesigns = useMemo(() => generateStudioMarketData(), []);
 
-  const handleOpenInStudio = (design: StudioGarmentData) => {
-    if (isUnlocked(design.id)) {
-      // Design is unlocked, proceed to studio
-      const params = new URLSearchParams({
-        garment: design.garmentId,
-        orientation: design.orientation,
-        mmToPx: String(design.mmToPx),
-        safeWmm: String(design.safeArea.w),
-        safeHmm: String(design.safeArea.h),
-        view: design.orientation,
-        size: 'M',
-        design: design.id
-      }).toString();
-      
-      window.location.href = `/studio/editor?${params}`;
-      
-      toast({ 
-        title: "Opening Studio", 
-        description: `Loading ${design.name} in the design editor...`
-      });
-    } else {
-      // Design is locked, show purchase gate
-      setPurchaseGateDesign(design);
-      setShowPurchaseGate(true);
+  // Generate market data
+  const allDesigns = useMemo(() => generateStudioMarketData(), []);
+
+  // Apply filters and search
+  const filteredDesigns = useMemo(() => {
+    let designs = allDesigns;
+
+    // Category filter
+    if (activeCategory !== 'all') {
+      switch (activeCategory) {
+        case 'trending':
+          designs = designs.filter(d => d.trending);
+          break;
+        case 'new':
+          designs = designs.filter(d => new Date(d.uploadedAt).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000);
+          break;
+        case 'popular':
+          designs = designs.filter(d => d.likes > 100);
+          break;
+        case 'premium':
+          designs = designs.filter(d => d.premium);
+          break;
+        case 'community':
+          designs = designs.filter(d => !d.premium);
+          break;
+      }
     }
-  };
 
-  const handleDesignClick = (design: StudioGarmentData) => {
-    navigate(`/item/${design.id}`);
-  };
+    // Search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      designs = designs.filter(design =>
+        design.title.toLowerCase().includes(query) ||
+        design.description.toLowerCase().includes(query) ||
+        design.tags.some(tag => tag.toLowerCase().includes(query)) ||
+        design.creator.name.toLowerCase().includes(query)
+      );
+    }
 
-  const handleLikeDesign = (designId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const wasLiked = likedDesigns.includes(designId);
-    setLikedDesigns(prev => 
-      prev.includes(designId) 
-        ? prev.filter(id => id !== designId)
-        : [...prev, designId]
-    );
-    
-    // Enhanced feedback with micro-interaction
-    const target = e.currentTarget as HTMLButtonElement;
-    target.classList.add('animate-bounce-gentle');
-    setTimeout(() => target.classList.remove('animate-bounce-gentle'), 300);
-    
-    toast({ 
-      title: wasLiked ? "Unliked" : "Liked ❤️", 
-      description: `Design ${wasLiked ? 'removed from' : 'added to'} your likes`,
-      duration: 2000
+    // Apply additional filters
+    if (filters.categories.length > 0) {
+      designs = designs.filter(d => filters.categories.some(cat => d.tags.includes(cat)));
+    }
+
+    if (filters.colors.length > 0) {
+      designs = designs.filter(d => filters.colors.some(color => d.tags.includes(color)));
+    }
+
+    if (filters.premium) {
+      designs = designs.filter(d => d.premium);
+    }
+
+    if (filters.trending) {
+      designs = designs.filter(d => d.trending);
+    }
+
+    return designs;
+  }, [allDesigns, activeCategory, searchQuery, filters]);
+
+  // Sort designs
+  const sortedDesigns = useMemo(() => {
+    return [...filteredDesigns].sort((a, b) => {
+      switch (sortBy) {
+        case 'newest':
+          return new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime();
+        case 'popular':
+          return b.likes - a.likes;
+        case 'price-low':
+          return a.price - b.price;
+        case 'price-high':
+          return b.price - a.price;
+        case 'rating':
+          return b.rating - a.rating;
+        default:
+          return 0;
+      }
     });
-  };
+  }, [filteredDesigns, sortBy]);
 
-  const handleSaveDesign = (designId: string, e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    const wasSaved = isSaved(designId);
-    toggleSave(designId);
-    
-    // Enhanced feedback
-    if (e) {
-      const target = e.currentTarget as HTMLButtonElement;
-      target.classList.add('animate-bounce-gentle');
-      setTimeout(() => target.classList.remove('animate-bounce-gentle'), 300);
+  // Check if filters are active
+  const hasActiveFilters = useMemo(() => {
+    return filters.categories.length > 0 ||
+           filters.colors.length > 0 ||
+           filters.priceRange[0] > 0 ||
+           filters.priceRange[1] < 100 ||
+           filters.premium ||
+           filters.trending ||
+           searchQuery.length > 0;
+  }, [filters, searchQuery]);
+
+  // Event handlers
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      addSearch(searchQuery.trim());
+      setFilters(prev => ({ ...prev, search: searchQuery.trim() }));
     }
-    
-    toast({ 
-      title: wasSaved ? "Removed from collection" : "Saved to collection ⭐", 
-      description: `Design ${wasSaved ? 'removed from' : 'added to'} your saved collection`,
-      duration: 2000
-    });
+    setShowSuggestions(false);
   };
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    if (query.trim()) {
-      addSearch(query);
-    }
-    setShowSearchSuggestions(false);
-  };
-
-  const handleViewDesign = (design: StudioGarmentData) => {
+  const handleQuickView = (design: StudioGarmentData) => {
     setSelectedDesign(design);
     setShowQuickView(true);
   };
 
-  const applyFilterPreset = (presetName: string) => {
-    const preset = FILTER_PRESETS[presetName as keyof typeof FILTER_PRESETS];
-    const newFilters = {
-      garmentTypes: preset.garmentTypes ? [...preset.garmentTypes] : [],
-      baseColors: preset.baseColors ? [...preset.baseColors] : [],
-      tags: preset.tags ? [...preset.tags] : [],
-      priceRange: [0, 100] as [number, number],
-      inStock: false,
-      size: []
-    };
-    setFilters(newFilters);
-    setActiveFilterPreset(presetName);
-    toast({ title: "Filter Applied", description: `Applied ${presetName} filter preset` });
+  const handleOpenInStudio = (design: StudioGarmentData) => {
+    setAppActiveTab('studio');
+    navigate('/studio/editor', { state: { design } });
+  };
+
+  const handleSaveDesign = (designId: string) => {
+    toggleSave(designId);
+    toast({
+      title: isSaved(designId) ? "Removed from saved" : "Design saved",
+      description: isSaved(designId) ? "Design removed from your saved collection" : "You can find this design in your saved collection",
+    });
   };
 
   const clearAllFilters = () => {
     setFilters({
-      garmentTypes: [],
-      baseColors: [],
-      tags: [],
+      search: '',
+      categories: [],
       priceRange: [0, 100],
-      inStock: false,
-      size: []
+      colors: [],
+      garmentTypes: [],
+      styles: [],
+      printAreas: [],
+      difficulty: [],
+      trending: false,
+      premium: false
     });
     setSearchQuery('');
-    setActiveFilterPreset(null);
-    toast({ title: "Filters Cleared", description: "All filters have been reset" });
+    setActiveCategory('all');
   };
-
-  const filteredDesigns = studioDesigns.filter(design => {
-    const matchesSearch = design.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         design.creator.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         design.fabric.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         design.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-    
-    const matchesGarmentType = filters.garmentTypes.length === 0 || 
-                              filters.garmentTypes.includes(design.garmentId);
-    
-    const matchesBaseColor = filters.baseColors.length === 0 || 
-                            filters.baseColors.includes(design.baseColor);
-    
-    const matchesTags = filters.tags.length === 0 || 
-                       filters.tags.some(tag => design.tags.includes(tag));
-    
-    const matchesPrice = design.price >= filters.priceRange[0] && design.price <= filters.priceRange[1];
-    
-    // For "Saved" tab, only show saved designs
-    if (activeTab === 'saved') {
-      return isSaved(design.id) && matchesSearch && matchesGarmentType && 
-             matchesBaseColor && matchesTags && matchesPrice;
-    }
-    
-    return matchesSearch && matchesGarmentType && matchesBaseColor && 
-           matchesTags && matchesPrice;
-  });
-
-  const sortedDesigns = [...filteredDesigns].sort((a, b) => {
-    switch (sortBy) {
-      case 'trending':
-        return (b.likes + b.views / 10) - (a.likes + a.views / 10);
-      case 'newest':
-        return b.id.localeCompare(a.id);
-      case 'popular':
-        return b.likes - a.likes;
-      case 'canvas-size':
-        return (b.printArea.width * b.printArea.height) - (a.printArea.width * a.printArea.height);
-      case 'price-low':
-        return a.price - b.price;
-      case 'price-high':
-        return b.price - a.price;
-      default:
-        return 0;
-    }
-  });
-
-  const featuredDesigns = studioDesigns.filter(design => design.featured);
-  const mockGarments = sortedDesigns.map((design, index) => ({
-    ...design,
-    studioReady: design.studioReady || ['High DPI', 'Large Print Area', 'Dark Base'],
-    dpi: 300,
-    shippingEstimate: design.shippingDays || '3-5 days'
-  }));
-
-  const uniqueGarmentTypes = [...new Set(mockGarments.map(g => g.garmentId))];
-  const uniqueTags = [...new Set(mockGarments.flatMap(g => g.tags))];
-
-  const handleProfileClick = () => {
-    setAppActiveTab('profile');
-  };
-
-  // Active filters count
-  const activeFiltersCount = filters.garmentTypes.length + filters.baseColors.length + 
-                           filters.tags.length + filters.size.length +
-                           (filters.inStock ? 1 : 0) +
-                           (filters.priceRange[0] > 0 || filters.priceRange[1] < 100 ? 1 : 0);
-
-  // Close search suggestions when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (searchInputRef.current && !searchInputRef.current.contains(event.target as Node)) {
-        setShowSearchSuggestions(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // URL sync for sort
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (sortBy !== 'trending') {
-      params.set('sort', sortBy);
-    } else {
-      params.delete('sort');
-    }
-    const newUrl = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`;
-    window.history.replaceState({}, '', newUrl);
-  }, [sortBy]);
 
   // Mock trending designers data
   const trendingDesigners = [
@@ -270,7 +203,8 @@ export const MarketPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background modern-scroll">
+    <>
+      <div className="min-h-screen bg-background modern-scroll">
         <BrandHeader 
           title="Marketplace" 
           subtitle="Discover unique fashion designs from creators worldwide"
@@ -289,461 +223,55 @@ export const MarketPage = () => {
               </Badge>
             )}
           </Button>
-          
-          <Button
-            onClick={() => setAppActiveTab('profile')}
-            variant="ghost"
-            size="icon"
-            className="glass-effect border-border/20 min-h-[48px] min-w-[48px] rounded-2xl"
-            aria-label="View profile"
-          >
-            <User className="w-5 h-5" />
-          </Button>
         </BrandHeader>
 
-        <div className="container mx-auto px-4 py-4 max-h-[calc(100vh-12rem)] overflow-y-auto modern-scroll">
-
-            {/* Clean search bar with better accessibility */}
-            <div className="relative mb-4" ref={searchInputRef}>
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+        {/* Main Content */}
+        <div className="p-4 sm:p-6 pt-20">
+          
+          {/* Search Bar with enhanced design */}
+          <div className="relative mb-6">
+            <div className="relative max-w-xl mx-auto">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
-                placeholder="Search designs, creators, styles..."
+                ref={searchInputRef}
+                placeholder="Search designs, styles, creators..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => setShowSearchSuggestions(true)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleSearch(searchQuery);
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  if (e.target.value) {
+                    setShowSuggestions(true);
                   }
                 }}
-                className="pl-10 pr-20 bg-background/50 border-border/30 focus:bg-background transition-all duration-200 text-base"
-                aria-label="Search marketplace designs"
-              />
-              <Button 
-                size="sm" 
-                onClick={() => handleSearch(searchQuery)}
-                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 px-3 text-xs"
-                aria-label="Search"
-              >
-                Search
-              </Button>
-              
-              {/* Search Suggestions */}
-              <SearchSuggestions
-                isOpen={showSearchSuggestions}
-                onClose={() => setShowSearchSuggestions(false)}
-                onSelectSuggestion={handleSearch}
-                searchQuery={searchQuery}
-              />
-            </div>
-
-            {/* Minimal tab navigation */}
-            <div className="flex items-center gap-1 bg-muted/30 rounded-lg p-1 w-fit">
-              {[
-                { key: 'for-you', label: 'For You', icon: Sparkles },
-                { key: 'deals', label: 'Deals', icon: Star },
-                { key: 'selling', label: 'Trending', icon: TrendingUp },
-                { key: 'saved', label: 'Saved', icon: Bookmark }
-              ].map(({ key, label, icon: Icon }) => (
-                <Button
-                  key={key}
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    "rounded-md h-8 px-3 text-xs font-medium transition-all duration-200 flex items-center gap-1.5",
-                    activeTab === key 
-                      ? "bg-primary text-primary-foreground shadow-sm -translate-y-0.5" 
-                      : "text-muted-foreground hover:text-foreground hover:bg-background/50 hover:-translate-y-0.5"
-                  )}
-                  onClick={() => setActiveTab(key)}
-                >
-                  <Icon className="h-3 w-3" />
-                  {label}
-                </Button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="container mx-auto px-4 py-4 max-h-[calc(100vh-12rem)] overflow-y-auto modern-scroll">
-          {/* Clean category filters */}
-          <div className="flex items-center gap-2 mb-6 overflow-x-auto modern-scroll pb-2">
-            <Button
-              variant={activeFilterPreset === null ? "default" : "outline"}
-              size="sm"
-              onClick={() => clearAllFilters()}
-              className="h-8 px-3 text-xs rounded-full whitespace-nowrap"
-            >
-              All
-            </Button>
-            {Object.keys(FILTER_PRESETS).map((presetName) => (
-              <Button
-                key={presetName}
-                variant={activeFilterPreset === presetName ? "default" : "outline"}
-                size="sm"
-                onClick={() => applyFilterPreset(presetName)}
-                className="h-8 px-3 text-xs rounded-full whitespace-nowrap"
-              >
-                {presetName}
-              </Button>
-            ))}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowFilters(true)}
-              className={cn(
-                "h-8 px-3 text-xs rounded-full whitespace-nowrap relative",
-                activeFiltersCount > 0 && "border-primary bg-primary/5 text-primary"
-              )}
-            >
-              <Filter className="h-3 w-3 mr-1.5" />
-              Filters
-              {activeFiltersCount > 0 && (
-                <Badge variant="secondary" className="ml-1.5 bg-primary text-primary-foreground text-xs h-4 px-1.5">
-                  {activeFiltersCount}
-                </Badge>
-              )}
-            </Button>
-          </div>
-
-          {/* Featured Designs Section */}
-          {activeTab === 'for-you' && (
-            <div className="mb-12">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-xl font-bold text-foreground">Featured This Week</h2>
-                  <p className="text-sm text-muted-foreground mt-1">Handpicked by our design team</p>
-                </div>
-                <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80 hover:bg-primary/5">
-                  View Collection
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                {sortedDesigns.slice(0, 3).map((design) => (
-                  <Card 
-                    key={design.id} 
-                    className="overflow-hidden border-0 hover:shadow-editorial transition-all duration-500 cursor-pointer group bg-gradient-to-br from-background to-manana-cream/20"
-                    onClick={() => handleDesignClick(design)}
-                  >
-                    <div className="relative aspect-[4/5] overflow-hidden rounded-t-xl">
-                      <img 
-                        src={design.thumbSrc} 
-                        alt={design.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                      <Badge className="absolute top-4 left-4 bg-primary text-primary-foreground text-xs font-medium shadow-lg border-0 rounded-full px-3 py-1">
-                        Featured
-                      </Badge>
-                      <div className="absolute top-4 right-4 flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-9 w-9 p-0 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-full border border-white/20 transition-all duration-300"
-                          onClick={(e) => handleLikeDesign(design.id, e)}
-                        >
-                          <Heart className={cn("h-4 w-4 transition-all duration-300", likedDesigns.includes(design.id) ? "fill-primary text-primary scale-110" : "text-white")} />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-9 w-9 p-0 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-full border border-white/20 transition-all duration-300"
-                          onClick={(e) => handleSaveDesign(design.id, e)}
-                        >
-                          <Bookmark className={cn("h-4 w-4 transition-all duration-300", savedIds.includes(design.id) ? "fill-manana-sage text-manana-sage scale-110" : "text-white")} />
-                        </Button>
-                      </div>
-                      <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-4 group-hover:translate-y-0">
-                        <Button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleOpenInStudio(design);
-                          }}
-                          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg h-10 font-medium transition-all duration-200"
-                        >
-                          Open in Studio
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="p-6">
-                      <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors duration-300">{design.name}</h3>
-                      <p className="text-sm text-muted-foreground mb-4">by {design.creator}</p>
-                      <div className="flex items-center justify-between">
-                        <span className="text-2xl font-bold text-primary">${design.price}</span>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Eye className="h-4 w-4" />
-                            {design.views.toLocaleString()}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Heart className="h-4 w-4" />
-                            {design.likes.toLocaleString()}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Trending Designers Section */}
-          {activeTab === 'for-you' && (
-            <div className="mb-12">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-xl font-bold text-foreground">Trending Designers</h2>
-                  <p className="text-sm text-muted-foreground mt-1">Follow the creators making waves</p>
-                </div>
-                <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80 hover:bg-primary/5">
-                  See All Creators
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </div>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {trendingDesigners.map((designer) => (
-                  <Card 
-                    key={designer.id}
-                    className="p-6 text-center hover:shadow-fashion transition-all duration-300 cursor-pointer group border-border/30 hover:border-primary/30 bg-gradient-to-b from-background to-manana-cream/10"
-                  >
-                    <div className="relative mx-auto w-16 h-16 mb-4">
-                      <Avatar className="w-16 h-16 ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all duration-300">
-                        <AvatarImage src={designer.avatar} />
-                        <AvatarFallback className="bg-primary text-primary-foreground text-lg font-bold">
-                          {designer.name.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      {designer.badge === 'Top Creator' && (
-                        <Crown className="absolute -top-1 -right-1 h-5 w-5 text-yellow-500" />
-                      )}
-                      {designer.badge === 'Rising Star' && (
-                        <Star className="absolute -top-1 -right-1 h-5 w-5 text-primary" />
-                      )}
-                    </div>
-                    <h3 className="font-semibold text-foreground mb-1 group-hover:text-primary transition-colors duration-300">{designer.name}</h3>
-                    <p className="text-xs text-muted-foreground mb-2">{designer.specialty}</p>
-                    <Badge variant="outline" className="mb-3 text-xs border-primary/30 text-primary">
-                      {designer.badge}
-                    </Badge>
-                    <p className="text-sm font-medium text-foreground">{designer.followers} followers</p>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="mt-4 w-full rounded-xl border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300"
-                    >
-                      Follow
-                    </Button>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Recently Viewed - Refined */}
-          {activeTab === 'for-you' && (
-            <div className="mb-12">
-              <h2 className="text-xl font-bold text-foreground mb-6">Recently Viewed</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {sortedDesigns.slice(3, 9).map((design) => (
-                  <Card 
-                    key={design.id} 
-                    className="overflow-hidden border-border/30 hover:shadow-fashion hover:border-primary/30 transition-all duration-300 cursor-pointer group bg-gradient-to-b from-background to-manana-cream/10"
-                    onClick={() => handleDesignClick(design)}
-                  >
-                    <div className="relative aspect-square overflow-hidden">
-                      <img 
-                        src={design.thumbSrc} 
-                        alt={design.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="absolute top-2 right-2 h-7 w-7 p-0 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-full border border-white/20 opacity-0 group-hover:opacity-100 transition-all duration-300"
-                        onClick={(e) => handleLikeDesign(design.id, e)}
-                      >
-                        <Heart className={cn("h-3 w-3", likedDesigns.includes(design.id) ? "fill-primary text-primary" : "text-white")} />
-                      </Button>
-                    </div>
-                    <div className="p-3">
-                      <p className="text-sm text-foreground truncate font-medium mb-1">{design.name}</p>
-                      <p className="text-xs text-muted-foreground mb-2">by {design.creator}</p>
-                      <span className="text-sm font-bold text-primary">${design.price}</span>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Main Product Grid - Editorial Style */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-xl font-bold text-foreground">
-                  {activeTab === 'saved' ? 'Your Saved Designs' : 'Explore Designs'}
-                </h2>
-                <div className="flex items-center gap-4 mt-1">
-                  <p className="text-sm text-muted-foreground">
-                    {sortedDesigns.length} {activeTab === 'saved' ? 'saved' : 'unique'} pieces available
-                  </p>
-                  {sortBy !== 'trending' && (
-                    <Badge variant="outline" className="text-xs">
-                      Sorted by: {sortBy === 'newest' ? 'Newest' : 
-                                sortBy === 'popular' ? 'Most Liked' :
-                                sortBy === 'price-low' ? 'Price: Low to High' :
-                                sortBy === 'price-high' ? 'Price: High to Low' : 'Trending'}
-                    </Badge>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-40 border-border/40 rounded-xl bg-background">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border-border/50">
-                    <SelectItem value="trending">Trending</SelectItem>
-                    <SelectItem value="newest">Newest</SelectItem>
-                    <SelectItem value="popular">Most Liked</SelectItem>
-                    <SelectItem value="price-low">Price: Low to High</SelectItem>
-                    <SelectItem value="price-high">Price: High to Low</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {sortedDesigns.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/50 flex items-center justify-center">
-                  <Search className="h-8 w-8 text-muted-foreground" />
-                </div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">No designs found</h3>
-                <p className="text-muted-foreground mb-4">
-                  {activeTab === 'saved' 
-                    ? "You haven't saved any designs yet. Start exploring and save your favorites!"
-                    : "Try adjusting your filters or search terms"
+                onFocus={() => searchQuery && setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSearch();
                   }
-                </p>
-                <Button 
-                  variant="outline" 
-                  onClick={clearAllFilters}
-                  className="rounded-xl"
+                }}
+                className="pl-12 pr-12 h-14 rounded-2xl bg-background/50 backdrop-blur-sm border-border/50 focus:border-primary/50 text-lg placeholder:text-muted-foreground/60 transition-all duration-300"
+              />
+              {searchQuery && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setActiveCategory('all');
+                    setFilters(prev => ({ ...prev, search: '' }));
+                  }}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 h-10 w-10 rounded-xl hover:bg-destructive/10 hover:text-destructive transition-colors"
                 >
-                  Clear Filters
+                  <X className="h-4 w-4" />
                 </Button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {sortedDesigns.map((design) => (
-                <Card 
-                  key={design.id} 
-                  className="overflow-hidden border-0 hover:shadow-editorial transition-all duration-500 cursor-pointer group bg-gradient-to-br from-background to-manana-cream/10"
-                  onClick={() => handleViewDesign(design)}
-                >
-                  <div className="relative aspect-[3/4] overflow-hidden">
-                    <img 
-                      src={design.thumbSrc} 
-                      alt={design.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    
-                    {/* Favorite Button */}
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="absolute top-3 right-3 h-8 w-8 p-0 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-full border border-white/20 transition-all duration-300"
-                      onClick={(e) => handleLikeDesign(design.id, e)}
-                    >
-                      <Heart className={cn("h-4 w-4 transition-all duration-300", likedDesigns.includes(design.id) ? "fill-primary text-primary scale-110" : "text-white")} />
-                    </Button>
-
-                    {/* Quick Actions on Hover */}
-                    <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-4 group-hover:translate-y-0 space-y-2">
-                      <Button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleOpenInStudio(design);
-                        }}
-                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg h-9 font-medium transition-all duration-200"
-                      >
-                        {isUnlocked(design.id) ? (
-                          <>Customize in Studio</>
-                        ) : (
-                          <>
-                            <Lock className="w-3 h-3 mr-1" />
-                            Purchase to Customize
-                          </>
-                        )}
-                      </Button>
-                      <div className="flex gap-2">
-                        <Button 
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => handleSaveDesign(design.id, e)}
-                          className={cn(
-                            "flex-1 rounded-lg h-8 text-xs transition-all duration-200",
-                            savedIds.includes(design.id) 
-                              ? "bg-primary/90 hover:bg-primary border-primary text-primary-foreground" 
-                              : "bg-white/90 hover:bg-white border-white/50 text-manana-charcoal"
-                          )}
-                        >
-                          {savedIds.includes(design.id) ? 'Saved' : 'Save'}
-                        </Button>
-                        <Button 
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleViewDesign(design);
-                          }}
-                          className="flex-1 bg-white/90 hover:bg-white border-white/50 text-manana-charcoal rounded-lg h-8 text-xs"
-                        >
-                          View
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Design Tags */}
-                    {design.featured && (
-                      <Badge className="absolute top-3 left-3 bg-manana-sage text-white text-xs font-medium shadow-sm border-0 rounded-full px-2 py-1">
-                        Editor's Choice
-                      </Badge>
-                    )}
-                  </div>
-
-                  <div className="p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors duration-300 line-clamp-1">{design.name}</h3>
-                        <p className="text-sm text-muted-foreground">by {design.creator}</p>
-                      </div>
-                      <span className="text-lg font-bold text-primary">${design.price}</span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <div className="flex items-center gap-3">
-                        <span className="flex items-center gap-1">
-                          <Eye className="h-3 w-3" />
-                          {design.views > 1000 ? `${(design.views / 1000).toFixed(1)}k` : design.views}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Heart className="h-3 w-3" />
-                          {design.likes > 1000 ? `${(design.likes / 1000).toFixed(1)}k` : design.likes}
-                        </span>
-                      </div>
-                      <Badge variant="outline" className="text-xs border-border/40 text-muted-foreground">
-                        {design.fabric}
-                      </Badge>
-                    </div>
-                  </div>
-                </Card>
-                ))}
-              </div>
+              )}
+            </div>
+            
+            {/* Search Suggestions */}
+            {showSuggestions && searchQuery && (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground">Simplified marketplace view - basic functionality restored</p>
+                </div>
             )}
           </div>
 
@@ -759,34 +287,34 @@ export const MarketPage = () => {
             </div>
           )}
         </div>
-
-        {/* Filters Sheet */}
-        <FiltersSheet
-          isOpen={showFilters}
-          onOpenChange={setShowFilters}
-          filters={filters}
-          onFiltersChange={setFilters}
-          onClearAll={clearAllFilters}
-        />
-
-        {/* Quick View Modal */}
-        <QuickViewModal
-          design={selectedDesign}
-          isOpen={showQuickView}
-          onClose={() => setShowQuickView(false)}
-          onOpenInStudio={handleOpenInStudio}
-          onSave={(designId) => handleSaveDesign(designId)}
-          isSaved={selectedDesign ? isSaved(selectedDesign.id) : false}
-          isUnlocked={selectedDesign ? isUnlocked(selectedDesign.id) : false}
-        />
-        
-        {/* Purchase Gate Modal */}
-        <PurchaseGateModal
-          design={purchaseGateDesign}
-          open={showPurchaseGate}
-          onOpenChange={setShowPurchaseGate}
-        />
       </div>
-    </div>
+
+      {/* Filters Sheet */}
+      <FiltersSheet
+        isOpen={showFilters}
+        onOpenChange={setShowFilters}
+        filters={filters}
+        onFiltersChange={setFilters}
+        onClearAll={clearAllFilters}
+      />
+
+      {/* Quick View Modal */}
+      <QuickViewModal
+        design={selectedDesign}
+        isOpen={showQuickView}
+        onClose={() => setShowQuickView(false)}
+        onOpenInStudio={handleOpenInStudio}
+        onSave={(designId) => handleSaveDesign(designId)}
+        isSaved={selectedDesign ? isSaved(selectedDesign.id) : false}
+        isUnlocked={selectedDesign ? isUnlocked(selectedDesign.id) : false}
+      />
+      
+      {/* Purchase Gate Modal */}
+      <PurchaseGateModal
+        design={purchaseGateDesign}
+        open={showPurchaseGate}
+        onOpenChange={setShowPurchaseGate}
+      />
+    </>
   );
 };

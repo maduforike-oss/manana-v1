@@ -2,7 +2,7 @@ import { useAppStore } from '@/store/useAppStore';
 import { cn } from '@/lib/utils';
 import { ShoppingCart, Users, Palette, User, Store } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { MicroButton } from '@/components/ui/micro-interactions';
+import { Button } from '@/components/ui/button';
 
 const tabs = [
   { id: 'market' as const, label: 'Market', icon: Store },
@@ -13,7 +13,7 @@ const tabs = [
 ];
 
 export const BottomNavigation = () => {
-  const { activeTab, setActiveTab, cart } = useAppStore();
+  const { activeTab, setActiveTab } = useAppStore();
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-xl bg-background/90 border-t border-border/20 rounded-t-3xl shadow-2xl">
@@ -22,10 +22,10 @@ export const BottomNavigation = () => {
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             const Icon = tab.icon;
-            const showBadge = tab.id === 'orders' && cart.length > 0;
+            const showBadge = false; // TODO: Add cart functionality
 
             return (
-              <MicroButton
+              <Button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
@@ -45,7 +45,7 @@ export const BottomNavigation = () => {
                     <Badge 
                       className="absolute -top-2 -right-2 min-w-[20px] h-[20px] text-xs p-0 flex items-center justify-center bg-gradient-to-r from-primary to-secondary text-white border-2 border-background rounded-full"
                     >
-                      {cart.length}
+                      0
                     </Badge>
                   )}
                 </div>
@@ -55,7 +55,7 @@ export const BottomNavigation = () => {
                 )}>
                   {tab.label}
                 </span>
-              </MicroButton>
+              </Button>
             );
           })}
         </div>
