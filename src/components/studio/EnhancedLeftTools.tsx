@@ -24,15 +24,16 @@ const primaryTools = [
   { id: 'select', icon: MousePointer2, label: 'Select & Move', shortcut: 'V' },
   { id: 'hand', icon: Hand, label: 'Pan Canvas', shortcut: 'H' },
   { id: 'text', icon: Type, label: 'Add Text', shortcut: 'T' },
+  { id: 'brush', icon: PenTool, label: 'Brush Tool', shortcut: 'B' },
   { id: 'image', icon: Image, label: 'Add Image', shortcut: 'I' },
 ] as const;
 
 const shapeTools = [
-  { shape: 'rect', icon: Square, label: 'Rectangle' },
-  { shape: 'circle', icon: Circle, label: 'Circle' },
-  { shape: 'triangle', icon: Triangle, label: 'Triangle' },
-  { shape: 'star', icon: Star, label: 'Star' },
-  { shape: 'line', icon: Minus, label: 'Line' },
+  { shape: 'rect', icon: Square, label: 'Rectangle', shortcut: 'R' },
+  { shape: 'circle', icon: Circle, label: 'Circle', shortcut: 'C' },
+  { shape: 'triangle', icon: Triangle, label: 'Triangle', shortcut: undefined },
+  { shape: 'star', icon: Star, label: 'Star', shortcut: undefined },
+  { shape: 'line', icon: Minus, label: 'Line', shortcut: undefined },
 ] as const;
 
 interface EnhancedLeftToolsProps {
@@ -90,8 +91,7 @@ export const EnhancedLeftTools = ({ collapsed = false }: EnhancedLeftToolsProps)
   // Handle tool click
   const handleToolClick = (toolId: string) => {
     if (toolId === 'text') {
-      createTextNode();
-      setActiveTool('select');
+      setActiveTool('text');
     } else if (toolId === 'image') {
       // Trigger file input for image upload
       const input = document.createElement('input');
@@ -100,8 +100,14 @@ export const EnhancedLeftTools = ({ collapsed = false }: EnhancedLeftToolsProps)
       input.onchange = (e) => {
         const file = (e.target as HTMLInputElement).files?.[0];
         if (file) {
-          // Image handling will be implemented in the next phase
-          console.log('Image upload:', file);
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            if (event.target?.result) {
+              // Create image node - simplified for now
+              console.log('Image loaded:', event.target.result);
+            }
+          };
+          reader.readAsDataURL(file);
         }
       };
       input.click();
@@ -176,18 +182,22 @@ export const EnhancedLeftTools = ({ collapsed = false }: EnhancedLeftToolsProps)
             <TooltipContent side="right" className="bg-card border border-border shadow-lg">
               <div className="text-center">
                 <div className="font-medium text-foreground">Shapes</div>
-                <div className="text-xs text-primary mt-1 font-mono">(S)</div>
+                <div className="text-xs text-primary mt-1 font-mono">(Click to add)</div>
               </div>
             </TooltipContent>
             <DropdownMenuContent side="right" className="w-48 bg-card border border-border shadow-xl">
-              {shapeTools.map(({ shape, icon: Icon, label }) => (
+              {shapeTools.map(({ shape, icon: Icon, label, shortcut }) => (
                 <DropdownMenuItem
                   key={shape}
-                  onClick={() => createShape(shape)}
+                  onClick={() => {
+                    createShape(shape);
+                    setActiveTool(shape as Tool);
+                  }}
                   className="flex items-center gap-3 p-3 hover:bg-accent cursor-pointer transition-colors"
                 >
                   <Icon className="w-5 h-5 text-foreground/80" />
                   <span className="font-medium text-foreground">{label}</span>
+                  {shortcut && <span className="text-xs text-primary ml-auto">({shortcut})</span>}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>

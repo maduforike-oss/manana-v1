@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { TopBar } from './TopBar';
 import { EnhancedLeftTools } from './EnhancedLeftTools';
 import { RightProps } from './RightProps';
-import { Enhanced2DCanvasStage } from './Enhanced2DCanvasStage';
+import { FunctionalCanvasStage } from './FunctionalCanvasStage';
 import { ColorSelector } from './ColorSelector';
 import { EnhancedBottomControls } from './EnhancedBottomControls';
 import { useSetActiveTool, useUndo, useRedo, useSetZoom, useSetPanOffset } from '../../lib/studio/storeSelectors';
@@ -18,7 +18,7 @@ import { PrintMethodValidator } from './PrintMethodValidator';
 import { CanvasGrid } from './CanvasGrid';
 import { CanvasRulers } from './CanvasRulers';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Layers, Settings, Grid, Ruler, Eye, Lock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Layers, Settings, Grid, Ruler, Eye, Lock, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -270,27 +270,24 @@ export const UnifiedStudioShell = () => {
           
           {/* Main Canvas Area with Enhanced Features */}
           <div className="flex-1 flex flex-col min-w-0 relative">
-            {/* Grid Overlay */}
-            <CanvasGrid 
-              zoom={zoom}
-              panOffset={panOffset}
-              showGrid={doc.canvas.showGrid}
-              gridSize={doc.canvas.gridSize || 20}
-            />
+            {/* Main Functional Canvas */}
+            <FunctionalCanvasStage />
             
-            {/* Rulers */}
-            {doc.canvas.showRulers && (
-              <CanvasRulers
-                zoom={zoom}
-                panOffset={panOffset}
-                canvasWidth={doc.canvas.width}
-                canvasHeight={doc.canvas.height}
-                showRulers={doc.canvas.showRulers}
-              />
-            )}
-            
-            {/* Main Canvas */}
-            <Enhanced2DCanvasStage />
+            {/* Floating Help Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                toast("Studio Help", {
+                  description: "V=Select, H=Pan, T=Text, R=Rectangle, C=Circle, B=Brush. Scroll to zoom, drag to pan.",
+                  duration: 5000
+                });
+              }}
+              className="absolute bottom-20 right-4 z-50 bg-card/95 backdrop-blur-sm border-border/50"
+            >
+              <HelpCircle className="w-4 h-4 mr-2" />
+              Help
+            </Button>
             
             {/* Floating Controls */}
             <div className="absolute top-4 right-4 z-50 pointer-events-auto">
