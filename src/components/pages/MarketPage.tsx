@@ -89,23 +89,41 @@ export const MarketPage = () => {
 
   const handleLikeDesign = (designId: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    const wasLiked = likedDesigns.includes(designId);
     setLikedDesigns(prev => 
       prev.includes(designId) 
         ? prev.filter(id => id !== designId)
         : [...prev, designId]
     );
+    
+    // Enhanced feedback with micro-interaction
+    const target = e.currentTarget as HTMLButtonElement;
+    target.classList.add('animate-bounce-gentle');
+    setTimeout(() => target.classList.remove('animate-bounce-gentle'), 300);
+    
     toast({ 
-      title: likedDesigns.includes(designId) ? "Unliked" : "Liked", 
-      description: `Design ${likedDesigns.includes(designId) ? 'removed from' : 'added to'} your likes` 
+      title: wasLiked ? "Unliked" : "Liked ❤️", 
+      description: `Design ${wasLiked ? 'removed from' : 'added to'} your likes`,
+      duration: 2000
     });
   };
 
   const handleSaveDesign = (designId: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
+    const wasSaved = isSaved(designId);
     toggleSave(designId);
+    
+    // Enhanced feedback
+    if (e) {
+      const target = e.currentTarget as HTMLButtonElement;
+      target.classList.add('animate-bounce-gentle');
+      setTimeout(() => target.classList.remove('animate-bounce-gentle'), 300);
+    }
+    
     toast({ 
-      title: savedIds.includes(designId) ? "Saved" : "Unsaved", 
-      description: `Design ${savedIds.includes(designId) ? 'added to' : 'removed from'} your collection` 
+      title: wasSaved ? "Removed from collection" : "Saved to collection ⭐", 
+      description: `Design ${wasSaved ? 'removed from' : 'added to'} your saved collection`,
+      duration: 2000
     });
   };
 
@@ -274,11 +292,12 @@ export const MarketPage = () => {
                   variant="ghost" 
                   size="icon"
                   onClick={() => navigate('/cart')}
-                  className="relative hover:-translate-y-0.5 transition-all duration-200"
+                  className="relative hover:-translate-y-0.5 transition-all duration-200 min-h-[44px] min-w-[44px]"
+                  aria-label={`Shopping cart${cart.itemCount > 0 ? ` with ${cart.itemCount} items` : ''}`}
                 >
-                  <ShoppingCart className="h-4 w-4" />
+                  <ShoppingCart className="h-4 w-4" aria-hidden="true" />
                   {cart.itemCount > 0 && (
-                    <Badge className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center p-0 text-xs">
+                    <Badge className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center p-0 text-xs animate-bounce-gentle">
                       {cart.itemCount}
                     </Badge>
                   )}
@@ -287,24 +306,26 @@ export const MarketPage = () => {
                   variant="ghost" 
                   size="icon"
                   onClick={() => navigate('/add-listing')}
-                  className="hover:-translate-y-0.5 transition-all duration-200"
+                  className="hover:-translate-y-0.5 transition-all duration-200 min-h-[44px] min-w-[44px]"
+                  aria-label="Create new listing"
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-4 w-4" aria-hidden="true" />
                 </Button>
                 <Button 
                   variant="ghost" 
                   size="icon"
                   onClick={handleProfileClick}
-                  className="hover:-translate-y-0.5 transition-all duration-200"
+                  className="hover:-translate-y-0.5 transition-all duration-200 min-h-[44px] min-w-[44px]"
+                  aria-label="View profile"
                 >
-                  <User className="h-4 w-4" />
+                  <User className="h-4 w-4" aria-hidden="true" />
                 </Button>
               </div>
             </div>
 
-            {/* Clean search bar */}
+            {/* Clean search bar with better accessibility */}
             <div className="relative mb-4" ref={searchInputRef}>
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
               <Input
                 placeholder="Search designs, creators, styles..."
                 value={searchQuery}
@@ -315,12 +336,14 @@ export const MarketPage = () => {
                     handleSearch(searchQuery);
                   }
                 }}
-                className="pl-10 pr-20 bg-background/50 border-border/30 focus:bg-background transition-all duration-200"
+                className="pl-10 pr-20 bg-background/50 border-border/30 focus:bg-background transition-all duration-200 text-base"
+                aria-label="Search marketplace designs"
               />
               <Button 
                 size="sm" 
                 onClick={() => handleSearch(searchQuery)}
                 className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 px-3 text-xs"
+                aria-label="Search"
               >
                 Search
               </Button>

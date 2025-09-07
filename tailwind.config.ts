@@ -188,6 +188,11 @@ export default {
 				'shimmer': {
 					'0%': { backgroundPosition: '-200% 0' },
 					'100%': { backgroundPosition: '200% 0' }
+				},
+				'shake': {
+					'0%, 100%': { transform: 'translateX(0)' },
+					'10%, 30%, 50%, 70%, 90%': { transform: 'translateX(-2px)' },
+					'20%, 40%, 60%, 80%': { transform: 'translateX(2px)' }
 				}
 			},
 			animation: {
@@ -201,7 +206,8 @@ export default {
 				'bounce-gentle': 'bounce-gentle 0.3s ease-out',
 				'float': 'float 3s ease-in-out infinite',
 				'pulse-glow': 'pulse-glow 1s ease-in-out',
-				'shimmer': 'shimmer 1.5s infinite'
+				'shimmer': 'shimmer 1.5s infinite',
+				'shake': 'shake 0.5s ease-in-out'
 			},
 			boxShadow: {
 				'sm': 'var(--shadow-sm)',
