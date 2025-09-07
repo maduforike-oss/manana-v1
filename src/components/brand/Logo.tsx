@@ -20,7 +20,7 @@ export const Logo = ({
         alt="Manana Logo"
         width={size}
         height={size}
-        className="object-contain"
+        className="object-contain rounded-lg"
       />
       {showWordmark && (
         <span className="font-bold text-xl text-foreground">
