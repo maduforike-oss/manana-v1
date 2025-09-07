@@ -70,7 +70,6 @@
 
     /* Enhanced Shadows */
     --shadow-primary: 0 8px 32px hsl(var(--primary) / 0.2);
-    --shadow-secondary: 0 4px 16px hsl(var(--secondary) / 0.15);
     --shadow-glow: 0 0 40px hsl(var(--primary-glow) / 0.3);
     --shadow-workspace: 0 4px 20px hsl(230 25% 5% / 0.5);
     --shadow-studio: 0 2px 12px hsl(230 25% 5% / 0.4);
@@ -79,12 +78,6 @@
     --shadow-tool: 0 2px 8px hsl(230 25% 5% / 0.2);
     --shadow-fashion: 0 8px 40px hsl(var(--primary) / 0.15);
     --shadow-editorial: 0 16px 64px hsl(var(--manana-charcoal) / 0.1);
-    --shadow-glass: 0 8px 32px hsl(var(--foreground) / 0.1);
-    --shadow-brand: 0 4px 20px hsl(var(--primary) / 0.25);
-    --shadow-subtle: 0 2px 8px hsl(var(--foreground) / 0.08);
-    --shadow-elevated: 0 12px 48px hsl(var(--foreground) / 0.12);
-    --shadow-floating: 0 16px 64px hsl(var(--foreground) / 0.15);
-    --shadow-modal: 0 32px 128px hsl(var(--foreground) / 0.2);
 
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -92,16 +85,7 @@
     --transition-studio: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-neon: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
-    /* Unified Border Radius System */
-    --radius-sm: 0.5rem;
     --radius: 0.75rem;
-    --radius-md: 1rem;
-    --radius-lg: 1.25rem;
-    --radius-xl: 1.5rem;
-    --radius-2xl: 2rem;
-    --radius-3xl: 3rem;
-    --radius-4xl: 4rem;
-    --radius-full: 9999px;
 
     --sidebar-background: 0 0% 98%;
 
