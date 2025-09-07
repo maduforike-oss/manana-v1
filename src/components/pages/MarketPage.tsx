@@ -46,18 +46,14 @@ export const MarketPage = () => {
   const [showPurchaseGate, setShowPurchaseGate] = useState(false);
   const [purchaseGateDesign, setPurchaseGateDesign] = useState<StudioGarmentData | null>(null);
 
-  // Filters state
+  // Filters state - match FiltersSheet interface
   const [filters, setFilters] = useState({
-    search: '',
-    categories: [] as string[],
-    priceRange: [0, 100] as [number, number],
-    colors: [] as string[],
     garmentTypes: [] as string[],
-    styles: [] as string[],
-    printAreas: [] as PrintAreaSize[],
-    difficulty: [] as string[],
-    trending: false,
-    premium: false
+    baseColors: [] as string[],
+    tags: [] as string[],
+    priceRange: [0, 100] as [number, number],
+    inStock: true,
+    size: [] as string[]
   });
 
   // Generate market data
@@ -71,19 +67,19 @@ export const MarketPage = () => {
     if (activeCategory !== 'all') {
       switch (activeCategory) {
         case 'trending':
-          designs = designs.filter(d => d.trending);
+          designs = designs.filter(d => d.featured || d.likes > 500);
           break;
         case 'new':
-          designs = designs.filter(d => new Date(d.uploadedAt).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000);
+          designs = designs.filter(d => d.views < 1000); // New designs have fewer views
           break;
         case 'popular':
-          designs = designs.filter(d => d.likes > 100);
+          designs = designs.filter(d => d.likes > 500);
           break;
         case 'premium':
-          designs = designs.filter(d => d.premium);
+          designs = designs.filter(d => d.price > 25);
           break;
         case 'community':
-          designs = designs.filter(d => !d.premium);
+          designs = designs.filter(d => d.price <= 25);
           break;
       }
     }
@@ -92,28 +88,23 @@ export const MarketPage = () => {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       designs = designs.filter(design =>
-        design.title.toLowerCase().includes(query) ||
-        design.description.toLowerCase().includes(query) ||
+        design.name.toLowerCase().includes(query) ||
         design.tags.some(tag => tag.toLowerCase().includes(query)) ||
-        design.creator.name.toLowerCase().includes(query)
+        design.creator.toLowerCase().includes(query)
       );
     }
 
     // Apply additional filters
-    if (filters.categories.length > 0) {
-      designs = designs.filter(d => filters.categories.some(cat => d.tags.includes(cat)));
+    if (filters.garmentTypes.length > 0) {
+      designs = designs.filter(d => filters.garmentTypes.some(type => d.garmentId.includes(type)));
     }
 
-    if (filters.colors.length > 0) {
-      designs = designs.filter(d => filters.colors.some(color => d.tags.includes(color)));
+    if (filters.baseColors.length > 0) {
+      designs = designs.filter(d => filters.baseColors.includes(d.baseColor));
     }
 
-    if (filters.premium) {
-      designs = designs.filter(d => d.premium);
-    }
-
-    if (filters.trending) {
-      designs = designs.filter(d => d.trending);
+    if (filters.tags.length > 0) {
+      designs = designs.filter(d => filters.tags.some(tag => d.tags.includes(tag)));
     }
 
     return designs;
@@ -124,7 +115,7 @@ export const MarketPage = () => {
     return [...filteredDesigns].sort((a, b) => {
       switch (sortBy) {
         case 'newest':
-          return new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime();
+          return b.views - a.views; // Newer designs have fewer views
         case 'popular':
           return b.likes - a.likes;
         case 'price-low':
@@ -141,12 +132,11 @@ export const MarketPage = () => {
 
   // Check if filters are active
   const hasActiveFilters = useMemo(() => {
-    return filters.categories.length > 0 ||
-           filters.colors.length > 0 ||
+    return filters.garmentTypes.length > 0 ||
+           filters.baseColors.length > 0 ||
+           filters.tags.length > 0 ||
            filters.priceRange[0] > 0 ||
            filters.priceRange[1] < 100 ||
-           filters.premium ||
-           filters.trending ||
            searchQuery.length > 0;
   }, [filters, searchQuery]);
 
@@ -179,16 +169,12 @@ export const MarketPage = () => {
 
   const clearAllFilters = () => {
     setFilters({
-      search: '',
-      categories: [],
-      priceRange: [0, 100],
-      colors: [],
       garmentTypes: [],
-      styles: [],
-      printAreas: [],
-      difficulty: [],
-      trending: false,
-      premium: false
+      baseColors: [],
+      tags: [],
+      priceRange: [0, 100],
+      inStock: true,
+      size: []
     });
     setSearchQuery('');
     setActiveCategory('all');
