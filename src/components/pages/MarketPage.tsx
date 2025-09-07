@@ -1,4 +1,5 @@
 import { Search, Heart, Bookmark, Filter, TrendingUp, Star, Eye, Download, Grid3X3, LayoutGrid, List, Play, Palette, Ruler, Layers, Info, ShoppingBag, Truck, X, ChevronRight, Package, Sparkles, User, Award, Users, Crown, Lock, ShoppingCart, Plus, Store } from 'lucide-react';
+import { BrandHeader } from '@/components/ui/brand-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -271,57 +272,37 @@ export const MarketPage = () => {
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-background modern-scroll">
-        {/* Consistent Manana Header */}
-        <div className="sticky top-0 z-40 glass-nav">
-          <div className="container mx-auto px-4 py-3">
-            {/* Brand-focused header */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-lg flex items-center justify-center">
-                  <Store className="h-4 w-4 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-lg font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                    Marketplace
-                  </h1>
-                  <p className="text-xs text-muted-foreground">Discover unique fashion designs</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-1">
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={() => navigate('/cart')}
-                  className="relative hover:-translate-y-0.5 transition-all duration-200 min-h-[44px] min-w-[44px]"
-                  aria-label={`Shopping cart${cart.itemCount > 0 ? ` with ${cart.itemCount} items` : ''}`}
-                >
-                  <ShoppingCart className="h-4 w-4" aria-hidden="true" />
-                  {cart.itemCount > 0 && (
-                    <Badge className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center p-0 text-xs animate-bounce-gentle">
-                      {cart.itemCount}
-                    </Badge>
-                  )}
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={() => navigate('/add-listing')}
-                  className="hover:-translate-y-0.5 transition-all duration-200 min-h-[44px] min-w-[44px]"
-                  aria-label="Create new listing"
-                >
-                  <Plus className="h-4 w-4" aria-hidden="true" />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={handleProfileClick}
-                  className="hover:-translate-y-0.5 transition-all duration-200 min-h-[44px] min-w-[44px]"
-                  aria-label="View profile"
-                >
-                  <User className="h-4 w-4" aria-hidden="true" />
-                </Button>
-              </div>
-            </div>
+        <BrandHeader 
+          title="Marketplace" 
+          subtitle="Discover unique fashion designs from creators worldwide"
+        >
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/cart')}
+            className="relative glass-effect border-border/20 min-h-[48px] min-w-[48px] rounded-2xl"
+            aria-label={`Shopping cart${cart.itemCount > 0 ? ` with ${cart.itemCount} items` : ''}`}
+          >
+            <ShoppingCart className="w-5 h-5" />
+            {cart.itemCount > 0 && (
+              <Badge className="absolute -top-2 -right-2 min-w-[20px] h-[20px] text-xs p-0 flex items-center justify-center bg-gradient-to-r from-primary to-secondary text-white border-2 border-background rounded-full">
+                {cart.itemCount}
+              </Badge>
+            )}
+          </Button>
+          
+          <Button
+            onClick={() => setAppActiveTab('profile')}
+            variant="ghost"
+            size="icon"
+            className="glass-effect border-border/20 min-h-[48px] min-w-[48px] rounded-2xl"
+            aria-label="View profile"
+          >
+            <User className="w-5 h-5" />
+          </Button>
+        </BrandHeader>
+
+        <div className="container mx-auto px-4 py-4 max-h-[calc(100vh-12rem)] overflow-y-auto modern-scroll">
 
             {/* Clean search bar with better accessibility */}
             <div className="relative mb-4" ref={searchInputRef}>
@@ -801,11 +782,12 @@ export const MarketPage = () => {
         />
         
         {/* Purchase Gate Modal */}
-        <PurchaseGateModal
-          design={purchaseGateDesign}
-          open={showPurchaseGate}
-          onOpenChange={setShowPurchaseGate}
-        />
+          <PurchaseGateModal
+            design={purchaseGateDesign}
+            open={showPurchaseGate}
+            onOpenChange={setShowPurchaseGate}
+          />
+        </div>
       </div>
     </TooltipProvider>
   );

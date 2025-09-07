@@ -1,4 +1,5 @@
-import { Package, Truck, CheckCircle, Clock, Calendar, ShoppingBag, Palette } from 'lucide-react';
+import { Package, Truck, CheckCircle, Clock, Calendar, ShoppingBag, Palette, User } from 'lucide-react';
+import { BrandHeader } from '@/components/ui/brand-header';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -80,20 +81,20 @@ export const OrdersPage = () => {
 
   return (
     <div className="h-full bg-background overflow-auto modern-scroll">
-      {/* Consistent Manana Header */}
-      <div className="sticky top-0 z-40 glass-nav">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-lg flex items-center justify-center">
-              <Package className="h-4 w-4 text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Orders</h1>
-              <p className="text-xs text-muted-foreground">Track your creative journey & custom pieces</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <BrandHeader 
+        title="Orders" 
+        subtitle="Track your purchases and order history"
+      >
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setActiveTab('profile')}
+          className="glass-effect border-border/20 min-h-[48px] min-w-[48px] rounded-2xl"
+          aria-label="View profile"
+        >
+          <User className="w-5 h-5" />
+        </Button>
+      </BrandHeader>
 
       <div className="container mx-auto py-4 px-4">
         {/* Brand-enhanced content */}

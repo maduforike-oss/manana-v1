@@ -416,3 +416,29 @@
 .modern-scroll::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground) / 0.5);
 }
+
+/* Masonry Grid Layout for Studio */
+.masonry-grid {
+  columns: 1;
+  column-gap: 1.5rem;
+  break-inside: avoid;
+}
+
+@media (min-width: 768px) {
+  .masonry-grid {
+    columns: 2;
+  }
+}
+
+@media (min-width: 1024px) {
+  .masonry-grid {
+    columns: 3;
+  }
+}
+
+.masonry-grid > * {
+  break-inside: avoid;
+  margin-bottom: 1.5rem;
+  display: block;
+  width: 100%;
+}

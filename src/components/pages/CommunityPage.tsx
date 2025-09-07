@@ -1,4 +1,5 @@
-import { MessageCircle, Heart, Share2, TrendingUp, Users } from 'lucide-react';
+import { MessageCircle, Heart, Share2, TrendingUp, Users, User } from 'lucide-react';
+import { BrandHeader } from '@/components/ui/brand-header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -10,7 +11,7 @@ import { cn } from '@/lib/utils';
 
 export const CommunityPage = () => {
   const { toast } = useToast();
-  const { posts, likedPosts, toggleLikePost, createPost, userProfiles } = useAppStore();
+  const { posts, likedPosts, toggleLikePost, createPost, userProfiles, setActiveTab } = useAppStore();
   const [postContent, setPostContent] = useState('');
   
   // Mock posts with user profiles
@@ -104,20 +105,20 @@ export const CommunityPage = () => {
 
   return (
     <div className="h-full bg-background overflow-auto modern-scroll">
-      {/* Consistent Manana Header */}
-      <div className="sticky top-0 z-40 glass-nav">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-lg flex items-center justify-center">
-              <Users className="h-4 w-4 text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Community</h1>
-              <p className="text-xs text-muted-foreground">Connect with designers and share your creativity</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <BrandHeader 
+        title="Community" 
+        subtitle="Connect with fashion designers and creators"
+      >
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setActiveTab('profile')}
+          className="glass-effect border-border/20 min-h-[48px] min-w-[48px] rounded-2xl"
+          aria-label="View profile"
+        >
+          <User className="w-5 h-5" />
+        </Button>
+      </BrandHeader>
 
       <div className="container mx-auto py-4 px-4 max-w-2xl">
 
