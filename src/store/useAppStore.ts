@@ -14,6 +14,8 @@ export interface Design {
   saves: number;
   isLiked?: boolean;
   isSaved?: boolean;
+  isPurchased?: boolean;
+  sourceDesignId?: string;
 }
 
 export interface UserProfile {

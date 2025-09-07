@@ -33,28 +33,34 @@ export const RightProps = ({
       >
         <div className="relative">
           {/* Enhanced Tab List */}
-          <TabsList className="grid w-full grid-cols-4 m-4 glass-panel neon-border bg-studio-surface/50">
+          <TabsList className="grid w-full grid-cols-5 m-4 glass-panel neon-border bg-studio-surface/50">
             <TabsTrigger 
               value="design" 
-              className="studio-tool data-[state=active]:studio-tool data-[state=active]:active px-3 py-2"
+              className="studio-tool data-[state=active]:studio-tool data-[state=active]:active px-2 py-2 text-xs"
             >
               Design
             </TabsTrigger>
             <TabsTrigger 
+              value="layers"
+              className="studio-tool data-[state=active]:studio-tool data-[state=active]:active px-2 py-2 text-xs"
+            >
+              Layers
+            </TabsTrigger>
+            <TabsTrigger 
               value="material"
-              className="studio-tool data-[state=active]:studio-tool data-[state=active]:active px-3 py-2"
+              className="studio-tool data-[state=active]:studio-tool data-[state=active]:active px-2 py-2 text-xs"
             >
               Material
             </TabsTrigger>
             <TabsTrigger 
               value="preview"
-              className="studio-tool data-[state=active]:studio-tool data-[state=active]:active px-3 py-2"
+              className="studio-tool data-[state=active]:studio-tool data-[state=active]:active px-2 py-2 text-xs"
             >
               Preview
             </TabsTrigger>
             <TabsTrigger 
               value="pricing"
-              className="studio-tool data-[state=active]:studio-tool data-[state=active]:active px-3 py-2"
+              className="studio-tool data-[state=active]:studio-tool data-[state=active]:active px-2 py-2 text-xs"
             >
               Pricing
             </TabsTrigger>
@@ -72,10 +78,10 @@ export const RightProps = ({
         </TabsContent>
         
         <TabsContent 
-          value="preview" 
+          value="layers" 
           className="flex-1 overflow-hidden animate-in fade-in-50 duration-300 slide-in-from-right-4"
         >
-          <OptimizedPreviewPanel />
+          <LayersPanel />
         </TabsContent>
         
         <TabsContent 
@@ -83,6 +89,13 @@ export const RightProps = ({
           className="flex-1 overflow-hidden animate-in fade-in-50 duration-300 slide-in-from-right-4"
         >
           <OptimizedMaterialSelector />
+        </TabsContent>
+        
+        <TabsContent 
+          value="preview" 
+          className="flex-1 overflow-hidden animate-in fade-in-50 duration-300 slide-in-from-right-4"
+        >
+          <OptimizedPreviewPanel />
         </TabsContent>
         
         <TabsContent 
