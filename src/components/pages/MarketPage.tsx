@@ -149,7 +149,7 @@ export function MarketPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       {/* Header */}
-      <BrandHeader className="border-b border-border/30 bg-background/80 backdrop-blur-md">
+      <BrandHeader title="Marketplace" className="border-b border-border/30 bg-background/80 backdrop-blur-md">
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
@@ -415,15 +415,11 @@ export function MarketPage() {
 
       <PurchaseGateModal
         design={selectedDesign}
-        isOpen={showPurchaseGate}
-        onClose={() => {
-          setShowPurchaseGate(false);
-          setSelectedDesign(null);
-        }}
-        onPurchase={(design) => {
-          if (design) {
+        open={showPurchaseGate}
+        onOpenChange={(open) => {
+          if (!open) {
             setShowPurchaseGate(false);
-            handleOpenInStudio(design);
+            setSelectedDesign(null);
           }
         }}
       />
