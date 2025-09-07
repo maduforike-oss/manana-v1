@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Minus, Plus, Trash2, ShoppingBag, CreditCard, Truck, Package, CheckCircle, Clock, Calendar, Palette } from 'lucide-react';
+import { ArrowLeft, Minus, Plus, Trash2, ShoppingBag, CreditCard, Truck, Package, CheckCircle, Clock, Calendar, Palette, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Heading } from '@/components/ui/heading';
 import { useCart } from '@/hooks/useCart';
 import { useToast } from '@/hooks/use-toast';
 import { useAppStore } from '@/store/useAppStore';
@@ -122,71 +123,80 @@ export default function Cart() {
   const ordersTabTitle = mockOrders.length > 0 ? `Orders (${mockOrders.length})` : 'Orders';
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b">
-        <div className="container mx-auto px-6 py-4">
+    <div className="min-h-screen bg-background modern-scroll">
+      {/* Consistent Manana Header */}
+      <div className="sticky top-0 z-40 glass-nav">
+        <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
             <Button 
               variant="ghost" 
-              size="sm" 
+              size="icon" 
               onClick={() => navigate('/')}
-              className="rounded-full"
+              className="hover:-translate-y-0.5 transition-all duration-200"
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <h1 className="font-semibold">Cart & Orders</h1>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-lg flex items-center justify-center">
+                <ShoppingBag className="h-4 w-4 text-white" />
+              </div>
+              <Heading as="h1" size="h3" variant="gradient">
+                Cart & Orders
+              </Heading>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-6 py-6">
+      <div className="container mx-auto px-4 py-4">
         <Tabs value={activeTab} onValueChange={setActiveCartTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="cart" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-2 bg-muted/30 rounded-lg p-1">
+            <TabsTrigger value="cart" className="flex items-center gap-2 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <ShoppingBag className="h-4 w-4" />
               {cartTabTitle}
             </TabsTrigger>
-            <TabsTrigger value="orders" className="flex items-center gap-2">
+            <TabsTrigger value="orders" className="flex items-center gap-2 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Package className="h-4 w-4" />
               {ordersTabTitle}
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="cart" className="mt-6">
+          <TabsContent value="cart" className="mt-4 animate-fade-in">
             {cart.items.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
-                  <ShoppingBag className="h-12 w-12 text-muted-foreground" />
+              <div className="text-center py-12 animate-scale-in">
+                <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <ShoppingBag className="h-10 w-10 text-primary" />
                 </div>
-                <h2 className="text-2xl font-bold mb-4">Your cart is empty</h2>
-                <p className="text-muted-foreground mb-6">
-                  Start shopping to add items to your cart
+                <Heading as="h2" size="h2" variant="default" className="mb-3">Your cart is empty</Heading>
+                <p className="text-muted-foreground mb-6 text-sm">
+                  Discover amazing designs and start creating your collection
                 </p>
-                <Button onClick={() => navigate('/')}>
-                  Continue Shopping
+                <Button onClick={() => navigate('/')} className="hover:-translate-y-0.5 transition-all duration-200">
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Explore Marketplace
                 </Button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Cart Items */}
-                <div className="lg:col-span-2 space-y-4">
+                <div className="lg:col-span-2 space-y-3">
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold">Cart Items</h2>
+                    <Heading as="h2" size="h4" variant="default">Cart Items</Heading>
                     <Button 
                       variant="ghost" 
                       size="sm" 
                       onClick={clearCart}
-                      className="text-destructive hover:text-destructive"
+                      className="text-destructive hover:text-destructive hover:-translate-y-0.5 transition-all duration-200"
                     >
+                      <Trash2 className="h-3 w-3 mr-1.5" />
                       Clear All
                     </Button>
                   </div>
-                  {cart.items.map((item) => (
-                    <Card key={item.id}>
+                  {cart.items.map((item, index) => (
+                    <Card key={item.id} className="hover:shadow-md transition-all duration-200 animate-fade-in" style={{ animationDelay: `${index * 100}ms` }}>
                       <CardContent className="p-4">
-                        <div className="flex gap-4">
-                          <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted">
+                        <div className="flex gap-3">
+                          <div className="w-16 h-16 rounded-lg overflow-hidden bg-gradient-to-br from-primary/5 to-secondary/5">
                             <img 
                               src={item.image} 
                               alt={item.name}
@@ -197,49 +207,63 @@ export default function Cart() {
                           <div className="flex-1">
                             <div className="flex justify-between items-start mb-2">
                               <div>
-                                <h3 className="font-medium">{item.name}</h3>
-                                <p className="text-sm text-muted-foreground">by {item.creator}</p>
+                                <h3 className="font-medium text-sm">{item.name}</h3>
+                                <p className="text-xs text-muted-foreground">by {item.creator}</p>
                               </div>
                               <Button 
                                 variant="ghost" 
-                                size="sm"
-                                onClick={() => removeFromCart(item.id)}
-                                className="text-destructive hover:text-destructive"
+                                size="icon"
+                                onClick={() => {
+                                  removeFromCart(item.id);
+                                  toast({ 
+                                    title: "Removed from cart", 
+                                    description: `${item.name} has been removed`
+                                  });
+                                }}
+                                className="text-destructive hover:text-destructive h-8 w-8 hover:-translate-y-0.5 transition-all duration-200"
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-3 w-3" />
                               </Button>
                             </div>
                             
-                            <div className="flex flex-wrap gap-2 mb-3">
-                              <Badge variant="outline">Size: {item.size}</Badge>
-                              <Badge variant="outline">Color: {item.color}</Badge>
-                              <Badge variant="outline">{item.listingType}</Badge>
+                            <div className="flex flex-wrap gap-1.5 mb-3">
+                              <Badge variant="outline" className="text-xs px-2 py-0.5">Size: {item.size}</Badge>
+                              <Badge variant="outline" className="text-xs px-2 py-0.5">Color: {item.color}</Badge>
+                              <Badge variant="outline" className="text-xs px-2 py-0.5">{item.listingType}</Badge>
                             </div>
                             
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
                                 <Button 
                                   variant="outline" 
-                                  size="sm"
-                                  onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                  className="h-8 w-8 p-0"
+                                  size="icon"
+                                  onClick={() => {
+                                    updateQuantity(item.id, item.quantity - 1);
+                                    toast({ title: "Quantity updated" });
+                                  }}
+                                  className="h-7 w-7 hover:-translate-y-0.5 transition-all duration-200"
                                 >
                                   <Minus className="h-3 w-3" />
                                 </Button>
-                                <span className="w-8 text-center font-medium">{item.quantity}</span>
+                                <span className="w-8 text-center font-medium text-sm">{item.quantity}</span>
                                 <Button 
                                   variant="outline" 
-                                  size="sm"
-                                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                  className="h-8 w-8 p-0"
+                                  size="icon"
+                                  onClick={() => {
+                                    updateQuantity(item.id, item.quantity + 1);
+                                    toast({ title: "Quantity updated" });
+                                  }}
+                                  className="h-7 w-7 hover:-translate-y-0.5 transition-all duration-200"
                                 >
                                   <Plus className="h-3 w-3" />
                                 </Button>
                               </div>
                               
                               <div className="text-right">
-                                <div className="font-medium">${(item.price * item.quantity).toFixed(2)}</div>
-                                <div className="text-sm text-muted-foreground">${item.price.toFixed(2)} each</div>
+                                <div className="font-semibold text-sm bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                                  ${(item.price * item.quantity).toFixed(2)}
+                                </div>
+                                <div className="text-xs text-muted-foreground">${item.price.toFixed(2)} each</div>
                               </div>
                             </div>
                           </div>
@@ -250,22 +274,27 @@ export default function Cart() {
                 </div>
 
                 {/* Order Summary */}
-                <div className="space-y-6">
-                  <Card>
-                    <CardContent className="p-6">
-                      <h3 className="font-semibold mb-4">Order Summary</h3>
+                <div className="space-y-4">
+                  <Card className="glass-effect">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="w-6 h-6 bg-gradient-to-r from-primary to-secondary rounded-md flex items-center justify-center">
+                          <CreditCard className="h-3 w-3 text-white" />
+                        </div>
+                        <Heading as="h3" size="h5" variant="default">Order Summary</Heading>
+                      </div>
                       
-                      <div className="space-y-3">
+                      <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span>Subtotal ({cart.itemCount} items)</span>
-                          <span>${cart.total.toFixed(2)}</span>
+                          <span className="font-medium">${cart.total.toFixed(2)}</span>
                         </div>
                         
                         <div className="flex justify-between">
                           <span>Shipping</span>
                           <span>
                             {shipping === 0 ? (
-                              <span className="text-green-600 font-medium">FREE</span>
+                              <span className="text-emerald-600 font-medium">FREE</span>
                             ) : (
                               `$${shipping.toFixed(2)}`
                             )}
@@ -274,22 +303,24 @@ export default function Cart() {
                         
                         <div className="flex justify-between">
                           <span>Tax</span>
-                          <span>${tax.toFixed(2)}</span>
+                          <span className="font-medium">${tax.toFixed(2)}</span>
                         </div>
                         
-                        <div className="border-t pt-3">
-                          <div className="flex justify-between font-semibold text-lg">
+                        <div className="border-t pt-2 mt-3">
+                          <div className="flex justify-between font-semibold">
                             <span>Total</span>
-                            <span>${finalTotal.toFixed(2)}</span>
+                            <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                              ${finalTotal.toFixed(2)}
+                            </span>
                           </div>
                         </div>
                       </div>
                       
                       {cart.total < 50 && (
-                        <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                          <div className="flex items-center gap-2 text-blue-700">
-                            <Truck className="h-4 w-4" />
-                            <span className="text-sm">
+                        <div className="mt-3 p-3 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-lg border border-primary/20">
+                          <div className="flex items-center gap-2 text-primary">
+                            <Truck className="h-3 w-3" />
+                            <span className="text-xs font-medium">
                               Add ${(50 - cart.total).toFixed(2)} more for free shipping
                             </span>
                           </div>
@@ -299,19 +330,26 @@ export default function Cart() {
                   </Card>
 
                   {/* Promo Code */}
-                  <Card>
-                    <CardContent className="p-6">
-                      <h3 className="font-semibold mb-4">Promo Code</h3>
+                  <Card className="glass-effect">
+                    <CardContent className="p-4">
+                      <Heading as="h3" size="h6" variant="default" className="mb-3">Promo Code</Heading>
                       <div className="flex gap-2">
                         <Input 
                           placeholder="Enter code"
                           value={promoCode}
                           onChange={(e) => setPromoCode(e.target.value)}
+                          className="text-sm"
                         />
                         <Button 
                           variant="outline" 
-                          onClick={applyPromoCode}
+                          onClick={() => {
+                            applyPromoCode();
+                            if (promoCode.toLowerCase() === 'welcome10') {
+                              setTimeout(() => setPromoCode(''), 2000);
+                            }
+                          }}
                           disabled={!promoCode}
+                          className="hover:-translate-y-0.5 transition-all duration-200"
                         >
                           Apply
                         </Button>
@@ -321,9 +359,14 @@ export default function Cart() {
 
                   {/* Checkout Button */}
                   <Button 
-                    onClick={handleCheckout}
-                    className="w-full h-12"
-                    size="lg"
+                    onClick={() => {
+                      handleCheckout();
+                      toast({ 
+                        title: "Proceeding to checkout", 
+                        description: "Taking you to secure payment..."
+                      });
+                    }}
+                    className="w-full h-10 bg-gradient-to-r from-primary to-secondary hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
                   >
                     <CreditCard className="h-4 w-4 mr-2" />
                     Proceed to Checkout
@@ -333,8 +376,8 @@ export default function Cart() {
             )}
           </TabsContent>
 
-          <TabsContent value="orders" className="mt-6">
-            <div className="space-y-6">
+          <TabsContent value="orders" className="mt-4 animate-fade-in">
+            <div className="space-y-4">
               {mockOrders.length === 0 ? (
                 <Card className="border-0 shadow-xl bg-gradient-to-br from-card/50 to-card p-16 text-center">
                   <div className="relative">

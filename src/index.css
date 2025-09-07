@@ -31,13 +31,6 @@
     --secondary-dark: 187 100% 30%;
 
     /* Studio Workspace */
-    --workspace: 230 25% 8%;
-    --workspace-foreground: 0 0% 95%;
-    --workspace-border: 230 15% 15%;
-
-    --muted: 230 10% 95%;
-    --muted-foreground: 230 10% 45%;
-
     --accent: 187 100% 42%;
     --accent-foreground: 0 0% 100%;
 
@@ -48,7 +41,12 @@
     --input: 230 15% 95%;
     --ring: 340 82% 52%;
 
-    --radius: 0.75rem;
+    /* Signature Manana Fashion Colors */
+    --manana-sage: 150 20% 70%;
+    --manana-sage-light: 150 20% 80%;
+    --manana-sage-dark: 150 20% 60%;
+    --manana-cream: 45 30% 95%;
+    --manana-charcoal: 210 15% 20%;
 
     /* Unified Spacing System */
     --spacing-xs: 0.25rem;     /* 4px */
@@ -73,6 +71,7 @@
     --gradient-hero: linear-gradient(180deg, hsl(var(--primary-glow) / 0.1), hsl(var(--secondary-glow) / 0.05));
     --gradient-workspace: linear-gradient(180deg, hsl(var(--workspace)), hsl(230 25% 5%));
     --gradient-glass: linear-gradient(135deg, hsl(0 0% 100% / 0.1), hsl(0 0% 100% / 0.05));
+    --gradient-manana: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)), hsl(var(--manana-sage)));
 
     /* Studio Design Tokens */
     --studio-bg: 230 25% 8%;

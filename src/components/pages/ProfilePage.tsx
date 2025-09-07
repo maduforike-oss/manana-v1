@@ -1,4 +1,4 @@
-import { Settings, Palette, Package, Crown, LogOut, Trash2, Users, CreditCard, ArrowRight, MapPin, Globe } from 'lucide-react';
+import { Settings, Palette, Package, Crown, LogOut, Trash2, Users, CreditCard, ArrowRight, MapPin, Globe, User } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -81,8 +81,23 @@ export const ProfilePage = () => {
   };
 
   return (
-    <div className="h-full bg-background overflow-auto">
-      <div className="container mx-auto py-4 sm:py-6 px-3 sm:px-4 max-w-2xl space-y-4 sm:space-y-6">
+    <div className="h-full bg-background overflow-auto modern-scroll">
+      {/* Consistent Manana Header */}
+      <div className="sticky top-0 z-40 glass-nav">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-lg flex items-center justify-center">
+              <User className="h-4 w-4 text-white" />
+            </div>
+            <div>
+              <h1 className="text-lg font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Profile</h1>
+              <p className="text-xs text-muted-foreground">Manage your creative profile</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto py-4 px-3 sm:px-4 max-w-2xl space-y-4 sm:space-y-6">
         {/* Profile Header */}
         <Card className="p-4 sm:p-6">
           {/* Mobile-optimized header layout */}

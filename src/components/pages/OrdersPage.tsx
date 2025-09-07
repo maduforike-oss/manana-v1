@@ -79,31 +79,45 @@ export const OrdersPage = () => {
   };
 
   return (
-    <div className="h-full bg-gradient-to-br from-background via-background to-primary/5 overflow-auto">
-      <div className="container mx-auto py-8 px-4">
-        {/* Modern Header */}
-        <div className="relative mb-12">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 rounded-3xl blur-3xl -z-10" />
-          <div className="relative bg-card/80 backdrop-blur-sm border border-primary/20 rounded-2xl p-8 shadow-xl">
+    <div className="h-full bg-background overflow-auto modern-scroll">
+      {/* Consistent Manana Header */}
+      <div className="sticky top-0 z-40 glass-nav">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-lg flex items-center justify-center">
+              <Package className="h-4 w-4 text-white" />
+            </div>
+            <div>
+              <h1 className="text-lg font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Orders</h1>
+              <p className="text-xs text-muted-foreground">Track your creative journey & custom pieces</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto py-4 px-4">
+        {/* Brand-enhanced content */}
+        <div className="mb-8">
+          <div className="relative bg-gradient-to-r from-primary/5 via-background to-secondary/5 rounded-lg p-6 border border-primary/10">
             <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-xl">
-                <Package className="w-8 h-8 text-primary" />
+              <div className="p-2 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-lg">
+                <Package className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <Heading as="h1" size="h1" variant="gradient">
-                  Your Orders ✨
+                <Heading as="h2" size="h2" variant="gradient">
+                  Your Creative Orders ✨
                 </Heading>
-                <p className="text-muted-foreground text-lg">Track your creative journey & custom pieces</p>
+                <p className="text-muted-foreground text-sm">Premium quality designs delivered fast</p>
               </div>
             </div>
-            <div className="flex flex-wrap gap-3 text-sm">
-              <span className="px-3 py-1 bg-primary/10 text-primary rounded-full border border-primary/20">
+            <div className="flex flex-wrap gap-2 text-xs">
+              <span className="px-2 py-1 bg-primary/10 text-primary rounded-full border border-primary/20">
                 {mockOrders.length} Active Orders
               </span>
-              <span className="px-3 py-1 bg-secondary/10 text-secondary rounded-full border border-secondary/20">
+              <span className="px-2 py-1 bg-secondary/10 text-secondary rounded-full border border-secondary/20">
                 Premium Quality ⭐
               </span>
-              <span className="px-3 py-1 bg-emerald-500/10 text-emerald-600 rounded-full border border-emerald-500/20">
+              <span className="px-2 py-1 bg-emerald-500/10 text-emerald-600 rounded-full border border-emerald-500/20">
                 Fast Shipping 🚀
               </span>
             </div>

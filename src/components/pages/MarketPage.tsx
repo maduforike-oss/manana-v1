@@ -1,4 +1,4 @@
-import { Search, Heart, Bookmark, Filter, TrendingUp, Star, Eye, Download, Grid3X3, LayoutGrid, List, Play, Palette, Ruler, Layers, Info, ShoppingBag, Truck, X, ChevronRight, Package, Sparkles, User, Award, Users, Crown, Lock, ShoppingCart, Plus } from 'lucide-react';
+import { Search, Heart, Bookmark, Filter, TrendingUp, Star, Eye, Download, Grid3X3, LayoutGrid, List, Play, Palette, Ruler, Layers, Info, ShoppingBag, Truck, X, ChevronRight, Package, Sparkles, User, Award, Users, Crown, Lock, ShoppingCart, Plus, Store } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -253,16 +253,21 @@ export const MarketPage = () => {
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-background modern-scroll">
-        {/* Clean, minimal header */}
+        {/* Consistent Manana Header */}
         <div className="sticky top-0 z-40 glass-nav">
           <div className="container mx-auto px-4 py-3">
-            {/* Simplified top bar */}
+            {/* Brand-focused header */}
             <div className="flex items-center justify-between mb-4">
-              <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                  Marketplace
-                </h1>
-                <p className="text-sm text-muted-foreground">Discover unique fashion designs</p>
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-lg flex items-center justify-center">
+                  <Store className="h-4 w-4 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-lg font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                    Marketplace
+                  </h1>
+                  <p className="text-xs text-muted-foreground">Discover unique fashion designs</p>
+                </div>
               </div>
               <div className="flex items-center gap-1">
                 <Button 
