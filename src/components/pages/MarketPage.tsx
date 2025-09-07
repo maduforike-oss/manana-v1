@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -270,8 +270,7 @@ export const MarketPage = () => {
   ];
 
   return (
-    <TooltipProvider>
-      <div className="min-h-screen bg-background modern-scroll">
+    <div className="min-h-screen bg-background modern-scroll">
         <BrandHeader 
           title="Marketplace" 
           subtitle="Discover unique fashion designs from creators worldwide"
@@ -782,13 +781,12 @@ export const MarketPage = () => {
         />
         
         {/* Purchase Gate Modal */}
-          <PurchaseGateModal
-            design={purchaseGateDesign}
-            open={showPurchaseGate}
-            onOpenChange={setShowPurchaseGate}
-          />
-        </div>
+        <PurchaseGateModal
+          design={purchaseGateDesign}
+          open={showPurchaseGate}
+          onOpenChange={setShowPurchaseGate}
+        />
       </div>
-    </TooltipProvider>
+    </div>
   );
 };
