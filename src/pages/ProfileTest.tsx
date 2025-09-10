@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { getMyProfile, updateMyProfile, type Profile } from '@/lib/profile';
-import { supabase } from '@/lib/supabaseClient';
+import { getMyProfile, updateMyProfile, type Profile } from '../../lib/profile';
+import { supabase } from '../../lib/supabaseClient';
 
 export default function ProfileTest() {
   const [profile, setProfile] = useState<Profile | null>(null);
