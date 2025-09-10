@@ -1,101 +1,353 @@
 "use client"
 
-import { useState } from "react";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Camera, Settings, Crown, Package, Users, MapPin, Globe, LogOut, Trash2, ArrowRight } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { useToast } from '@/hooks/use-toast';
+import { getMyProfile, getProfileMetrics, type ExtendedProfile, type ProfileMetrics } from '@/lib/profile';
+import { getErrorMessage } from '@/lib/errors';
+import { supabase } from '@/integrations/supabase/client';
+import { ProfileTags } from '@/components/ProfileTags';
+import { SocialLinks } from '@/components/SocialLinks';
 
 export default function ProfilePage() {
-  // Local state for the form fields
-  const [profilePic, setProfilePic] = useState<File | null>(null);
-  const [profilePicURL, setProfilePicURL] = useState<string | null>(null);
-  const [phone, setPhone] = useState("");
-  const [location, setLocation] = useState("");
-  const [bio, setBio] = useState("");
+  const router = useRouter();
+  const { toast } = useToast();
+  const [profile, setProfile] = useState<ExtendedProfile | null>(null);
+  const [metrics, setMetrics] = useState<ProfileMetrics | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Handle image upload and preview
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setProfilePic(file);
-      const reader = new FileReader();
-      reader.onload = () => {
-        setProfilePicURL(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+  useEffect(() => {
+    loadProfile();
+    
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+      if (!session) {
+        router.push('/auth');
+      } else if (event === 'SIGNED_IN') {
+        loadProfile();
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [router]);
+
+  const loadProfile = async () => {
+    try {
+      setLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        setIsAuthenticated(false);
+        router.push('/auth');
+        return;
+      }
+
+      setIsAuthenticated(true);
+      const [profileData, metricsData] = await Promise.all([
+        getMyProfile(),
+        getProfileMetrics(session.user.id)
+      ]);
+
+      setProfile(profileData);
+      setMetrics(metricsData);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: getErrorMessage(error),
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Placeholder save handler – replace with your actual persistence logic
-  const handleSave = () => {
-    console.log({ profilePic, phone, location, bio });
-    // TODO: Persist these values using your chosen backend (e.g., Supabase, API call, etc.)
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast({ title: "Signed Out", description: "You have been signed out successfully" });
+      router.push('/');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: getErrorMessage(error),
+        variant: "destructive"
+      });
+    }
   };
 
-  return (
-    <div className="flex justify-center p-4">
-      <Card className="w-full max-w-2xl">
-        <CardContent className="space-y-4 p-6">
-          {/* Profile picture and upload */}
-          <div className="flex flex-col items-center space-y-2">
-            <Avatar className="h-24 w-24">
-              {profilePicURL ? (
-                <AvatarImage src={profilePicURL} alt="Profile picture" />
-              ) : (
-                <AvatarFallback>UV</AvatarFallback>
-              )}
-            </Avatar>
-            <Input
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="w-full"
-            />
-          </div>
+  const handleDeleteAccount = () => {
+    toast({
+      title: "Delete Account",
+      description: "This feature will be available soon",
+      variant: "destructive"
+    });
+  };
 
-          {/* Form fields */}
-          <div className="grid grid-cols-1 gap-4">
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="Enter your phone number"
-              />
-            </div>
-
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="location">Location</Label>
-              <Input
-                id="location"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="Enter your location"
-              />
-            </div>
-
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="bio">Bio</Label>
-              <Textarea
-                id="bio"
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                placeholder="Tell us about yourself"
-                className="h-32"
-              />
-            </div>
-          </div>
-
-          {/* Save button */}
-          <Button onClick={handleSave} className="w-full">
-            Save Profile
+  if (!isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Card className="p-8 text-center">
+          <h2 className="text-2xl font-bold mb-4">Sign In Required</h2>
+          <p className="text-muted-foreground mb-6">Please sign in to view your profile</p>
+          <Button onClick={() => router.push('/auth')}>
+            Sign In
           </Button>
-        </CardContent>
-      </Card>
+        </Card>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Card className="p-8 text-center">
+          <h2 className="text-2xl font-bold mb-4">Profile Not Found</h2>
+          <p className="text-muted-foreground mb-6">Unable to load your profile</p>
+          <Button onClick={loadProfile}>
+            Try Again
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
+  const progressPercentage = metrics ? (metrics.total_designs / 30) * 100 : 0; // Assuming 30 design limit
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <div className="border-b border-border bg-card">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <h1 className="text-2xl font-bold">Profile</h1>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.push('/profile/settings')}
+          >
+            <Settings className="w-5 h-5" />
+          </Button>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
+        {/* Cover Photo */}
+        <div className="relative h-48 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-t-lg mb-6">
+          {profile.cover_url && (
+            <img 
+              src={profile.cover_url} 
+              alt="Cover" 
+              className="w-full h-full object-cover rounded-t-lg"
+            />
+          )}
+          <Button
+            variant="secondary"
+            size="sm"
+            className="absolute top-4 right-4"
+            onClick={() => router.push('/profile/settings')}
+          >
+            <Camera className="w-4 h-4 mr-2" />
+            Edit Cover
+          </Button>
+        </div>
+
+        {/* Profile Header */}
+        <Card className="p-6 -mt-6 relative z-10">
+          <div className="flex flex-col sm:flex-row gap-6">
+            {/* Avatar */}
+            <div className="relative">
+              <Avatar className="w-24 h-24 border-4 border-background">
+                {profile.avatar_url ? (
+                  <AvatarImage src={profile.avatar_url} alt={profile.display_name || profile.username || 'User'} />
+                ) : (
+                  <AvatarFallback className="bg-gradient-to-r from-primary to-secondary text-white text-xl font-bold">
+                    {(profile.display_name || profile.username || 'U').charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                )}
+              </Avatar>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="absolute -bottom-2 -right-2"
+                onClick={() => router.push('/profile/settings')}
+              >
+                <Camera className="w-3 h-3" />
+              </Button>
+            </div>
+
+            {/* Profile Info */}
+            <div className="flex-1">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold">
+                    {profile.display_name || profile.username || 'Unnamed User'}
+                  </h2>
+                  {profile.username && (
+                    <p className="text-muted-foreground">@{profile.username}</p>
+                  )}
+                  {profile.bio && (
+                    <p className="text-sm mt-2 max-w-md">{profile.bio}</p>
+                  )}
+                  
+                  <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-muted-foreground">
+                    {profile.location && (
+                      <div className="flex items-center gap-1">
+                        <MapPin className="w-4 h-4" />
+                        {profile.location}
+                      </div>
+                    )}
+                    {profile.website && (
+                      <div className="flex items-center gap-1">
+                        <Globe className="w-4 h-4" />
+                        <a 
+                          href={profile.website} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="hover:text-primary"
+                        >
+                          Website
+                        </a>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Social Links */}
+                  <div className="mt-3">
+                    <SocialLinks 
+                      links={[
+                        profile.website && { platform: 'website' as const, url: profile.website },
+                        profile.social_instagram && { platform: 'instagram' as const, url: `https://instagram.com/${profile.social_instagram}` },
+                        profile.social_twitter && { platform: 'twitter' as const, url: `https://twitter.com/${profile.social_twitter}` },
+                      ].filter(Boolean) as Array<{ platform: 'website' | 'instagram' | 'twitter' | 'linkedin'; url: string }>}
+                    />
+                  </div>
+                </div>
+
+                <Badge className="bg-gradient-to-r from-primary to-secondary text-white">
+                  <Crown className="w-3 h-3 mr-1" />
+                  Basic Plan
+                </Badge>
+              </div>
+            </div>
+          </div>
+
+          {/* Metrics */}
+          <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-border">
+            <div className="text-center">
+              <p className="text-2xl font-bold">{metrics?.total_designs || 0}</p>
+              <p className="text-sm text-muted-foreground">Designs</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold">{metrics?.followers || 0}</p>
+              <p className="text-sm text-muted-foreground">Followers</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold">{metrics?.following || 0}</p>
+              <p className="text-sm text-muted-foreground">Following</p>
+            </div>
+          </div>
+        </Card>
+
+        {/* Design Usage */}
+        <Card className="p-6 mt-6">
+          <h3 className="text-lg font-semibold mb-4">Monthly Design Usage</h3>
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm">Designs Created</span>
+            <span className="text-sm text-muted-foreground">
+              {metrics?.total_designs || 0} / 30
+            </span>
+          </div>
+          <Progress value={Math.min(progressPercentage, 100)} className="h-2 mb-2" />
+          <p className="text-xs text-muted-foreground">
+            {30 - (metrics?.total_designs || 0)} designs remaining this month
+          </p>
+        </Card>
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
+            <div className="space-y-2">
+              <Button 
+                variant="ghost" 
+                className="w-full justify-between"
+                onClick={() => router.push('/profile/settings')}
+              >
+                <div className="flex items-center">
+                  <Settings className="w-4 h-4 mr-3" />
+                  Profile Settings
+                </div>
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+              
+              <Button 
+                variant="ghost" 
+                className="w-full justify-between"
+                onClick={() => router.push('/studio')}
+              >
+                <div className="flex items-center">
+                  <Package className="w-4 h-4 mr-3" />
+                  Create Design
+                </div>
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+              
+              <Button 
+                variant="ghost" 
+                className="w-full justify-between"
+                onClick={() => router.push('/profile/followers')}
+              >
+                <div className="flex items-center">
+                  <Users className="w-4 h-4 mr-3" />
+                  Followers
+                </div>
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </Card>
+
+          <Card className="p-6 border-destructive/50">
+            <h3 className="text-lg font-semibold mb-4 text-destructive">Account Actions</h3>
+            <div className="space-y-2">
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start text-destructive hover:text-destructive"
+                onClick={handleSignOut}
+              >
+                <LogOut className="w-4 h-4 mr-3" />
+                Sign Out
+              </Button>
+              
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start text-destructive hover:text-destructive"
+                onClick={handleDeleteAccount}
+              >
+                <Trash2 className="w-4 h-4 mr-3" />
+                Delete Account
+              </Button>
+            </div>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

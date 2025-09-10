@@ -14,13 +14,84 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profile_metrics: {
+        Row: {
+          followers: number | null
+          following: number | null
+          total_designs: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          followers?: number | null
+          following?: number | null
+          total_designs?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          followers?: number | null
+          following?: number | null
+          total_designs?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          cover_url: string | null
+          created_at: string | null
+          display_name: string | null
+          id: string
+          location: string | null
+          preferences: Json | null
+          social_instagram: string | null
+          social_twitter: string | null
+          username: string | null
+          website: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          cover_url?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id: string
+          location?: string | null
+          preferences?: Json | null
+          social_instagram?: string | null
+          social_twitter?: string | null
+          username?: string | null
+          website?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          cover_url?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string
+          location?: string | null
+          preferences?: Json | null
+          social_instagram?: string | null
+          social_twitter?: string | null
+          username?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_username_available: {
+        Args: { username_to_check: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

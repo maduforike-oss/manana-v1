@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { getMyProfile, updateMyProfile, type Profile } from '../../lib/profile';
+import { getMyProfile, updateMyProfile, type ExtendedProfile } from '../../lib/profile';
 import { supabase } from '../../lib/supabaseClient';
 
 export default function ProfileTest() {
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profile, setProfile] = useState<ExtendedProfile | null>(null);
   const [username, setUsername] = useState('');
   const [status, setStatus] = useState<string>('');
 
