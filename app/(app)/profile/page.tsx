@@ -67,71 +67,128 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/10">
         {/* Header */}
-        <div className="border-b border-border bg-card">
+        <div className="border-b border-border bg-card/50 backdrop-blur-sm">
           <div className="container mx-auto px-4 py-4">
-            <h1 className="text-2xl font-bold">Profile</h1>
+            <h1 className="text-2xl font-bold">Welcome to Manana</h1>
           </div>
         </div>
 
-        <div className="container mx-auto px-4 py-8 max-w-md">
-          <Card className="glass-card border-0">
-            <CardHeader className="text-center">
-              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <UserIcon className="h-10 w-10 text-primary" />
-              </div>
-              <CardTitle className="text-2xl mb-2">Welcome to Manana</CardTitle>
-              <p className="text-muted-foreground">
-                Sign in to access your profile and start creating amazing designs
-              </p>
-            </CardHeader>
-            
-            <CardContent className="space-y-4">
-              <Button 
-                className="w-full bg-gradient-to-r from-primary to-secondary text-white"
-                onClick={() => router.push('/auth')}
-              >
-                Get Started
-              </Button>
-              
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground">
-                  Already have an account?{' '}
-                  <button 
-                    onClick={() => router.push('/auth')}
-                    className="text-primary hover:underline font-medium"
-                  >
-                    Sign In
-                  </button>
+        <div className="container mx-auto px-4 py-12 max-w-4xl">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+            {/* Left side - Hero content */}
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <h2 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                  Start Your Design Journey
+                </h2>
+                <p className="text-lg text-muted-foreground leading-relaxed">
+                  Join thousands of creators using AI-powered tools to design amazing apparel. 
+                  Create, share, and bring your ideas to life.
                 </p>
               </div>
 
-              <div className="pt-4 border-t border-border">
-                <h3 className="font-semibold mb-3 text-center">What you'll get:</h3>
-                <div className="space-y-3 text-sm">
-                  <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
-                      <Palette className="h-3 w-3 text-primary" />
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button 
+                  size="lg"
+                  className="bg-gradient-to-r from-primary to-secondary text-white hover:from-primary/90 hover:to-secondary/90 shadow-lg hover:shadow-xl transition-all duration-300"
+                  onClick={() => router.push('/auth')}
+                >
+                  <UserIcon className="h-5 w-5 mr-2" />
+                  Get Started Free
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  onClick={() => router.push('/auth')}
+                  className="border-primary/20 hover:border-primary/40 hover:bg-primary/5"
+                >
+                  Sign In
+                </Button>
+              </div>
+
+              <div className="text-sm text-muted-foreground">
+                No credit card required • Free to start
+              </div>
+            </div>
+
+            {/* Right side - Features card */}
+            <Card className="glass-card border-0 shadow-xl">
+              <CardHeader className="text-center pb-4">
+                <div className="w-16 h-16 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Crown className="h-8 w-8 text-primary" />
+                </div>
+                <CardTitle className="text-xl">Premium Design Tools</CardTitle>
+                <p className="text-muted-foreground text-sm">
+                  Everything you need to create professional designs
+                </p>
+              </CardHeader>
+              
+              <CardContent className="space-y-4">
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-primary/5 border border-primary/10">
+                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center mt-0.5">
+                      <Palette className="h-4 w-4 text-primary" />
                     </div>
-                    <span>AI-powered design tools</span>
+                    <div>
+                      <div className="font-medium text-sm">AI Design Studio</div>
+                      <div className="text-xs text-muted-foreground">Create designs with advanced AI assistance</div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
-                      <Users className="h-3 w-3 text-primary" />
+
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-secondary/5 border border-secondary/10">
+                    <div className="w-8 h-8 bg-secondary/10 rounded-full flex items-center justify-center mt-0.5">
+                      <Users className="h-4 w-4 text-secondary" />
                     </div>
-                    <span>Community features</span>
+                    <div>
+                      <div className="font-medium text-sm">Community Features</div>
+                      <div className="text-xs text-muted-foreground">Share, discover, and collaborate with creators</div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
-                      <Package className="h-3 w-3 text-primary" />
+
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-green-500/5 border border-green-500/10">
+                    <div className="w-8 h-8 bg-green-500/10 rounded-full flex items-center justify-center mt-0.5">
+                      <Package className="h-4 w-4 text-green-600" />
                     </div>
-                    <span>Export your designs</span>
+                    <div>
+                      <div className="font-medium text-sm">Export & Print</div>
+                      <div className="text-xs text-muted-foreground">High-quality exports ready for production</div>
+                    </div>
                   </div>
                 </div>
+
+                <div className="pt-4 border-t border-border">
+                  <Button 
+                    className="w-full bg-gradient-to-r from-primary to-secondary text-white"
+                    onClick={() => router.push('/auth')}
+                  >
+                    Join Manana Today
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Social proof section */}
+          <div className="mt-16 text-center">
+            <p className="text-sm text-muted-foreground mb-6">Trusted by creators worldwide</p>
+            <div className="grid grid-cols-3 gap-8 max-w-md mx-auto">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary">10K+</div>
+                <div className="text-xs text-muted-foreground">Designs Created</div>
               </div>
-            </CardContent>
-          </Card>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-secondary">5K+</div>
+                <div className="text-xs text-muted-foreground">Active Users</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">99%</div>
+                <div className="text-xs text-muted-foreground">Satisfaction</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
