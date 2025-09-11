@@ -37,6 +37,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 // Enhanced interfaces for social features
 interface SocialPost {
@@ -287,7 +288,8 @@ export const CommunityPage = () => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  const handleLike = (postId: string) => {
+  const handleLike = async (postId: string) => {
+    if (!(await mustBeAuthedOrRedirect())) return;
     setPosts(prev => prev.map(post => 
       post.id === postId 
         ? { 
@@ -302,7 +304,8 @@ export const CommunityPage = () => {
     toast(post?.isLiked ? 'Unliked' : 'Liked!');
   };
 
-  const handleSave = (postId: string) => {
+  const handleSave = async (postId: string) => {
+    if (!(await mustBeAuthedOrRedirect())) return;
     setPosts(prev => prev.map(post => 
       post.id === postId 
         ? { 
@@ -317,7 +320,8 @@ export const CommunityPage = () => {
     toast(post?.isSaved ? 'Unsaved' : 'Saved!');
   };
 
-  const handleComment = (postId: string, content: string) => {
+  const handleComment = async (postId: string, content: string) => {
+    if (!(await mustBeAuthedOrRedirect())) return;
     if (!content.trim()) return;
 
     const newComment: Comment = {
@@ -373,7 +377,8 @@ export const CommunityPage = () => {
     ));
   };
 
-  const handleCreatePost = () => {
+  const handleCreatePost = async () => {
+    if (!(await mustBeAuthedOrRedirect())) return;
     if (!newPostContent.trim()) return;
 
     const hashtags = newPostContent.match(/#[\w]+/g)?.map(tag => tag.slice(1)) || [];
@@ -402,6 +407,15 @@ export const CommunityPage = () => {
     setNewPostContent('');
     setShowCreatePost(false);
     toast('Post created! 🎉');
+  };
+
+  const mustBeAuthedOrRedirect = async (): Promise<boolean> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      window.location.href = '/auth/signin';
+      return false;
+    }
+    return true;
   };
 
   const loadMorePosts = () => {
@@ -727,7 +741,10 @@ export const CommunityPage = () => {
           <div className="lg:col-span-1 space-y-4">
             {/* Create Post Button */}
             <Button
-              onClick={() => setShowCreatePost(true)}
+              onClick={async () => {
+                if (!(await mustBeAuthedOrRedirect())) return;
+                setShowCreatePost(true);
+              }}
               className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary-dark hover:to-secondary-dark text-white rounded-2xl py-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
             >
               <Plus className="w-5 h-5 mr-2" />

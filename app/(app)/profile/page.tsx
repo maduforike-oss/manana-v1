@@ -14,6 +14,7 @@ import { getErrorMessage } from '@/lib/errors';
 import { ProfileTags } from '@/components/ProfileTags';
 import { SocialLinks } from '@/components/SocialLinks';
 import { useAuth } from '@/lib/auth-context';
+import SignOutButton from '@/components/auth/SignOutButton';
 
 export default function ProfilePage() {
   const { user, profile, signOut } = useAuth();
@@ -361,14 +362,10 @@ export default function ProfilePage() {
           <Card className="p-6 border-destructive/50">
             <h3 className="text-lg font-semibold mb-4 text-destructive">Account Actions</h3>
             <div className="space-y-2">
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start text-destructive hover:text-destructive"
-                onClick={handleSignOut}
-              >
+              <SignOutButton className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 px-0 py-2 h-auto font-normal bg-transparent border-none flex items-center">
                 <LogOut className="w-4 h-4 mr-3" />
                 Sign Out
-              </Button>
+              </SignOutButton>
               
               <Button 
                 variant="ghost" 
