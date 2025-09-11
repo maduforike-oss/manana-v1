@@ -7,7 +7,6 @@ import { CommunityPage } from '@/components/pages/CommunityPage';
 import { OrdersPage } from '@/components/pages/OrdersPage';
 import { ProfilePage } from '@/components/pages/ProfilePage';
 import { DesktopSidebar } from '@/components/DesktopSidebar';
-import { DesktopActivityPanel } from '@/components/DesktopActivityPanel';
 import { SkipToContent } from '@/components/SkipToContent';
 import { OnboardingWalkthrough } from '@/components/OnboardingWalkthrough';
 import { useRouteSync } from '@/hooks/useNavigation';
@@ -101,11 +100,13 @@ const Index = () => {
       {announcer}
       
       {/* Desktop Layout */}
-      <div className="hidden lg:block desktop-layout h-full p-4">
-        <DesktopSidebar />
+      <div className="hidden lg:flex desktop-layout h-full">
+        <div className="w-80 p-4 border-r border-border">
+          <DesktopSidebar />
+        </div>
         
         <div 
-          className="desktop-main overflow-hidden modern-scroll will-change-scroll prevent-layout-shift"
+          className="flex-1 overflow-auto modern-scroll will-change-scroll prevent-layout-shift"
           ref={mainContentRef}
           id="main-content"
           tabIndex={-1}
@@ -114,8 +115,6 @@ const Index = () => {
         >
           {renderPage()}
         </div>
-        
-        <DesktopActivityPanel />
       </div>
       
       {/* Mobile/Tablet Layout */}
