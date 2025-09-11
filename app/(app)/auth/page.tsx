@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Mail, Loader2, ArrowLeft } from 'lucide-react';
+import { Mail, Loader2, ArrowLeft, Palette } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,8 +11,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { getErrorMessage } from '@/lib/errors';
+import { useAuth } from '@/lib/auth-context';
 
 export default function AuthPage() {
+  const { user, profile } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   
@@ -21,24 +23,15 @@ export default function AuthPage() {
   const [password, setPassword] = useState('');
 
   useEffect(() => {
-    // Check if user is already authenticated
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        router.push('/profile');
+    // Redirect authenticated users
+    if (user) {
+      if (!profile?.username) {
+        router.push('/onboarding');
+      } else {
+        router.push('/dashboard');
       }
-    };
-    checkAuth();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session && event === 'SIGNED_IN') {
-        router.push('/profile');
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [router]);
+    }
+  }, [user, profile, router]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,7 +92,7 @@ export default function AuthPage() {
 
     try {
       setLoading(true);
-      const redirectUrl = `${window.location.origin}/profile`;
+      const redirectUrl = `${window.location.origin}/onboarding`;
       
       const { error } = await supabase.auth.signUp({
         email,
@@ -112,7 +105,7 @@ export default function AuthPage() {
       if (error) throw error;
 
       toast({
-        title: "Account Created!",
+        title: "Welcome to Manana!",
         description: "Please check your email to confirm your account"
       });
     } catch (error) {
@@ -138,7 +131,7 @@ export default function AuthPage() {
 
     try {
       setLoading(true);
-      const redirectUrl = `${window.location.origin}/profile`;
+      const redirectUrl = `${window.location.origin}/onboarding`;
       
       const { error } = await supabase.auth.signInWithOtp({
         email,
@@ -164,8 +157,13 @@ export default function AuthPage() {
     }
   };
 
+  // Don't show auth page if user is already authenticated
+  if (user) {
+    return null; // Will redirect in useEffect
+  }
+
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Back Button */}
         <Button
@@ -178,13 +176,16 @@ export default function AuthPage() {
           Back to Home
         </Button>
 
-        <Card>
+        <Card className="glass-card border-0">
           <CardHeader className="text-center">
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Palette className="h-8 w-8 text-primary" />
+            </div>
             <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               Welcome to Manana
             </CardTitle>
             <p className="text-muted-foreground">
-              Sign in to access your design studio
+              Join our creative community of designers
             </p>
           </CardHeader>
           <CardContent>

@@ -9,69 +9,42 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { getMyProfile, getProfileMetrics, type ExtendedProfile, type ProfileMetrics } from '@/lib/profile';
+import { getProfileMetrics, type ProfileMetrics } from '@/lib/profile';
 import { getErrorMessage } from '@/lib/errors';
-import { supabase } from '@/integrations/supabase/client';
 import { ProfileTags } from '@/components/ProfileTags';
 import { SocialLinks } from '@/components/SocialLinks';
+import { useAuth } from '@/lib/auth-context';
 
 export default function ProfilePage() {
+  const { user, profile, signOut } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
-  const [profile, setProfile] = useState<ExtendedProfile | null>(null);
   const [metrics, setMetrics] = useState<ProfileMetrics | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    loadProfile();
-    
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setIsAuthenticated(!!session);
-      if (!session) {
-        router.push('/auth');
-      } else if (event === 'SIGNED_IN') {
-        loadProfile();
+    const loadMetrics = async () => {
+      if (profile?.id) {
+        try {
+          const metricsData = await getProfileMetrics(profile.id);
+          setMetrics(metricsData);
+        } catch (error) {
+          toast({
+            title: "Error loading metrics",
+            description: getErrorMessage(error),
+            variant: "destructive"
+          });
+        }
       }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [router]);
-
-  const loadProfile = async () => {
-    try {
-      setLoading(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        setIsAuthenticated(false);
-        router.push('/auth');
-        return;
-      }
-
-      setIsAuthenticated(true);
-      const [profileData, metricsData] = await Promise.all([
-        getMyProfile(),
-        getProfileMetrics(session.user.id)
-      ]);
-
-      setProfile(profileData);
-      setMetrics(metricsData);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: getErrorMessage(error),
-        variant: "destructive"
-      });
-    } finally {
       setLoading(false);
-    }
-  };
+    };
+
+    loadMetrics();
+  }, [profile, toast]);
 
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut();
+      await signOut();
       toast({ title: "Signed Out", description: "You have been signed out successfully" });
       router.push('/');
     } catch (error) {
@@ -91,18 +64,8 @@ export default function ProfilePage() {
     });
   };
 
-  if (!isAuthenticated) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Card className="p-8 text-center">
-          <h2 className="text-2xl font-bold mb-4">Sign In Required</h2>
-          <p className="text-muted-foreground mb-6">Please sign in to view your profile</p>
-          <Button onClick={() => router.push('/auth')}>
-            Sign In
-          </Button>
-        </Card>
-      </div>
-    );
+  if (!user || !profile) {
+    return null; // Auth layout will handle redirect
   }
 
   if (loading) {
@@ -112,20 +75,6 @@ export default function ProfilePage() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
           <p>Loading profile...</p>
         </div>
-      </div>
-    );
-  }
-
-  if (!profile) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Card className="p-8 text-center">
-          <h2 className="text-2xl font-bold mb-4">Profile Not Found</h2>
-          <p className="text-muted-foreground mb-6">Unable to load your profile</p>
-          <Button onClick={loadProfile}>
-            Try Again
-          </Button>
-        </Card>
       </div>
     );
   }
