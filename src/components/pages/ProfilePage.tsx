@@ -1,4 +1,5 @@
-import { Settings, Palette, Package, Crown, LogOut, Trash2, Users, CreditCard, ArrowRight, MapPin, Globe, User } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Settings, Palette, Package, Crown, LogOut, Trash2, Users, CreditCard, ArrowRight, MapPin, Globe, User as UserIcon } from 'lucide-react';
 import { BrandHeader } from '@/components/ui/brand-header';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,11 +12,34 @@ import { useNavigate } from 'react-router-dom';
 import { FeaturedDesignsGallery } from '@/components/FeaturedDesignsGallery';
 import { ProfileTags } from '@/components/ProfileTags';
 import { SocialLinks } from '@/components/SocialLinks';
+import { supabase } from '@/integrations/supabase/client';
+import SignOutButton from '../../../components/auth/SignOutButton';
+import type { User } from '@supabase/supabase-js';
 
 export const ProfilePage = () => {
-  const { user, logout, setActiveTab } = useAppStore();
+  const { setActiveTab } = useAppStore();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user ?? null);
+        setLoading(false);
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Mock user data
   const mockUser = {
@@ -68,9 +92,8 @@ export const ProfilePage = () => {
     setActiveTab('orders');
   };
 
-  const handleSignOut = () => {
-    logout();
-    toast({ title: "Signed Out", description: "You have been signed out successfully" });
+  const handleSignIn = () => {
+    navigate('/auth/signin');
   };
 
   const handleDeleteAccount = () => {
@@ -80,6 +103,71 @@ export const ProfilePage = () => {
       variant: "destructive"
     });
   };
+
+  if (loading) {
+    return (
+      <div className="h-full bg-background overflow-auto modern-scroll">
+        <BrandHeader title="Profile" subtitle="Loading..." />
+        <div className="container mx-auto py-4 px-3 sm:px-4 max-w-2xl">
+          <Card className="p-6 text-center">
+            <div className="animate-pulse space-y-4">
+              <div className="w-16 h-16 bg-muted rounded-full mx-auto"></div>
+              <div className="h-4 bg-muted rounded w-1/2 mx-auto"></div>
+              <div className="h-3 bg-muted rounded w-1/3 mx-auto"></div>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="h-full bg-background overflow-auto modern-scroll">
+        <BrandHeader title="Profile" subtitle="Sign in to view your profile" />
+        <div className="container mx-auto py-4 px-3 sm:px-4 max-w-2xl space-y-6">
+          <Card className="p-6 text-center">
+            <div className="space-y-4">
+              <div className="w-16 h-16 bg-muted rounded-full mx-auto flex items-center justify-center">
+                <UserIcon className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold mb-2">Welcome to Manana</h2>
+                <p className="text-muted-foreground mb-4">
+                  Sign in to access your profile, designs, and account settings.
+                </p>
+              </div>
+              <Button onClick={handleSignIn} className="w-full h-12 bg-gradient-to-r from-primary to-secondary text-white">
+                Sign In
+              </Button>
+            </div>
+          </Card>
+          
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold mb-4">Why sign in?</h3>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <Palette className="w-5 h-5 text-primary" />
+                <span className="text-sm">Create and save your designs</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Users className="w-5 h-5 text-primary" />
+                <span className="text-sm">Connect with the community</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Package className="w-5 h-5 text-primary" />
+                <span className="text-sm">Track your orders</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Crown className="w-5 h-5 text-primary" />
+                <span className="text-sm">Access premium features</span>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full bg-background overflow-auto modern-scroll">
@@ -325,10 +413,10 @@ export const ProfilePage = () => {
           </div>
           
           <div className="p-3 sm:p-4 space-y-1">
-            <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-destructive hover:text-destructive h-12 sm:h-10">
+            <SignOutButton className="w-full justify-start text-destructive hover:text-destructive h-12 sm:h-10 bg-transparent hover:bg-destructive/10 border-0 p-0">
               <LogOut className="w-4 h-4 mr-3" />
               <span className="text-sm sm:text-base">Sign Out</span>
-            </Button>
+            </SignOutButton>
             
             <Button variant="ghost" onClick={handleDeleteAccount} className="w-full justify-start text-destructive hover:text-destructive h-12 sm:h-10">
               <Trash2 className="w-4 h-4 mr-3" />

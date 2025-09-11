@@ -3,15 +3,25 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-export default function SignOutButton({ className = '' }: { className?: string }) {
+interface SignOutButtonProps {
+  className?: string;
+  children?: React.ReactNode;
+  redirectTo?: string;
+}
+
+export default function SignOutButton({ 
+  className = '', 
+  children, 
+  redirectTo = '/auth/signin' 
+}: SignOutButtonProps) {
   const [loading, setLoading] = useState(false);
 
   const onClick = async () => {
     setLoading(true);
     try {
       await supabase.auth.signOut();
-      // Hard reload to flush client state
-      window.location.href = '/';
+      // Navigate to redirect URL
+      window.location.href = redirectTo;
     } finally {
       setLoading(false);
     }
@@ -24,7 +34,7 @@ export default function SignOutButton({ className = '' }: { className?: string }
       className={className || 'px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-800'}
       aria-label="Sign out"
     >
-      {loading ? 'Signing out…' : 'Sign out'}
+      {children || (loading ? 'Signing out…' : 'Sign out')}
     </button>
   );
 }
