@@ -2,8 +2,8 @@ import { useEffect, useRef } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import { StudioPage } from '@/components/pages/StudioPage';
-import { MarketPage } from '@/components/pages/MarketPage';
-import { CommunityPage } from '@/components/pages/CommunityPage';
+import { ImprovedMarketPage } from '@/components/pages/ImprovedMarketPage';
+import { ImprovedCommunityPage } from '@/components/pages/ImprovedCommunityPage';
 import { OrdersPage } from '@/components/pages/OrdersPage';
 import { ProfilePage } from '@/components/pages/ProfilePage';
 import { DesktopSidebar } from '@/components/DesktopSidebar';
@@ -79,9 +79,9 @@ const Index = () => {
   const renderPage = () => {
     switch (activeTab) {
       case 'market':
-        return <MarketPage />;
+        return <ImprovedMarketPage />;
       case 'community':
-        return <CommunityPage />;
+        return <ImprovedCommunityPage />;
       case 'studio':
         return <StudioPage />;
       case 'orders':
@@ -89,7 +89,7 @@ const Index = () => {
       case 'profile':
         return <ProfilePage />;
       default:
-        return <MarketPage />;
+        return <ImprovedMarketPage />;
     }
   };
 
