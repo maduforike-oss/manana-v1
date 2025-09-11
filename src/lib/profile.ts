@@ -120,6 +120,28 @@ export async function getProfileMetrics(userId: string): Promise<ProfileMetrics 
   return data as ProfileMetrics | null;
 }
 
+/** Get the signed-in user's profile_metrics row */
+export async function getMyProfileMetrics(): Promise<ProfileMetrics> {
+  const { data: { user }, error: userErr } = await supabase.auth.getUser();
+  if (userErr) throw userErr;
+  if (!user) throw new Error('Not signed in');
+
+  const { data, error } = await supabase
+    .from('profile_metrics')
+    .select('*')
+    .eq('user_id', user.id)
+    .single();
+
+  if (error && error.code !== 'PGRST116') throw error; // 116 = no rows
+  return data ?? {
+    user_id: user.id,
+    total_designs: 0,
+    followers: 0,
+    following: 0,
+    updated_at: new Date().toISOString(),
+  };
+}
+
 /** Check if a username is available (case-insensitive). Excludes current user when provided. */
 export async function checkUsernameAvailability(username: string): Promise<boolean> {
   const name = (username || '').trim();
