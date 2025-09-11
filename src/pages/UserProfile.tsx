@@ -13,17 +13,20 @@ import FollowButton from '@/components/profile/FollowButton';
 
 export default function UserProfile() {
   const navigate = useNavigate();
-  const { userId } = useParams();
+  const { username } = useParams();
   const [user, setUser] = useState<ExtendedProfile | null>(null);
   const [metrics, setMetrics] = useState<ProfileMetrics | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadProfile = async () => {
-      if (!userId) return;
+      if (!username) {
+        setLoading(false);
+        return;
+      }
       
       try {
-        const profile = await getProfileByUsername(userId);
+        const profile = await getProfileByUsername(username);
         if (profile) {
           setUser(profile);
           const profileMetrics = await getProfileMetrics(profile.id);
@@ -37,7 +40,7 @@ export default function UserProfile() {
     };
 
     loadProfile();
-  }, [userId]);
+  }, [username]);
 
   if (loading) {
     return (
@@ -66,6 +69,9 @@ export default function UserProfile() {
         </div>
         <Card className="p-6 text-center">
           <p className="text-muted-foreground">The user you're looking for doesn't exist or hasn't set up their profile yet.</p>
+          <Button onClick={() => navigate('/')} className="mt-4">
+            Back to Market
+          </Button>
         </Card>
       </div>
     );

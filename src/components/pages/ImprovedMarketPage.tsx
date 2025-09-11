@@ -226,7 +226,7 @@ export function ImprovedMarketPage() {
 
         {/* Navigation Tabs - Mobile First */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-          <div className="sticky top-20 z-40 bg-background/80 backdrop-blur-md pb-4">
+          <div className="sticky top-20 z-40 bg-background/80 backdrop-blur-md pb-4 border-b border-border/20">
             <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-11 bg-muted/30 backdrop-blur-sm rounded-2xl gap-1 mb-4">
               <TabsTrigger value="all" className="rounded-xl text-sm">All</TabsTrigger>
               <TabsTrigger value="trending" className="rounded-xl text-sm">
@@ -240,14 +240,60 @@ export function ImprovedMarketPage() {
               </TabsTrigger>
             </TabsList>
 
-            {/* Controls Row - Stacked on Mobile */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+            {/* Mobile Filter Controls - Scrollable horizontal layout */}
+            <div className="block sm:hidden mb-4">
+              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                <Button
+                  onClick={() => setActiveTab('new')}
+                  variant={activeTab === 'new' ? 'default' : 'outline'}
+                  size="sm"
+                  className="flex-shrink-0 h-10 px-4 rounded-xl border-border/40"
+                  aria-pressed={activeTab === 'new'}
+                >
+                  New
+                </Button>
+                <Button
+                  onClick={() => {
+                    setSearchQuery('');
+                    clearFilters();
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="flex-shrink-0 h-10 px-4 rounded-xl border-border/40"
+                  disabled={!searchQuery && !Object.values(activeFilters).some(v => Array.isArray(v) ? v.length > 0 : v)}
+                >
+                  Clear
+                </Button>
+                <Button
+                  onClick={() => setActiveTab('saved')}
+                  variant={activeTab === 'saved' ? 'default' : 'outline'}
+                  size="sm"
+                  className="flex-shrink-0 h-10 px-4 rounded-xl border-border/40"
+                  aria-pressed={activeTab === 'saved'}
+                >
+                  <Heart className="h-3 w-3 mr-2" />
+                  Saved
+                </Button>
+                <Button
+                  onClick={() => setShowFilters(true)}
+                  variant="outline"
+                  size="sm"
+                  className="flex-shrink-0 h-10 px-4 rounded-xl border-border/40"
+                >
+                  <Filter className="h-4 w-4 mr-2" />
+                  Filters
+                </Button>
+              </div>
+            </div>
+
+            {/* Desktop Controls Row */}
+            <div className="hidden sm:flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 flex-wrap">
                 <Button
                   onClick={() => setShowFilters(true)}
                   variant="outline"
                   size="sm"
-                  className="rounded-xl border-border/40 sm:hidden"
+                  className="rounded-xl border-border/40"
                 >
                   <Filter className="h-4 w-4 mr-2" />
                   Filters
