@@ -1,19 +1,22 @@
 import { supabase } from '@/integrations/supabase/client';
 
-export type ExtendedProfile = {
+export type Profile = {
   id: string;
   username: string | null;
   display_name: string | null;
-  avatar_url: string | null;
-  cover_url: string | null;
   bio: string | null;
   location: string | null;
   website: string | null;
   social_instagram: string | null;
   social_twitter: string | null;
+  avatar_url: string | null;
+  cover_url: string | null;
   preferences: Record<string, any>;
   created_at: string;
 };
+
+// Legacy type alias for compatibility
+export type ExtendedProfile = Profile;
 
 export type ProfileMetrics = {
   user_id: string;
@@ -23,7 +26,16 @@ export type ProfileMetrics = {
   updated_at: string;
 };
 
-export async function getMyProfile(): Promise<ExtendedProfile | null> {
+const BUCKET = 'design-assets';
+
+function uid() {
+  // Small helper for unique filenames
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+/** Get the signed-in user's profile row (or null if not signed in) */
+export async function getMyProfile(): Promise<Profile | null> {
   const { data: { user }, error: userErr } = await supabase.auth.getUser();
   if (userErr) throw userErr;
   if (!user) return null;
@@ -32,35 +44,14 @@ export async function getMyProfile(): Promise<ExtendedProfile | null> {
     .from('profiles')
     .select('*')
     .eq('id', user.id)
-    .maybeSingle();
+    .single();
 
   if (error) throw error;
-  return data as ExtendedProfile | null;
+  return data as Profile;
 }
 
-export async function getProfileByUsername(username: string): Promise<ExtendedProfile | null> {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('username', username)
-    .maybeSingle();
-
-  if (error) throw error;
-  return data as ExtendedProfile | null;
-}
-
-export async function getProfileMetrics(userId: string): Promise<ProfileMetrics | null> {
-  const { data, error } = await supabase
-    .from('profile_metrics')
-    .select('*')
-    .eq('user_id', userId)
-    .maybeSingle();
-
-  if (error) throw error;
-  return data as ProfileMetrics | null;
-}
-
-export async function updateMyProfile(fields: Partial<Omit<ExtendedProfile, 'id' | 'created_at'>>) {
+/** Update fields on the signed-in user's profile */
+export async function updateMyProfile(fields: Partial<Omit<Profile, 'id' | 'created_at'>>): Promise<void> {
   const { data: { user }, error: userErr } = await supabase.auth.getUser();
   if (userErr) throw userErr;
   if (!user) throw new Error('Not signed in');
@@ -73,55 +64,87 @@ export async function updateMyProfile(fields: Partial<Omit<ExtendedProfile, 'id'
   if (error) throw error;
 }
 
-export async function checkUsernameAvailability(username: string): Promise<boolean> {
-  const { data, error } = await supabase.rpc('is_username_available', {
-    username_to_check: username
-  });
+/** Upload a file to Storage and return { path, publicUrl } */
+async function uploadToStorage(file: File, pathPrefix: string) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not signed in');
+
+  const ext = file.name.includes('.') ? file.name.split('.').pop() : 'png';
+  const path = `${pathPrefix}/${user.id}/${uid()}.${ext}`;
+
+  const { error: upErr } = await supabase.storage
+    .from(BUCKET)
+    .upload(path, file, { upsert: false });
+
+  if (upErr) throw upErr;
+
+  const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
+  return { path, publicUrl: data.publicUrl as string };
+}
+
+/** Upload avatar image; saves avatar_url on profile and returns the public URL */
+export async function uploadAvatar(file: File): Promise<string> {
+  const { publicUrl } = await uploadToStorage(file, 'avatars');
+  await updateMyProfile({ avatar_url: publicUrl });
+  return publicUrl;
+}
+
+/** Upload cover image; saves cover_url on profile and returns the public URL */
+export async function uploadCover(file: File): Promise<string> {
+  const { publicUrl } = await uploadToStorage(file, 'covers');
+  await updateMyProfile({ cover_url: publicUrl });
+  return publicUrl;
+}
+
+/** Get a profile by username */
+export async function getProfileByUsername(username: string): Promise<ExtendedProfile | null> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('username', username)
+    .maybeSingle();
 
   if (error) throw error;
-  return data as boolean;
+  return data as ExtendedProfile | null;
 }
 
-export async function uploadAvatar(file: File): Promise<string> {
-  const { data: { user }, error: userErr } = await supabase.auth.getUser();
-  if (userErr) throw userErr;
-  if (!user) throw new Error('Not signed in');
+/** Get profile metrics for a user */
+export async function getProfileMetrics(userId: string): Promise<ProfileMetrics | null> {
+  const { data, error } = await supabase
+    .from('profile_metrics')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle();
 
-  const fileExt = file.name.split('.').pop();
-  const fileName = `${crypto.randomUUID()}.${fileExt}`;
-  const filePath = `avatars/${user.id}/${fileName}`;
-
-  const { error: uploadError } = await supabase.storage
-    .from('design-assets')
-    .upload(filePath, file, { upsert: true });
-
-  if (uploadError) throw uploadError;
-
-  const { data } = supabase.storage
-    .from('design-assets')
-    .getPublicUrl(filePath);
-
-  return data.publicUrl;
+  if (error) throw error;
+  return data as ProfileMetrics | null;
 }
 
-export async function uploadCover(file: File): Promise<string> {
-  const { data: { user }, error: userErr } = await supabase.auth.getUser();
-  if (userErr) throw userErr;
-  if (!user) throw new Error('Not signed in');
+/** Check if a username is available (case-insensitive). Excludes current user when provided. */
+export async function checkUsernameAvailability(username: string): Promise<boolean> {
+  const name = (username || '').trim();
+  if (!name) return false;
 
-  const fileExt = file.name.split('.').pop();
-  const fileName = `${crypto.randomUUID()}.${fileExt}`;
-  const filePath = `covers/${user.id}/${fileName}`;
+  // Prefer RPC if available
+  const { data: { user } } = await supabase.auth.getUser();
+  try {
+    const { data, error } = await supabase.rpc('is_username_available', {
+      username_to_check: name
+    });
+    if (error) throw error;
+    return Boolean(data);
+  } catch {
+    // Fallback: direct query
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, username')
+      .ilike('username', name) // case-insensitive
+      .limit(1);
 
-  const { error: uploadError } = await supabase.storage
-    .from('design-assets')
-    .upload(filePath, file, { upsert: true });
-
-  if (uploadError) throw uploadError;
-
-  const { data } = supabase.storage
-    .from('design-assets')
-    .getPublicUrl(filePath);
-
-  return data.publicUrl;
+    if (error) throw error;
+    // If no rows or only our own row, it's available
+    if (!data || data.length === 0) return true;
+    if (user && data[0]?.id === user.id) return true;
+    return false;
+  }
 }
