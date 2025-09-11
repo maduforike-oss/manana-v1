@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Camera, Settings, Crown, Package, Users, MapPin, Globe, LogOut, Trash2, ArrowRight } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import { Camera, Settings, Crown, Package, Users, MapPin, Globe, LogOut, Trash2, ArrowRight, Palette, User as UserIcon } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -46,7 +46,7 @@ export default function ProfilePage() {
     try {
       await signOut();
       toast({ title: "Signed Out", description: "You have been signed out successfully" });
-      router.push('/');
+      router.push('/auth');
     } catch (error) {
       toast({
         title: "Error",
@@ -64,16 +64,101 @@ export default function ProfilePage() {
     });
   };
 
-  if (!user || !profile) {
-    return null; // Auth layout will handle redirect
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <div className="border-b border-border bg-card">
+          <div className="container mx-auto px-4 py-4">
+            <h1 className="text-2xl font-bold">Profile</h1>
+          </div>
+        </div>
+
+        <div className="container mx-auto px-4 py-8 max-w-md">
+          <Card className="glass-card border-0">
+            <CardHeader className="text-center">
+              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <UserIcon className="h-10 w-10 text-primary" />
+              </div>
+              <CardTitle className="text-2xl mb-2">Welcome to Manana</CardTitle>
+              <p className="text-muted-foreground">
+                Sign in to access your profile and start creating amazing designs
+              </p>
+            </CardHeader>
+            
+            <CardContent className="space-y-4">
+              <Button 
+                className="w-full bg-gradient-to-r from-primary to-secondary text-white"
+                onClick={() => router.push('/auth')}
+              >
+                Get Started
+              </Button>
+              
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground">
+                  Already have an account?{' '}
+                  <button 
+                    onClick={() => router.push('/auth')}
+                    className="text-primary hover:underline font-medium"
+                  >
+                    Sign In
+                  </button>
+                </p>
+              </div>
+
+              <div className="pt-4 border-t border-border">
+                <h3 className="font-semibold mb-3 text-center">What you'll get:</h3>
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
+                      <Palette className="h-3 w-3 text-primary" />
+                    </div>
+                    <span>AI-powered design tools</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
+                      <Users className="h-3 w-3 text-primary" />
+                    </div>
+                    <span>Community features</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
+                      <Package className="h-3 w-3 text-primary" />
+                    </div>
+                    <span>Export your designs</span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
   }
 
-  if (loading) {
+  if (!profile) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Loading profile...</p>
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <div className="border-b border-border bg-card">
+          <div className="container mx-auto px-4 py-4">
+            <h1 className="text-2xl font-bold">Profile</h1>
+          </div>
+        </div>
+
+        <div className="container mx-auto px-4 py-8 max-w-md">
+          <Card className="glass-card border-0 text-center">
+            <CardHeader>
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <UserIcon className="h-8 w-8 text-primary" />
+              </div>
+              <CardTitle>Loading Profile...</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Please wait while we load your profile</p>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
@@ -119,7 +204,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Profile Header */}
-        <Card className="p-6 -mt-6 relative z-10">
+        <Card className="p-6 -mt-6 relative z-10">{/* ... keep existing code (all UI components) */}
           <div className="flex flex-col sm:flex-row gap-6">
             {/* Avatar */}
             <div className="relative">

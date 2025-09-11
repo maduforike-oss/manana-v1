@@ -163,25 +163,34 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Back Button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => router.push('/')}
-          className="mb-4"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Home
-        </Button>
+    <div className="min-h-screen bg-background">
+      {/* Header matching app style */}
+      <div className="border-b border-border bg-card">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.push('/')}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Home
+          </Button>
+          <div className="flex items-center gap-2">
+            <Palette className="h-6 w-6 text-primary" />
+            <span className="text-lg font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              Manana
+            </span>
+          </div>
+        </div>
+      </div>
 
+      <div className="container mx-auto px-4 py-8 max-w-md">
         <Card className="glass-card border-0">
           <CardHeader className="text-center">
-            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Palette className="h-8 w-8 text-primary" />
+            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Palette className="h-10 w-10 text-primary" />
             </div>
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">
               Welcome to Manana
             </CardTitle>
             <p className="text-muted-foreground">
@@ -190,15 +199,15 @@ export default function AuthPage() {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="signin" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">Sign In</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="signin" className="font-medium">Sign In</TabsTrigger>
+                <TabsTrigger value="signup" className="font-medium">Sign Up</TabsTrigger>
               </TabsList>
               
-              <TabsContent value="signin" className="space-y-4">
+              <TabsContent value="signin" className="space-y-6">
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signin-email">Email</Label>
+                    <Label htmlFor="signin-email" className="text-sm font-medium">Email</Label>
                     <Input
                       id="signin-email"
                       type="email"
@@ -207,11 +216,12 @@ export default function AuthPage() {
                       placeholder="your@email.com"
                       disabled={loading}
                       required
+                      className="h-12"
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="signin-password">Password</Label>
+                    <Label htmlFor="signin-password" className="text-sm font-medium">Password</Label>
                     <Input
                       id="signin-password"
                       type="password"
@@ -220,12 +230,13 @@ export default function AuthPage() {
                       placeholder="••••••••"
                       disabled={loading}
                       required
+                      className="h-12"
                     />
                   </div>
                   
                   <Button 
                     type="submit" 
-                    className="w-full bg-gradient-to-r from-primary to-secondary text-white"
+                    className="w-full h-12 bg-gradient-to-r from-primary to-secondary text-white font-medium"
                     disabled={loading}
                   >
                     {loading ? (
@@ -234,23 +245,23 @@ export default function AuthPage() {
                         Signing In...
                       </>
                     ) : (
-                      'Sign In'
+                      'Sign In to Manana'
                     )}
                   </Button>
                 </form>
                 
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
+                    <span className="w-full border-t border-border" />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">Or</span>
+                    <span className="bg-background px-3 text-muted-foreground font-medium">Or continue with</span>
                   </div>
                 </div>
                 
                 <Button 
                   variant="outline" 
-                  className="w-full"
+                  className="w-full h-12 border-border hover:bg-muted"
                   onClick={handleMagicLink}
                   disabled={loading}
                 >
@@ -259,10 +270,16 @@ export default function AuthPage() {
                 </Button>
               </TabsContent>
               
-              <TabsContent value="signup" className="space-y-4">
+              <TabsContent value="signup" className="space-y-6">
+                <div className="text-center mb-4">
+                  <p className="text-sm text-muted-foreground">
+                    Join thousands of creators and start designing today
+                  </p>
+                </div>
+                
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
+                    <Label htmlFor="signup-email" className="text-sm font-medium">Email</Label>
                     <Input
                       id="signup-email"
                       type="email"
@@ -271,11 +288,12 @@ export default function AuthPage() {
                       placeholder="your@email.com"
                       disabled={loading}
                       required
+                      className="h-12"
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
+                    <Label htmlFor="signup-password" className="text-sm font-medium">Password</Label>
                     <Input
                       id="signup-password"
                       type="password"
@@ -285,6 +303,7 @@ export default function AuthPage() {
                       disabled={loading}
                       required
                       minLength={6}
+                      className="h-12"
                     />
                     <p className="text-xs text-muted-foreground">
                       Must be at least 6 characters long
@@ -293,7 +312,7 @@ export default function AuthPage() {
                   
                   <Button 
                     type="submit" 
-                    className="w-full bg-gradient-to-r from-primary to-secondary text-white"
+                    className="w-full h-12 bg-gradient-to-r from-primary to-secondary text-white font-medium"
                     disabled={loading}
                   >
                     {loading ? (
@@ -302,23 +321,23 @@ export default function AuthPage() {
                         Creating Account...
                       </>
                     ) : (
-                      'Create Account'
+                      'Create Your Account'
                     )}
                   </Button>
                 </form>
                 
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
+                    <span className="w-full border-t border-border" />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">Or</span>
+                    <span className="bg-background px-3 text-muted-foreground font-medium">Or continue with</span>
                   </div>
                 </div>
                 
                 <Button 
                   variant="outline" 
-                  className="w-full"
+                  className="w-full h-12 border-border hover:bg-muted"
                   onClick={handleMagicLink}
                   disabled={loading}
                 >
@@ -330,9 +349,14 @@ export default function AuthPage() {
           </CardContent>
         </Card>
         
-        <p className="text-center text-sm text-muted-foreground mt-4">
-          By signing up, you agree to our Terms of Service and Privacy Policy
-        </p>
+        <div className="text-center mt-6">
+          <p className="text-sm text-muted-foreground">
+            By continuing, you agree to our{' '}
+            <a href="#" className="text-primary hover:underline">Terms of Service</a>{' '}
+            and{' '}
+            <a href="#" className="text-primary hover:underline">Privacy Policy</a>
+          </p>
+        </div>
       </div>
     </div>
   );
