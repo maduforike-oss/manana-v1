@@ -120,26 +120,66 @@ export async function getProfileMetrics(userId: string): Promise<ProfileMetrics 
   return data as ProfileMetrics | null;
 }
 
-/** Get the signed-in user's profile_metrics row */
-export async function getMyProfileMetrics(): Promise<ProfileMetrics> {
+/** Ensure a metrics row exists for the signed-in user; returns the row */
+export async function ensureProfileMetrics(): Promise<ProfileMetrics | null> {
   const { data: { user }, error: userErr } = await supabase.auth.getUser();
   if (userErr) throw userErr;
-  if (!user) throw new Error('Not signed in');
+  if (!user) return null;
 
+  // Try read
   const { data, error } = await supabase
     .from('profile_metrics')
     .select('*')
     .eq('user_id', user.id)
     .single();
 
-  if (error && error.code !== 'PGRST116') throw error; // 116 = no rows
-  return data ?? {
-    user_id: user.id,
-    total_designs: 0,
-    followers: 0,
-    following: 0,
-    updated_at: new Date().toISOString(),
-  };
+  if (!error && data) return data as ProfileMetrics;
+
+  // Insert if missing
+  const { data: inserted, error: insErr } = await supabase
+    .from('profile_metrics')
+    .insert({ user_id: user.id })
+    .select('*')
+    .single();
+
+  if (insErr) throw insErr;
+  return inserted as ProfileMetrics;
+}
+
+/** Update metrics with a partial patch (e.g., { followers: 10 }) */
+export async function updateProfileMetrics(patch: Partial<Omit<ProfileMetrics, 'user_id'>>): Promise<ProfileMetrics | null> {
+  const { data: { user }, error: userErr } = await supabase.auth.getUser();
+  if (userErr) throw userErr;
+  if (!user) return null;
+
+  const { data, error } = await supabase
+    .from('profile_metrics')
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq('user_id', user.id)
+    .select('*')
+    .single();
+
+  if (error) {
+    // If no row exists yet, create it then try again
+    await ensureProfileMetrics();
+    const { data: data2, error: err2 } = await supabase
+      .from('profile_metrics')
+      .update({ ...patch, updated_at: new Date().toISOString() })
+      .eq('user_id', user.id)
+      .select('*')
+      .single();
+    if (err2) throw err2;
+    return data2 as ProfileMetrics;
+  }
+  return data as ProfileMetrics;
+}
+
+/** Convenience: increment total_designs by n (default 1) */
+export async function incrementDesignCount(n = 1): Promise<ProfileMetrics | null> {
+  const current = await ensureProfileMetrics();
+  if (!current) return null;
+  const next = Math.max(0, (current.total_designs ?? 0) + n);
+  return updateProfileMetrics({ total_designs: next });
 }
 
 /** Check if a username is available (case-insensitive). Excludes current user when provided. */
