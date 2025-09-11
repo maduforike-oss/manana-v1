@@ -3,7 +3,7 @@ import { Settings, Palette, Package, Crown, LogOut, Trash2, Users, CreditCard, A
 import { BrandHeader } from '@/components/ui/brand-header';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useAppStore } from '@/store/useAppStore';
@@ -12,65 +12,62 @@ import { useNavigate } from 'react-router-dom';
 import { FeaturedDesignsGallery } from '@/components/FeaturedDesignsGallery';
 import { ProfileTags } from '@/components/ProfileTags';
 import { SocialLinks } from '@/components/SocialLinks';
-import { supabase } from '@/integrations/supabase/client';
-import SignOutButton from '../../../components/auth/SignOutButton';
-import type { User } from '@supabase/supabase-js';
+import { useAuth } from '@/lib/auth-context';
+import { getProfileMetrics, ProfileMetrics } from '@/lib/profile';
+import SignOutButton from '@/components/auth/SignOutButton';
 
 export const ProfilePage = () => {
   const { setActiveTab } = useAppStore();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, profile, isLoading } = useAuth();
+  const [metrics, setMetrics] = useState<ProfileMetrics | null>(null);
+  const [metricsLoading, setMetricsLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user ?? null);
-        setLoading(false);
+    const loadMetrics = async () => {
+      if (user) {
+        try {
+          const data = await getProfileMetrics(user.id);
+          setMetrics(data);
+        } catch (error) {
+          console.error('Error loading metrics:', error);
+        }
       }
-    );
+      setMetricsLoading(false);
+    };
+    
+    loadMetrics();
+  }, [user]);
 
-    return () => subscription.unsubscribe();
-  }, []);
-
-  // Mock user data
-  const mockUser = {
-    name: 'Alex Designer',
-    email: 'alex@example.com',
-    bio: 'Passionate designer creating unique streetwear and minimalist graphics. Available for custom work.',
-    location: 'London, UK',
-    website: 'https://alexdesigner.com',
-    specialties: ['Streetwear', 'Typography', 'Minimalist', 'Vintage', 'Custom Logos'],
-    joinDate: '2024-01-01',
+  // Default data when no profile exists yet
+  const displayData = {
+    name: profile?.display_name || profile?.username || 'Anonymous User',
+    email: user?.email || '',
+    bio: profile?.bio || 'Welcome to Manana! Complete your profile to get started.',
+    location: profile?.location || '',
+    website: profile?.website || '',
+    avatar_url: profile?.avatar_url || '',
+    specialties: ['New User'],
+    joinDate: profile?.created_at || user?.created_at || new Date().toISOString(),
     plan: 'Basic',
-    designsThisMonth: 12,
+    designsThisMonth: 0,
     maxDesigns: 30,
-    totalDesigns: 47,
-    totalOrders: 8,
-    followers: 1247,
-    following: 892,
+    totalDesigns: metrics?.total_designs || 0,
+    totalOrders: 0,
+    followers: metrics?.followers || 0,
+    following: metrics?.following || 0,
     socialLinks: [
-      { platform: 'website' as const, url: 'https://alexdesigner.com' },
-      { platform: 'instagram' as const, url: 'https://instagram.com/alexdesigner' },
-      { platform: 'twitter' as const, url: 'https://twitter.com/alexdesigner' },
+      ...(profile?.website ? [{ platform: 'website' as const, url: profile.website }] : []),
+      ...(profile?.social_instagram ? [{ platform: 'instagram' as const, url: `https://instagram.com/${profile.social_instagram}` }] : []),
+      ...(profile?.social_twitter ? [{ platform: 'twitter' as const, url: `https://twitter.com/${profile.social_twitter}` }] : []),
     ],
     featuredDesigns: [
-      { id: '1', name: 'Street Art Tee', thumbnail: '', garmentType: 'T-Shirt', likes: 234, views: 1024 },
-      { id: '2', name: 'Minimal Logo Hoodie', thumbnail: '', garmentType: 'Hoodie', likes: 189, views: 876 },
-      { id: '3', name: 'Vintage Band Tee', thumbnail: '', garmentType: 'T-Shirt', likes: 156, views: 642 },
-      { id: '4', name: 'Custom Typography', thumbnail: '', garmentType: 'Tank Top', likes: 98, views: 432 },
+      { id: '1', name: 'Get started in Studio', thumbnail: '', garmentType: 'Create your first design', likes: 0, views: 0 },
     ],
   };
 
-  const progressPercentage = (mockUser.designsThisMonth / mockUser.maxDesigns) * 100;
+  const progressPercentage = (displayData.designsThisMonth / displayData.maxDesigns) * 100;
 
   const handleProfileSettings = () => {
     navigate('/profile/settings');
@@ -104,7 +101,7 @@ export const ProfilePage = () => {
     });
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="h-full bg-background overflow-auto modern-scroll">
         <BrandHeader title="Profile" subtitle="Loading..." />
@@ -193,33 +190,34 @@ export const ProfilePage = () => {
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4 sm:mb-6">
             <div className="flex items-center gap-4">
               <Avatar className="w-20 h-20 sm:w-16 sm:h-16">
+                <AvatarImage src={displayData.avatar_url || undefined} />
                 <AvatarFallback className="bg-gradient-to-r from-primary to-secondary text-white text-xl font-bold">
-                  AD
+                  {displayData.name.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               
               <div className="flex-1 min-w-0">
-                <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent truncate">{mockUser.name}</h1>
-                <p className="text-muted-foreground text-sm sm:text-base truncate">{mockUser.email}</p>
+                <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent truncate">{displayData.name}</h1>
+                <p className="text-muted-foreground text-sm sm:text-base truncate">{displayData.email}</p>
               </div>
             </div>
             
             <div className="space-y-3">
-              {mockUser.bio && (
-                <p className="text-sm text-foreground leading-relaxed">{mockUser.bio}</p>
+              {displayData.bio && (
+                <p className="text-sm text-foreground leading-relaxed">{displayData.bio}</p>
               )}
               
               <div className="flex flex-wrap items-center gap-3 text-xs">
-                {mockUser.location && (
+                {displayData.location && (
                   <div className="flex items-center gap-1 text-muted-foreground">
                     <MapPin className="w-3 h-3" />
-                    <span className="truncate max-w-[120px]">{mockUser.location}</span>
+                    <span className="truncate max-w-[120px]">{displayData.location}</span>
                   </div>
                 )}
-                {mockUser.website && (
+                {displayData.website && (
                   <div className="flex items-center gap-1 text-muted-foreground">
                     <Globe className="w-3 h-3" />
-                    <a href={mockUser.website} target="_blank" rel="noopener noreferrer" className="hover:text-primary">
+                    <a href={displayData.website} target="_blank" rel="noopener noreferrer" className="hover:text-primary">
                       Portfolio
                     </a>
                   </div>
@@ -229,16 +227,16 @@ export const ProfilePage = () => {
               <div className="flex flex-wrap items-center gap-2">
                 <Badge className="bg-gradient-to-r from-primary to-secondary text-white text-xs">
                   <Crown className="w-3 h-3 mr-1" />
-                  {mockUser.plan} Plan
+                  {displayData.plan} Plan
                 </Badge>
                 <span className="text-xs text-muted-foreground">
-                  Member since {new Date(mockUser.joinDate).toLocaleDateString()}
+                  Member since {new Date(displayData.joinDate).toLocaleDateString()}
                 </span>
               </div>
 
               <div className="space-y-2">
-                <ProfileTags specialties={mockUser.specialties} maxDisplay={3} />
-                <SocialLinks links={mockUser.socialLinks} />
+                <ProfileTags specialties={displayData.specialties} maxDisplay={3} />
+                <SocialLinks links={displayData.socialLinks} />
               </div>
             </div>
           </div>
@@ -249,28 +247,34 @@ export const ProfilePage = () => {
               className="text-center cursor-pointer hover:bg-muted/50 p-3 sm:px-4 sm:py-2 rounded-lg transition-colors min-h-[60px] sm:min-h-auto flex flex-col justify-center"
               onClick={handleFollowers}
             >
-              <p className="text-lg sm:text-2xl font-bold">{mockUser.followers.toLocaleString()}</p>
+              <p className="text-lg sm:text-2xl font-bold">
+                {metricsLoading ? '...' : displayData.followers.toLocaleString()}
+              </p>
               <p className="text-xs sm:text-sm text-muted-foreground">Followers</p>
             </div>
             <div 
               className="text-center cursor-pointer hover:bg-muted/50 p-3 sm:px-4 sm:py-2 rounded-lg transition-colors min-h-[60px] sm:min-h-auto flex flex-col justify-center"
               onClick={handleFollowing}
             >
-              <p className="text-lg sm:text-2xl font-bold">{mockUser.following.toLocaleString()}</p>
+              <p className="text-lg sm:text-2xl font-bold">
+                {metricsLoading ? '...' : displayData.following.toLocaleString()}
+              </p>
               <p className="text-xs sm:text-sm text-muted-foreground">Following</p>
             </div>
             <div 
               className="text-center cursor-pointer hover:bg-muted/50 p-3 sm:px-4 sm:py-2 rounded-lg transition-colors min-h-[60px] sm:min-h-auto flex flex-col justify-center"
               onClick={() => setActiveTab('studio')}
             >
-              <p className="text-lg sm:text-2xl font-bold">{mockUser.totalDesigns}</p>
+              <p className="text-lg sm:text-2xl font-bold">
+                {metricsLoading ? '...' : displayData.totalDesigns}
+              </p>
               <p className="text-xs sm:text-sm text-muted-foreground">Designs</p>
             </div>
           </div>
 
           {/* Featured Designs with mobile spacing */}
           <div className="bg-muted/50 p-3 sm:p-4 rounded-lg mb-4">
-            <FeaturedDesignsGallery designs={mockUser.featuredDesigns} maxDisplay={3} />
+            <FeaturedDesignsGallery designs={displayData.featuredDesigns} maxDisplay={3} />
           </div>
 
           {/* Design Usage with mobile optimization */}
@@ -278,12 +282,12 @@ export const ProfilePage = () => {
             <div className="flex justify-between items-center mb-3">
               <span className="text-sm font-medium">Monthly Designs</span>
               <span className="text-sm text-muted-foreground">
-                {mockUser.designsThisMonth} / {mockUser.maxDesigns}
+                {displayData.designsThisMonth} / {displayData.maxDesigns}
               </span>
             </div>
             <Progress value={progressPercentage} className="h-2 mb-2" />
             <p className="text-xs text-muted-foreground">
-              {mockUser.maxDesigns - mockUser.designsThisMonth} designs remaining this month
+              {displayData.maxDesigns - displayData.designsThisMonth} designs remaining this month
             </p>
           </div>
         </Card>
@@ -295,7 +299,9 @@ export const ProfilePage = () => {
             onClick={() => setActiveTab('studio')}
           >
             <Palette className="w-8 h-8 text-primary mx-auto mb-2" />
-            <p className="text-xl sm:text-2xl font-bold">{mockUser.totalDesigns}</p>
+            <p className="text-xl sm:text-2xl font-bold">
+              {metricsLoading ? '...' : displayData.totalDesigns}
+            </p>
             <p className="text-xs sm:text-sm text-muted-foreground">Total Designs</p>
           </Card>
           
@@ -304,7 +310,7 @@ export const ProfilePage = () => {
             onClick={() => setActiveTab('orders')}
           >
             <Package className="w-8 h-8 text-secondary mx-auto mb-2" />
-            <p className="text-xl sm:text-2xl font-bold">{mockUser.totalOrders}</p>
+            <p className="text-xl sm:text-2xl font-bold">{displayData.totalOrders}</p>
             <p className="text-xs sm:text-sm text-muted-foreground">Orders Placed</p>
           </Card>
         </div>
@@ -367,7 +373,7 @@ export const ProfilePage = () => {
               
               <div className="text-center sm:text-right">
                 <div className="bg-background rounded-lg p-3 border inline-block">
-                  <p className="text-lg font-bold">12/30</p>
+                  <p className="text-lg font-bold">{displayData.designsThisMonth}/{displayData.maxDesigns}</p>
                   <p className="text-xs text-muted-foreground">Designs used</p>
                 </div>
               </div>
@@ -376,12 +382,12 @@ export const ProfilePage = () => {
             <div className="bg-background rounded-lg p-3 mb-4">
               <div className="flex justify-between text-sm mb-2">
                 <span>Monthly limit</span>
-                <span>40% used</span>
+                <span>{Math.round(progressPercentage)}% used</span>
               </div>
               <div className="w-full bg-muted rounded-full h-2">
-                <div className="bg-gradient-to-r from-primary to-secondary h-2 rounded-full" style={{ width: '40%' }}></div>
+                <div className="bg-gradient-to-r from-primary to-secondary h-2 rounded-full" style={{ width: `${progressPercentage}%` }}></div>
               </div>
-              <p className="text-xs text-muted-foreground mt-1">18 designs remaining this month</p>
+              <p className="text-xs text-muted-foreground mt-1">{displayData.maxDesigns - displayData.designsThisMonth} designs remaining this month</p>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mb-4">
@@ -399,29 +405,44 @@ export const ProfilePage = () => {
               </div>
             </div>
             
-            <Button onClick={handleUpgradePlan} className="w-full h-12 sm:h-10 bg-gradient-to-r from-primary to-secondary text-white hover:shadow-lg transition-shadow">
-              <Crown className="w-4 h-4 mr-2" />
-              Upgrade to Premium
+            <Button onClick={handleUpgradePlan} className="w-full h-12 sm:h-10 bg-gradient-to-r from-primary to-secondary text-white">
+              Upgrade to Pro
             </Button>
           </div>
         </Card>
 
-        {/* Danger Zone with mobile touch optimization */}
+        {/* Danger Zone */}
         <Card className="border-destructive/50">
           <div className="p-4 border-b border-border">
             <h2 className="text-lg font-semibold text-destructive">Danger Zone</h2>
           </div>
           
-          <div className="p-3 sm:p-4 space-y-1">
-            <SignOutButton className="w-full justify-start text-destructive hover:text-destructive h-12 sm:h-10 bg-transparent hover:bg-destructive/10 border-0 p-0">
-              <LogOut className="w-4 h-4 mr-3" />
-              <span className="text-sm sm:text-base">Sign Out</span>
-            </SignOutButton>
+          <div className="p-4 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <p className="font-medium">Sign Out</p>
+                <p className="text-sm text-muted-foreground">Sign out of your account</p>
+              </div>
+              <SignOutButton className="w-full sm:w-auto px-4 py-2 bg-muted hover:bg-muted/80 text-foreground rounded-md">
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </SignOutButton>
+            </div>
             
-            <Button variant="ghost" onClick={handleDeleteAccount} className="w-full justify-start text-destructive hover:text-destructive h-12 sm:h-10">
-              <Trash2 className="w-4 h-4 mr-3" />
-              <span className="text-sm sm:text-base">Delete Account</span>
-            </Button>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-border">
+              <div>
+                <p className="font-medium text-destructive">Delete Account</p>
+                <p className="text-sm text-muted-foreground">Permanently delete your account and all data</p>
+              </div>
+              <Button 
+                variant="destructive" 
+                onClick={handleDeleteAccount}
+                className="w-full sm:w-auto"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete Account
+              </Button>
+            </div>
           </div>
         </Card>
       </div>

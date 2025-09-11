@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/lib/auth-context';
 
 interface SignOutButtonProps {
   className?: string;
@@ -15,13 +16,14 @@ export default function SignOutButton({
   redirectTo = '/auth/signin' 
 }: SignOutButtonProps) {
   const [loading, setLoading] = useState(false);
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
 
   const onClick = async () => {
     setLoading(true);
     try {
-      await supabase.auth.signOut();
-      // Navigate to redirect URL
-      window.location.href = redirectTo;
+      await signOut();
+      navigate(redirectTo);
     } finally {
       setLoading(false);
     }

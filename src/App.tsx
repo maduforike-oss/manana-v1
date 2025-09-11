@@ -19,6 +19,8 @@ import Cart from "./pages/Cart";
 import AddListing from "./pages/AddListing";
 import Checkout from "./pages/Checkout";
 import CheckoutSuccess from "./pages/CheckoutSuccess";
+import SignIn from "./pages/SignIn";
+import RequireAuth from "./components/auth/RequireAuth";
 
 const queryClient = new QueryClient();
 
@@ -31,18 +33,19 @@ const App = () => (
         <AppLayout>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/studio" element={<StudioPro />} />
-            <Route path="/studio/editor" element={<StudioEditor />} />
-            <Route path="/studio/legacy" element={<StudioPage />} />
+            <Route path="/auth/signin" element={<SignIn />} />
+            <Route path="/studio" element={<RequireAuth><StudioPro /></RequireAuth>} />
+            <Route path="/studio/editor" element={<RequireAuth><StudioEditor /></RequireAuth>} />
+            <Route path="/studio/legacy" element={<RequireAuth><StudioPage /></RequireAuth>} />
             <Route path="/item/:id" element={<ItemDetail />} />
             <Route path="/cart" element={<Cart />} />
-            <Route path="/add-listing" element={<AddListing />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/checkout/success" element={<CheckoutSuccess />} />
-            <Route path="/orders/:id" element={<OrderDetails />} />
-            <Route path="/profile/settings" element={<ProfileSettings />} />
-            <Route path="/profile/upgrade" element={<UpgradePlan />} />
-            <Route path="/profile/followers" element={<Followers />} />
+            <Route path="/add-listing" element={<RequireAuth><AddListing /></RequireAuth>} />
+            <Route path="/checkout" element={<RequireAuth><Checkout /></RequireAuth>} />
+            <Route path="/checkout/success" element={<RequireAuth><CheckoutSuccess /></RequireAuth>} />
+            <Route path="/orders/:id" element={<RequireAuth><OrderDetails /></RequireAuth>} />
+            <Route path="/profile/settings" element={<RequireAuth><ProfileSettings /></RequireAuth>} />
+            <Route path="/profile/upgrade" element={<RequireAuth><UpgradePlan /></RequireAuth>} />
+            <Route path="/profile/followers" element={<RequireAuth><Followers /></RequireAuth>} />
             <Route path="/users/:userId" element={<UserProfile />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

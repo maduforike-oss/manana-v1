@@ -32,10 +32,10 @@ export async function getMyProfile(): Promise<ExtendedProfile | null> {
     .from('profiles')
     .select('*')
     .eq('id', user.id)
-    .single();
+    .maybeSingle();
 
   if (error) throw error;
-  return data as ExtendedProfile;
+  return data as ExtendedProfile | null;
 }
 
 export async function getProfileByUsername(username: string): Promise<ExtendedProfile | null> {
@@ -43,9 +43,9 @@ export async function getProfileByUsername(username: string): Promise<ExtendedPr
     .from('profiles')
     .select('*')
     .eq('username', username)
-    .single();
+    .maybeSingle();
 
-  if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows found
+  if (error) throw error;
   return data as ExtendedProfile | null;
 }
 
@@ -54,9 +54,9 @@ export async function getProfileMetrics(userId: string): Promise<ProfileMetrics 
     .from('profile_metrics')
     .select('*')
     .eq('user_id', userId)
-    .single();
+    .maybeSingle();
 
-  if (error && error.code !== 'PGRST116') throw error;
+  if (error) throw error;
   return data as ProfileMetrics | null;
 }
 
