@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { MapPin, Globe, Users, Package, Crown } from 'lucide-react';
 import { getProfileByUsername, getProfileMetrics } from '@/lib/profile';
 import { SocialLinks } from '@/components/SocialLinks';
+import FollowButton from '@/components/profile/FollowButton';
 
 interface UserProfilePageProps {
   params: {
@@ -132,9 +133,7 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
                       Designer
                     </Badge>
                     
-                    <Button variant="outline" size="sm">
-                      Follow
-                    </Button>
+                    <FollowButton targetUserId={profile.id} />
                   </div>
                 </div>
               </div>
