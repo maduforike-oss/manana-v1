@@ -15,6 +15,7 @@ import {
   ExternalLink,
   Edit3,
   Shield,
+  ShieldCheck,
   CreditCard
 } from 'lucide-react';
 import { BrandHeader } from '@/components/ui/brand-header';
@@ -31,6 +32,7 @@ import RequireAuth from '@/components/auth/RequireAuth';
 import { Logo } from '@/components/brand/Logo';
 import { ProfileInfoSection } from '@/components/profile/ProfileInfoSection';
 import { QuickImageUpload } from '@/components/profile/QuickImageUpload';
+import { isStaff } from '@/lib/auth';
 
 interface OrderStats {
   total_orders: number;
@@ -58,6 +60,7 @@ export default function ProfileHub() {
     followers: 0, 
     following: 0 
   });
+  const [isUserStaff, setIsUserStaff] = useState(false);
 
   // Load profile and stats
   useEffect(() => {
@@ -91,6 +94,18 @@ export default function ProfileHub() {
     if (user) {
       loadStats();
     }
+  }, [user]);
+
+  useEffect(() => {
+    const checkStaff = async () => {
+      try {
+        const staff = await isStaff();
+        setIsUserStaff(staff);
+      } catch (e) {
+        console.error('Error checking staff status:', e);
+      }
+    };
+    if (user) checkStaff();
   }, [user]);
 
   const displayName = profile?.display_name || profile?.username || 'Anonymous User';
@@ -250,6 +265,26 @@ export default function ProfileHub() {
                 </div>
               </CardContent>
             </Card>
+
+            {isUserStaff && (
+              <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/admin/templates-uploader')}>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="p-2 rounded-lg bg-primary/10">
+                      <ShieldCheck className="w-5 h-5 text-primary" />
+                    </div>
+                    <h3 className="font-semibold">Admin Templates</h3>
+                  </div>
+                  <p className="text-muted-foreground text-sm mb-4">
+                    Upload and manage garment templates
+                  </p>
+                  <div className="flex items-center gap-2 text-primary text-sm font-medium">
+                    <span>Open uploader</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
