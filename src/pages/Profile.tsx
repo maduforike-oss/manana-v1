@@ -22,7 +22,7 @@ import { sanitizeUsername, validateUsername } from '@/lib/usernames';
 import { getErrorMessage } from '@/lib/errors';
 import SignOutButton from '@/components/auth/SignOutButton';
 import RequireAuth from '@/components/auth/RequireAuth';
-import BackButton from '@/components/BackButton';
+
 import { isStaff } from '@/lib/auth';
 
 // Debounce hook
@@ -326,7 +326,17 @@ export default function Profile() {
           subtitle="Manage your profile and settings"
         >
           <div className="flex items-center gap-2">
-            <BackButton fallback="/" />
+            {isUserStaff && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/admin/templates-uploader')}
+                className="h-12 px-4"
+              >
+                <ShieldCheck className="w-4 h-4 mr-2" />
+                Admin Templates
+              </Button>
+            )}
             <Button
               onClick={handleSave}
               disabled={!hasChanges || loading}
