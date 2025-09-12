@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Heart, Eye, Star, Download, Palette, ShoppingCart, Share2, Lock } from 'lucide-react';
+import { Heart, Eye, Star, Download, Palette, ShoppingCart, Share2, Lock, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,13 +18,16 @@ interface ProductCardProps {
   onAddToCart?: (design: StudioGarmentData) => void;
   onShare?: (design: StudioGarmentData) => void;
   viewMode?: 'grid' | 'list';
+  isLoading?: boolean;
+  hasError?: boolean;
+  onRetry?: () => void;
 }
 
 const COLOR_SWATCHES = [
-  { id: 'black', color: '#000000', name: 'Black' },
-  { id: 'white', color: '#FFFFFF', name: 'White' },
-  { id: 'navy', color: '#1E3A8A', name: 'Navy' },
-  { id: 'gray', color: '#6B7280', name: 'Gray' },
+  { id: 'black', color: 'hsl(var(--background))', name: 'Black', thumbSrc: '/garments/tshirt-black-front.png' },
+  { id: 'white', color: 'hsl(var(--background))', name: 'White', thumbSrc: '/garments/tshirt-white-front.png' },
+  { id: 'navy', color: 'hsl(217 91% 60%)', name: 'Navy', thumbSrc: '/garments/polo-navy-front.png' },
+  { id: 'gray', color: 'hsl(var(--muted))', name: 'Gray', thumbSrc: '/garments/crewneck-heather-front.png' },
 ];
 
 const SIZE_OPTIONS = ['S', 'M', 'L', 'XL'];
@@ -38,12 +41,26 @@ export function ProductCard({
   onOpenInStudio,
   onAddToCart,
   onShare,
-  viewMode = 'grid'
+  viewMode = 'grid',
+  isLoading = false,
+  hasError = false,
+  onRetry
 }: ProductCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [selectedColor, setSelectedColor] = useState(COLOR_SWATCHES[0]);
   const [selectedSize, setSelectedSize] = useState('M');
   const [showSwatches, setShowSwatches] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
+  // Mock stock status - in real app this would come from API
+  const isOutOfStock = Math.random() < 0.05; // 5% chance out of stock
+
+  // Handle color swatch click - changes the actual product image
+  const handleColorChange = (swatch: typeof COLOR_SWATCHES[0]) => {
+    setSelectedColor(swatch);
+    setImageLoaded(false);
+    setImageError(false);
+  };
 
   if (viewMode === 'list') {
     return (
