@@ -11,7 +11,8 @@ import { ProfileSettings } from "./pages/ProfileSettings";
 import { UpgradePlan } from "./pages/UpgradePlan";
 import Followers from "./pages/Followers";
 import UserProfile from "./pages/UserProfile";
-import Profile from "./pages/Profile";
+import ProfileHub from "./pages/ProfileHub";
+import ProfileEdit from "./pages/ProfileEdit";
 import UserProfilePublic from "./pages/UserProfilePublic";
 import { StudioPage } from "./components/pages/StudioPage";
 import StudioEditor from "./pages/StudioEditor";
@@ -43,7 +44,8 @@ const App = () => (
             <Route path="/checkout" element={<RequireAuth><Checkout /></RequireAuth>} />
             <Route path="/checkout/success" element={<RequireAuth><CheckoutSuccess /></RequireAuth>} />
             <Route path="/orders/:id" element={<RequireAuth><OrderDetails /></RequireAuth>} />
-            <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
+            <Route path="/profile" element={<RequireAuth><ProfileHub /></RequireAuth>} />
+            <Route path="/profile/edit" element={<RequireAuth><ProfileEdit /></RequireAuth>} />
             <Route path="/profile/settings" element={<RequireAuth><ProfileSettings /></RequireAuth>} />
             <Route path="/profile/upgrade" element={<RequireAuth><UpgradePlan /></RequireAuth>} />
             <Route path="/profile/followers" element={<RequireAuth><Followers /></RequireAuth>} />
