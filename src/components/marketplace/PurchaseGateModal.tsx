@@ -17,8 +17,8 @@ export function PurchaseGateModal({ design, open, onOpenChange }: PurchaseGateMo
   if (!design) return null;
 
   const handleAddToCart = () => {
-    // Mock add to cart - could integrate with actual cart system
-    console.log('Added to cart:', design.id);
+    // Actual add to cart implementation would go here
+    // For now, just close the modal
     onOpenChange(false);
     // Could show toast notification here
   };

@@ -147,7 +147,7 @@ export function MarketPage() {
           url: window.location.href + `?design=${design.id}`
         });
       } catch (err) {
-        console.log('Error sharing:', err);
+        // Share error - silent fail
       }
     } else {
       navigator.clipboard.writeText(window.location.href + `?design=${design.id}`);

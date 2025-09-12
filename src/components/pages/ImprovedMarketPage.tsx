@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, Suspense } from 'react';
 import { Filter, Grid, List, SortAsc, ShoppingCart, Sparkles, TrendingUp, Package, Heart, Search, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -7,15 +7,17 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Badge } from '@/components/ui/badge';
 import { BrandHeader } from '@/components/ui/brand-header';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { ProductCard } from '@/components/marketplace/ProductCard';
+import { VirtualizedProductGrid } from '@/components/marketplace/VirtualizedProductGrid';
 import { EmptyState } from '@/components/marketplace/EmptyState';
 import { ProductCardSkeleton } from '@/components/marketplace/ProductCardSkeleton';
 import { useMarketplace } from '@/hooks/useMarketplace';
 import { useCart } from '@/hooks/useCart';
 import { useImageOptimization } from '@/hooks/useImageOptimization';
+import { useProducts } from '@/hooks/useProducts';
 import { StudioGarmentData } from '@/lib/studio/marketData';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 export function ImprovedMarketPage() {
   // State management
@@ -23,6 +25,7 @@ export function ImprovedMarketPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
 
   // Custom hooks
   const {
@@ -48,7 +51,7 @@ export function ImprovedMarketPage() {
   const { addToCart, cart } = useCart();
   const { toast } = useToast();
   const { getOptimizedImageUrl } = useImageOptimization();
-  const [isLoading, setIsLoading] = useState(false);
+  const { data: realProducts, isLoading: productsLoading, error: productsError } = useProducts();
 
   // Get current tab data
   const getCurrentTabData = () => {
@@ -371,36 +374,28 @@ export function ImprovedMarketPage() {
               />
             ) : (
               <>
-                {/* Mobile: Always Grid, Desktop: Switchable */}
-                <div className={cn(
-                  "gap-3 sm:gap-4 lg:gap-6",
-                  // Mobile: 2 columns, Tablet: 3 columns, Desktop: 4-6 columns based on screen size
-                  "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6"
-                )}>
-                  {isLoading ? (
-                    Array.from({ length: 12 }).map((_, i) => (
+                <Suspense fallback={
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
+                    {Array.from({ length: 12 }).map((_, i) => (
                       <ProductCardSkeleton key={i} />
-                    ))
-                  ) : (
-                    filteredData.map((design) => (
-                      <ProductCard
-                        key={design.id}
-                        design={{
-                          ...design,
-                          thumbSrc: getOptimizedImageUrl(design.thumbSrc, { format: 'webp', fallback: design.thumbSrc })
-                        }}
-                        viewMode="grid" // Always grid on mobile
-                        isSaved={isSaved(design.id)}
-                        isUnlocked={isUnlocked(design.id)}
-                        onSave={handleSaveDesign}
-                        onQuickView={() => {}} // Simplified for mobile
-                        onOpenInStudio={() => {}} // Simplified for mobile  
-                        onAddToCart={handleAddToCart}
-                        onShare={handleShare}
-                      />
-                    ))
-                  )}
-                </div>
+                    ))}
+                  </div>
+                }>
+                  <VirtualizedProductGrid
+                    designs={filteredData.map((design) => ({
+                      ...design,
+                      thumbSrc: getOptimizedImageUrl(design.thumbSrc, { format: 'webp', fallback: design.thumbSrc })
+                    }))}
+                    isLoading={productsLoading}
+                    isSaved={isSaved}
+                    isUnlocked={isUnlocked}
+                    onSave={handleSaveDesign}
+                    onQuickView={() => {}}
+                    onOpenInStudio={() => {}}
+                    onAddToCart={handleAddToCart}
+                    onShare={handleShare}
+                  />
+                </Suspense>
               </>
             )}
           </div>
@@ -411,6 +406,7 @@ export function ImprovedMarketPage() {
       <Button
         className="fixed bottom-20 right-4 w-14 h-14 rounded-full shadow-lg lg:hidden z-40"
         size="sm"
+        onClick={() => navigate('/sell/new')}
       >
         <Plus className="h-6 w-6" />
       </Button>

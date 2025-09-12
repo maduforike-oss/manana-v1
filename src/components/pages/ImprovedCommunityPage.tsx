@@ -390,7 +390,7 @@ export const ImprovedCommunityPage = () => {
           navigator.vibrate(50);
         }
       } catch (err) {
-        console.log('Share cancelled');
+        // Share cancelled - silent fail
       }
     } else {
       try {

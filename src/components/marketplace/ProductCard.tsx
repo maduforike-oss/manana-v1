@@ -183,11 +183,13 @@ export function ProductCard({
           <img
             src={design.thumbSrc}
             alt={design.name}
+            loading="lazy"
             className={cn(
               "w-full h-full object-cover transition-all duration-300 group-hover:scale-105",
               imageLoaded ? "opacity-100" : "opacity-0"
             )}
             onLoad={() => setImageLoaded(true)}
+            onError={() => setImageError(true)}
           />
           
           {/* Overlay */}

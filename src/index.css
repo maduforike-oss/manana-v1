@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 /* Manana Design System - Unified Fashion Platform */
 
 @layer base {

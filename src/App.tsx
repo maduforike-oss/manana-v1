@@ -19,45 +19,65 @@ import StudioEditor from "./pages/StudioEditor";
 import StudioPro from "./pages/StudioPro";
 import ItemDetail from "./pages/ItemDetail";
 import Cart from "./pages/Cart";
-import AddListing from "./pages/AddListing";
+import SellNew from "./pages/SellNew";
 import Checkout from "./pages/Checkout";
 import CheckoutSuccess from "./pages/CheckoutSuccess";
 import RequireAuth from "./components/auth/RequireAuth";
+import { useEffect } from "react";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 3,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    },
+  },
+});
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AppLayout>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/studio" element={<RequireAuth><StudioPro /></RequireAuth>} />
-            <Route path="/studio/editor" element={<RequireAuth><StudioEditor /></RequireAuth>} />
-            <Route path="/studio/legacy" element={<RequireAuth><StudioPage /></RequireAuth>} />
-            <Route path="/item/:id" element={<ItemDetail />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/add-listing" element={<RequireAuth><AddListing /></RequireAuth>} />
-            <Route path="/checkout" element={<RequireAuth><Checkout /></RequireAuth>} />
-            <Route path="/checkout/success" element={<RequireAuth><CheckoutSuccess /></RequireAuth>} />
-            <Route path="/orders/:id" element={<RequireAuth><OrderDetails /></RequireAuth>} />
-            <Route path="/profile" element={<RequireAuth><ProfileHub /></RequireAuth>} />
-            <Route path="/profile/edit" element={<RequireAuth><ProfileEdit /></RequireAuth>} />
-            <Route path="/profile/settings" element={<RequireAuth><ProfileSettings /></RequireAuth>} />
-            <Route path="/profile/upgrade" element={<RequireAuth><UpgradePlan /></RequireAuth>} />
-            <Route path="/profile/followers" element={<RequireAuth><Followers /></RequireAuth>} />
-            <Route path="/users/:userId" element={<UserProfile />} />
-            <Route path="/u/:username" element={<UserProfilePublic />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AppLayout>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  useEffect(() => {
+    // Register service worker for offline support
+    if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+      navigator.serviceWorker.register('/sw.js')
+        .then(() => console.log('SW registered'))
+        .catch(() => console.log('SW registration failed'));
+    }
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AppLayout>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/studio" element={<RequireAuth><StudioPro /></RequireAuth>} />
+              <Route path="/studio/editor" element={<RequireAuth><StudioEditor /></RequireAuth>} />
+              <Route path="/studio/legacy" element={<RequireAuth><StudioPage /></RequireAuth>} />
+              <Route path="/item/:id" element={<ItemDetail />} />
+              <Route path="/cart" element={<Cart />} />
+              <Route path="/sell/new" element={<RequireAuth><SellNew /></RequireAuth>} />
+              <Route path="/checkout" element={<RequireAuth><Checkout /></RequireAuth>} />
+              <Route path="/checkout/success" element={<RequireAuth><CheckoutSuccess /></RequireAuth>} />
+              <Route path="/orders/:id" element={<RequireAuth><OrderDetails /></RequireAuth>} />
+              <Route path="/profile" element={<RequireAuth><ProfileHub /></RequireAuth>} />
+              <Route path="/profile/edit" element={<RequireAuth><ProfileEdit /></RequireAuth>} />
+              <Route path="/profile/settings" element={<RequireAuth><ProfileSettings /></RequireAuth>} />
+              <Route path="/profile/upgrade" element={<RequireAuth><UpgradePlan /></RequireAuth>} />
+              <Route path="/profile/followers" element={<RequireAuth><Followers /></RequireAuth>} />
+              <Route path="/users/:userId" element={<UserProfile />} />
+              <Route path="/u/:username" element={<UserProfilePublic />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AppLayout>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
