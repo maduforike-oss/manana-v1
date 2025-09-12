@@ -5,7 +5,7 @@ import { StudioPage } from '@/components/pages/StudioPage';
 import { ImprovedMarketPage } from '@/components/pages/ImprovedMarketPage';
 import { ImprovedCommunityPage } from '@/components/pages/ImprovedCommunityPage';
 import { OrdersPage } from '@/components/pages/OrdersPage';
-import { ProfilePage } from '@/components/pages/ProfilePage';
+import Profile from '@/pages/Profile';
 import { DesktopSidebar } from '@/components/DesktopSidebar';
 import { SkipToContent } from '@/components/SkipToContent';
 import { OnboardingWalkthrough } from '@/components/OnboardingWalkthrough';
@@ -87,7 +87,7 @@ const Index = () => {
       case 'orders':
         return <OrdersPage />;
       case 'profile':
-        return <ProfilePage />;
+        return <Profile />;
       default:
         return <ImprovedMarketPage />;
     }

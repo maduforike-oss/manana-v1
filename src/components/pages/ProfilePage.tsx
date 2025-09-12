@@ -70,7 +70,7 @@ export const ProfilePage = () => {
   const progressPercentage = (displayData.designsThisMonth / displayData.maxDesigns) * 100;
 
   const handleProfileSettings = () => {
-    navigate('/profile/settings');
+    navigate('/profile');
   };
 
   const handleUpgradePlan = () => {
@@ -175,7 +175,7 @@ export const ProfilePage = () => {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate('/profile/settings')}
+          onClick={() => navigate('/profile')}
           className="glass-effect border-border/20 min-h-[48px] min-w-[48px] rounded-2xl"
           aria-label="Profile settings"
         >

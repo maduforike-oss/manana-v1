@@ -1,8 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react";
-import { MapPin, Globe, Users, Heart, Bookmark, Grid, Calendar, ExternalLink } from 'lucide-react';
-import BackButton from '@/components/BackButton';
+import { ArrowLeft, MapPin, Globe, Users, Heart, Bookmark, Grid, Calendar, ExternalLink } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -11,30 +10,58 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getProfileByUsername, getProfileMetrics, ExtendedProfile, ProfileMetrics } from '@/lib/profile';
 import FollowButton from '@/components/profile/FollowButton';
+import BackButton from '@/components/BackButton';
+import { getErrorMessage } from '@/lib/errors';
+import { useToast } from '@/hooks/use-toast';
 
-export default function UserProfile() {
+export default function UserProfilePublic() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { username } = useParams();
   const [user, setUser] = useState<ExtendedProfile | null>(null);
   const [metrics, setMetrics] = useState<ProfileMetrics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadProfile = async () => {
       if (!username) {
+        setError('No username provided');
         setLoading(false);
         return;
       }
       
       try {
+        setLoading(true);
+        setError(null);
+        
         const profile = await getProfileByUsername(username);
-        if (profile) {
-          setUser(profile);
+        if (!profile) {
+          setError('User not found');
+          setLoading(false);
+          return;
+        }
+
+        // Check if profile is discoverable
+        const preferences = profile.preferences as any || {};
+        if (preferences.discoverable === false) {
+          setError('This profile is not discoverable');
+          setLoading(false);
+          return;
+        }
+
+        setUser(profile);
+        
+        try {
           const profileMetrics = await getProfileMetrics(profile.id);
           setMetrics(profileMetrics);
+        } catch (metricsError) {
+          console.error('Error loading metrics:', metricsError);
+          // Don't fail the whole page if metrics fail
         }
       } catch (error) {
         console.error('Error loading profile:', error);
+        setError(getErrorMessage(error));
       } finally {
         setLoading(false);
       }
@@ -47,28 +74,52 @@ export default function UserProfile() {
     return (
       <div className="container mx-auto py-6 px-4 max-w-4xl">
         <div className="flex items-center gap-4 mb-6">
-        <BackButton fallback="/" />
+          <BackButton fallback="/" />
           <div className="animate-pulse">
             <div className="h-6 bg-muted rounded w-32 mb-2"></div>
             <div className="h-4 bg-muted rounded w-24"></div>
           </div>
         </div>
+        <div className="space-y-6">
+          <Card className="p-6">
+            <div className="animate-pulse space-y-4">
+              <div className="flex gap-4">
+                <div className="w-24 h-24 bg-muted rounded-full"></div>
+                <div className="space-y-2 flex-1">
+                  <div className="h-6 bg-muted rounded w-1/3"></div>
+                  <div className="h-4 bg-muted rounded w-1/2"></div>
+                  <div className="h-4 bg-muted rounded w-2/3"></div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
       </div>
     );
   }
 
-  if (!user) {
+  if (error || !user) {
     return (
       <div className="container mx-auto py-6 px-4 max-w-4xl">
         <div className="flex items-center gap-4 mb-6">
-        <BackButton fallback="/" />
-          <h1 className="text-2xl font-bold">User Not Found</h1>
+          <BackButton fallback="/" />
+          <h1 className="text-2xl font-bold">Profile Not Found</h1>
         </div>
         <Card className="p-6 text-center">
-          <p className="text-muted-foreground">The user you're looking for doesn't exist or hasn't set up their profile yet.</p>
-          <Button onClick={() => navigate('/')} className="mt-4">
-            Back to Market
-          </Button>
+          <div className="space-y-4">
+            <div className="w-16 h-16 bg-muted rounded-full mx-auto flex items-center justify-center">
+              <Users className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold mb-2">User Not Available</h2>
+              <p className="text-muted-foreground mb-4">
+                {error || "The user you're looking for doesn't exist or hasn't set up their profile yet."}
+              </p>
+            </div>
+            <Button onClick={() => navigate('/')} className="bg-gradient-to-r from-primary to-secondary text-white">
+              Back to Market
+            </Button>
+          </div>
         </Card>
       </div>
     );
@@ -85,6 +136,11 @@ export default function UserProfile() {
     { id: '1', name: 'Getting started...', thumbnail: '', garmentType: 'Create your first design', likes: 0, saves: 0 },
   ];
 
+  // Check if we should show email and socials based on preferences
+  const preferences = user.preferences as any || {};
+  const showSocials = preferences.show_socials !== false; // Default to true
+  const shouldShowSocialLinks = showSocials && socialLinks.length > 0;
+
   return (
     <div className="container mx-auto py-6 px-4 max-w-4xl">
       {/* Header */}
@@ -99,6 +155,17 @@ export default function UserProfile() {
       {/* Profile Header */}
       <Card className="mb-6">
         <CardContent className="p-6">
+          {/* Cover Photo */}
+          {user.cover_url && (
+            <div className="relative h-32 sm:h-40 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-lg mb-6 overflow-hidden">
+              <img 
+                src={user.cover_url} 
+                alt="Cover" 
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+
           <div className="flex flex-col md:flex-row gap-6">
             <div className="flex flex-col items-center md:items-start">
               <Avatar className="w-24 h-24 mb-4">
@@ -123,7 +190,7 @@ export default function UserProfile() {
                       {user.location}
                     </div>
                   )}
-                  {user.website && (
+                  {user.website && shouldShowSocialLinks && (
                     <div className="flex items-center gap-1">
                       <Globe className="w-4 h-4" />
                       <a href={user.website} target="_blank" rel="noopener noreferrer" className="hover:text-primary">
@@ -160,7 +227,7 @@ export default function UserProfile() {
                 </div>
               </div>
 
-              {socialLinks.length > 0 && (
+              {shouldShowSocialLinks && (
                 <div className="flex gap-2">
                   {socialLinks.map((link, index) => (
                     <Button key={index} variant="outline" size="sm" asChild>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth } from '@/lib/auth-context';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 
 interface RequireAuthProps {
@@ -9,15 +9,19 @@ interface RequireAuthProps {
   redirectTo?: string;
 }
 
-export default function RequireAuth({ children, redirectTo = '/auth' }: RequireAuthProps) {
+export default function RequireAuth({ children, redirectTo }: RequireAuthProps) {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (!isLoading && !user) {
-      navigate(redirectTo);
+      const currentPath = location.pathname + location.search;
+      const authPath = redirectTo || '/auth';
+      const separator = authPath.includes('?') ? '&' : '?';
+      navigate(`${authPath}${separator}redirect=${encodeURIComponent(currentPath)}`);
     }
-  }, [user, isLoading, navigate, redirectTo]);
+  }, [user, isLoading, navigate, redirectTo, location]);
 
   if (isLoading) {
     return (

@@ -2,12 +2,12 @@
 
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { BrandHeader } from '@/components/ui/brand-header';
 import { ProfileSettingsForm } from '@/components/profile/ProfileSettingsForm';
 import { useAuth } from '@/lib/auth-context';
 import { useAppStore } from '@/store/useAppStore';
+import BackButton from '@/components/BackButton';
+import RequireAuth from '@/components/auth/RequireAuth';
 
 export function ProfileSettings() {
   const navigate = useNavigate();
@@ -45,26 +45,20 @@ export function ProfileSettings() {
   }
 
   return (
-    <div className="h-full bg-background overflow-auto modern-scroll">
-      <BrandHeader 
-        title="Profile Settings" 
-        subtitle="Update your profile information"
-      >
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate('/profile')}
-          className="glass-effect border-border/20 min-h-[48px] min-w-[48px] rounded-2xl"
-          aria-label="Back to profile"
+    <RequireAuth>
+      <div className="h-full bg-background overflow-auto modern-scroll">
+        <BrandHeader 
+          title="Profile Settings" 
+          subtitle="Update your profile information"
         >
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-      </BrandHeader>
+          <BackButton fallback="/profile" />
+        </BrandHeader>
 
-      <div className="container mx-auto py-6 px-4 max-w-4xl">
-        <ProfileSettingsForm />
+        <div className="container mx-auto py-6 px-4 max-w-4xl">
+          <ProfileSettingsForm />
+        </div>
       </div>
-    </div>
+    </RequireAuth>
   );
 }
 
