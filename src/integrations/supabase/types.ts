@@ -284,9 +284,14 @@ export type Database = {
           display_name: string
           id: string
           is_liked_by_user: boolean
+          is_saved_by_user: boolean
           likes_count: number
+          media_types: string[]
+          media_urls: string[]
+          reactions_summary: Json
           updated_at: string
           user_id: string
+          user_reaction: string
           username: string
         }[]
       }

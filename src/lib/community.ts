@@ -1,7 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { handleAsyncError, getErrorMessage } from './errors';
 
-// TypeScript interfaces for Community API v1
+// TypeScript interfaces for Community API v2
 export interface PostProfile {
   username: string | null;
   display_name: string | null;
@@ -20,6 +20,12 @@ export interface Post {
   likes_count: number;
   comments_count: number;
   is_liked_by_user: boolean;
+  // v2 fields
+  media_urls: string[];
+  media_types: string[];
+  is_saved_by_user: boolean;
+  reactions_summary: Record<string, number> | null;
+  user_reaction: string | null;
 }
 
 export interface Comment {
@@ -49,6 +55,21 @@ export interface ToggleLikeResult {
   error?: string;
 }
 
+export interface ToggleSaveResult {
+  data?: boolean; // true if saved, false if unsaved
+  error?: string;
+}
+
+export interface ToggleReactionResult {
+  data?: boolean; // true if added, false if removed
+  error?: string;
+}
+
+export interface UploadMediaResult {
+  data?: string; // media URL
+  error?: string;
+}
+
 export interface FeedPostsResult {
   data?: Post[];
   error?: string;
@@ -58,6 +79,20 @@ export interface PostCommentsResult {
   data?: Comment[];
   error?: string;
 }
+
+// Reaction types and emoji mappings
+export const REACTION_TYPES = {
+  like: '👍',
+  love: '❤️',
+  fire: '🔥',
+  clap: '👏',
+  laugh: '😂',
+  wow: '😮',
+  sad: '😢',
+  angry: '😡'
+} as const;
+
+export type ReactionType = keyof typeof REACTION_TYPES;
 
 // Core Community API functions
 export async function createPost(content: string): Promise<CreatePostResult> {
@@ -94,7 +129,18 @@ export async function getFeedPosts(
       return { error: getErrorMessage(error) };
     }
 
-    return { data: data || [] };
+    if (data) {
+      // Transform the data to ensure proper typing
+      const transformedData = data.map(post => ({
+        ...post,
+        reactions_summary: (post.reactions_summary as any) || {},
+        media_urls: post.media_urls || [],
+        media_types: post.media_types || []
+      }));
+      return { data: transformedData };
+    }
+
+    return { data: [] };
   } catch (error) {
     return { error: getErrorMessage(error) };
   }
@@ -115,6 +161,50 @@ export async function togglePostLike(postId: string): Promise<ToggleLikeResult> 
     }
 
     return { data };
+  } catch (error) {
+    return { error: getErrorMessage(error) };
+  }
+}
+
+export async function togglePostSave(postId: string): Promise<ToggleSaveResult> {
+  if (!postId) {
+    return { error: 'Post ID is required' };
+  }
+
+  try {
+    const { data, error } = await supabase.rpc('toggle_post_save' as any, {
+      post_id_param: postId
+    });
+
+    if (error) {
+      return { error: getErrorMessage(error) };
+    }
+
+    return { data: data as boolean };
+  } catch (error) {
+    return { error: getErrorMessage(error) };
+  }
+}
+
+export async function togglePostReaction(
+  postId: string, 
+  reactionType: ReactionType
+): Promise<ToggleReactionResult> {
+  if (!postId || !reactionType) {
+    return { error: 'Post ID and reaction type are required' };
+  }
+
+  try {
+    const { data, error } = await supabase.rpc('toggle_post_reaction' as any, {
+      post_id_param: postId,
+      reaction_type_param: reactionType
+    });
+
+    if (error) {
+      return { error: getErrorMessage(error) };
+    }
+
+    return { data: data as boolean };
   } catch (error) {
     return { error: getErrorMessage(error) };
   }
@@ -144,6 +234,57 @@ export async function createComment(
   }
 }
 
+export async function uploadPostMedia(
+  file: File,
+  postId?: string
+): Promise<UploadMediaResult> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return { error: 'Authentication required' };
+    }
+
+    // Generate unique filename
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
+    // Upload to storage
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('post-media')
+      .upload(fileName, file);
+
+    if (uploadError) {
+      return { error: getErrorMessage(uploadError) };
+    }
+
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('post-media')
+      .getPublicUrl(fileName);
+
+    // If postId is provided, associate with post
+    if (postId) {
+      const mediaType = file.type.startsWith('image/') ? 'image' : 'video';
+      const { error: mediaError } = await supabase.rpc('upload_post_media' as any, {
+        post_id_param: postId,
+        media_url_param: publicUrl,
+        media_type_param: mediaType,
+        file_size_param: file.size
+      });
+
+      if (mediaError) {
+        // Clean up uploaded file if database operation fails
+        await supabase.storage.from('post-media').remove([fileName]);
+        return { error: getErrorMessage(mediaError) };
+      }
+    }
+
+    return { data: publicUrl };
+  } catch (error) {
+    return { error: getErrorMessage(error) };
+  }
+}
+
 export async function getPostComments(
   postId: string,
   limit: number = 50
@@ -166,6 +307,33 @@ export async function getPostComments(
   } catch (error) {
     return { error: getErrorMessage(error) };
   }
+}
+
+// Helper function to format reaction counts
+export function formatReactionCounts(reactions: Record<string, number> | null): string {
+  if (!reactions) return '';
+  
+  const total = Object.values(reactions).reduce((sum, count) => sum + count, 0);
+  if (total === 0) return '';
+  
+  const topReactions = Object.entries(reactions)
+    .sort(([,a], [,b]) => b - a)
+    .slice(0, 3)
+    .map(([type]) => REACTION_TYPES[type as ReactionType])
+    .join('');
+    
+  return total > 3 ? `${topReactions} +${total - 3}` : topReactions;
+}
+
+// Helper to get most popular reaction
+export function getMostPopularReaction(reactions: Record<string, number> | null): ReactionType | null {
+  if (!reactions) return null;
+  
+  const entries = Object.entries(reactions);
+  if (entries.length === 0) return null;
+  
+  const [topReaction] = entries.sort(([,a], [,b]) => b - a);
+  return topReaction[0] as ReactionType;
 }
 
 // Utility functions
@@ -227,6 +395,16 @@ export function subscribeToPostUpdates(
         event: '*',
         schema: 'public',
         table: 'comments',
+        filter: `post_id=eq.${postId}`
+      },
+      onUpdate
+    )
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'post_reactions',
         filter: `post_id=eq.${postId}`
       },
       onUpdate

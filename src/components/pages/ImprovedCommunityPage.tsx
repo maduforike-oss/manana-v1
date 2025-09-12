@@ -39,6 +39,7 @@ import {
   createPost,
   getFeedPosts,
   togglePostLike,
+  togglePostSave,
   createComment,
   getPostComments,
   formatTimeAgo,
@@ -47,6 +48,8 @@ import {
   type Post,
   type Comment
 } from '@/lib/community';
+import { MediaUpload } from '@/components/studio/MediaUpload';
+import { ReactionPicker } from '@/components/studio/ReactionPicker';
 
 // Extended interfaces for additional UI features
 interface ExtendedPost extends Post {
@@ -103,6 +106,7 @@ export const ImprovedCommunityPage = () => {
   const [hasMore, setHasMore] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [offset, setOffset] = useState(0);
+  const [uploadedMedia, setUploadedMedia] = useState<Array<{ url: string; type: 'image' | 'video' }>>([]);
   const pullToRefreshRef = useRef<HTMLDivElement>(null);
 
   // Load initial posts
@@ -124,7 +128,10 @@ export const ImprovedCommunityPage = () => {
       const extendedPosts = data.map(post => ({
         ...post,
         ...getMockExtendedFields(),
-        hashtags: extractHashtags(post.content)
+        hashtags: extractHashtags(post.content),
+        // Map v2 fields properly
+        images: post.media_urls.filter((_, i) => post.media_types[i] === 'image'),
+        isSaved: post.is_saved_by_user
       }));
       setPosts(extendedPosts);
       setOffset(20);
@@ -157,7 +164,10 @@ export const ImprovedCommunityPage = () => {
         const extendedPosts = data.map(post => ({
           ...post,
           ...getMockExtendedFields(),
-          hashtags: extractHashtags(post.content)
+          hashtags: extractHashtags(post.content),
+          // Map v2 fields properly
+          images: post.media_urls.filter((_, i) => post.media_types[i] === 'image'),
+          isSaved: post.is_saved_by_user
         }));
         setPosts(prev => [...prev, ...extendedPosts]);
         setOffset(prev => prev + 20);
@@ -244,19 +254,38 @@ export const ImprovedCommunityPage = () => {
   const handleSave = async (postId: string) => {
     if (!mustBeAuthedOrRedirect()) return;
     
-    // Placeholder for future saves functionality
+    // Optimistic update
     const post = posts.find(p => p.id === postId);
+    if (!post) return;
+
+    const newSavedState = !post.isSaved;
     setPosts(prev => prev.map(p => 
       p.id === postId 
         ? { 
             ...p, 
-            isSaved: !p.isSaved,
-            saves: p.isSaved ? (p.saves || 0) - 1 : (p.saves || 0) + 1
+            isSaved: newSavedState,
+            saves: newSavedState ? (p.saves || 0) + 1 : Math.max((p.saves || 0) - 1, 0)
           }
         : p
     ));
-    
-    toast(post?.isSaved ? 'Unsaved' : 'Saved!');
+
+    // Persist to backend
+    const { error } = await togglePostSave(postId);
+    if (error) {
+      // Revert optimistic update on error
+      setPosts(prev => prev.map(p => 
+        p.id === postId 
+          ? { 
+              ...p, 
+              isSaved: post.isSaved,
+              saves: post.saves
+            }
+          : p
+      ));
+      toast.error(error);
+    } else {
+      toast.success(newSavedState ? 'Post saved!' : 'Post unsaved');
+    }
   };
 
   const handleComment = async (postId: string, content: string) => {
@@ -339,6 +368,7 @@ export const ImprovedCommunityPage = () => {
       // Refresh the feed to show the new post
       await loadInitialPosts();
       setNewPostContent('');
+      setUploadedMedia([]);
       setShowCreatePost(false);
       toast.success('Post created! 🎉');
     }
@@ -397,6 +427,18 @@ export const ImprovedCommunityPage = () => {
       setShowComments(!showComments);
     };
 
+    const handleReactionUpdate = (newReactions: Record<string, number>, newUserReaction: string | null) => {
+      setPosts(prev => prev.map(p => 
+        p.id === post.id 
+          ? { 
+              ...p, 
+              reactions_summary: newReactions,
+              user_reaction: newUserReaction
+            }
+          : p
+      ));
+    };
+
     return (
       <Card className="border border-border/10 rounded-3xl overflow-hidden bg-card/50 backdrop-blur-sm hover:shadow-lg transition-all duration-300 mb-4">
         {/* Post Header */}
@@ -429,14 +471,38 @@ export const ImprovedCommunityPage = () => {
           <div className="space-y-3">
             <p className="text-sm leading-relaxed">{post.content}</p>
             
-            {/* Post Image */}
+            {/* Post Image/Media Gallery */}
             {post.images && post.images.length > 0 && (
-              <div className="rounded-2xl overflow-hidden bg-muted/30">
-                <img 
-                  src={post.images[0]} 
-                  alt="Post content"
-                  className="w-full aspect-square object-cover"
-                />
+              <div className={cn(
+                "rounded-2xl overflow-hidden bg-muted/30",
+                post.images.length === 1 ? "aspect-square" : "aspect-[4/3]"
+              )}>
+                {post.images.length === 1 ? (
+                  <img 
+                    src={post.images[0]} 
+                    alt="Post content"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="grid grid-cols-2 gap-1 h-full">
+                    {post.images.slice(0, 4).map((image, idx) => (
+                      <div key={idx} className="relative">
+                        <img 
+                          src={image} 
+                          alt={`Post content ${idx + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        {idx === 3 && post.images.length > 4 && (
+                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                            <span className="text-white font-semibold">
+                              +{post.images.length - 4}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -495,6 +561,13 @@ export const ImprovedCommunityPage = () => {
                 <MessageCircle className="h-4 w-4" />
                 <span className="text-sm">{post.comments_count}</span>
               </Button>
+
+              <ReactionPicker
+                postId={post.id}
+                reactions={post.reactions_summary}
+                userReaction={post.user_reaction}
+                onReactionUpdate={handleReactionUpdate}
+              />
               
               <Button
                 variant="ghost"
@@ -747,6 +820,18 @@ export const ImprovedCommunityPage = () => {
                   />
                 </div>
               </div>
+
+              {/* Media Upload */}
+              <MediaUpload
+                onMediaUploaded={(url, type) => {
+                  setUploadedMedia(prev => [...prev, { url, type }]);
+                }}
+                onError={(error) => {
+                  toast.error(error);
+                }}
+                maxFiles={10}
+              />
+
               <div className="flex items-center justify-between pt-4 border-t border-border/20">
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" size="sm">
