@@ -34,155 +34,53 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/lib/auth-context';
+import {
+  createPost,
+  getFeedPosts,
+  togglePostLike,
+  createComment,
+  getPostComments,
+  formatTimeAgo,
+  formatDisplayName,
+  getAvatarUrl,
+  type Post,
+  type Comment
+} from '@/lib/community';
 
-// Enhanced interfaces for social features
-interface SocialPost {
-  id: string;
-  userId: string;
-  user: {
-    id: string;
-    name: string;
-    username: string;
-    avatar?: string;
-    verified?: boolean;
-    followers: number;
-  };
-  content: string;
+// Extended interfaces for additional UI features
+interface ExtendedPost extends Post {
+  hashtags?: string[];
   images?: string[];
-  hashtags: string[];
-  likes: number;
-  comments: number;
-  shares: number;
-  saves: number;
-  views: number;
-  isLiked?: boolean;
+  shares?: number;
+  saves?: number;
+  views?: number;
   isSaved?: boolean;
   isFollowing?: boolean;
-  createdAt: Date;
   isPinned?: boolean;
   category?: string;
   location?: string;
 }
 
-interface Comment {
-  id: string;
-  postId: string;
-  userId: string;
-  user: {
-    id: string;
-    name: string;
-    username: string;
-    avatar?: string;
-  };
-  content: string;
-  likes: number;
+interface ExtendedComment extends Comment {
+  likes?: number;
   isLiked?: boolean;
-  createdAt: Date;
-  replies?: Comment[];
+  replies?: ExtendedComment[];
 }
 
-const generateMockPosts = (): SocialPost[] => [
-  {
-    id: 'post-1',
-    userId: 'user-1',
-    user: {
-      id: 'user-1',
-      name: 'Sarah Design',
-      username: '@sarahdesign',
-      avatar: '',
-      verified: true,
-      followers: 12547
-    },
-    content: 'Just dropped this minimalist t-shirt design! What do you think? 🎨 The inspiration came from urban architecture and clean lines. #minimalist #tshirt #design #urban',
-    images: ['/api/placeholder/400/400'],
-    hashtags: ['minimalist', 'tshirt', 'design', 'urban'],
-    likes: 234,
-    comments: 47,
-    shares: 12,
-    saves: 89,
-    views: 2341,
-    isLiked: false,
-    isSaved: false,
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    isPinned: true,
-    category: 'Fashion'
-  },
-  {
-    id: 'post-2',
-    userId: 'user-2',
-    user: {
-      id: 'user-2',
-      name: 'Mike Creative',
-      username: '@mikecreative',
-      avatar: '',
-      followers: 8932
-    },
-    content: 'Behind the scenes of my latest hoodie collection. The process is just as important as the result! Each design goes through 15+ iterations before I\'m satisfied. What\'s your creative process like? 💪',
-    hashtags: ['hoodie', 'behindthescenes', 'process', 'creative'],
-    likes: 156,
-    comments: 23,
-    shares: 8,
-    saves: 45,
-    views: 1876,
-    createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000),
-    category: 'Behind the Scenes'
-  },
-  {
-    id: 'post-3',
-    userId: 'user-3',
-    user: {
-      id: 'user-3',
-      name: 'Emma Artist',
-      username: '@emmaartist',
-      avatar: '',
-      verified: true,
-      followers: 15698
-    },
-    content: 'Nature-inspired designs are my passion. This forest-themed collection took 3 months to perfect 🌲 Each piece tells a story about conservation and our connection to nature.',
-    hashtags: ['nature', 'forest', 'collection', 'inspiration', 'sustainability'],
-    likes: 342,
-    comments: 67,
-    shares: 24,
-    saves: 127,
-    views: 3542,
-    createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000),
-    category: 'Nature'
-  }
-];
-
-const generateMockComments = (postId: string): Comment[] => [
-  {
-    id: 'comment-1',
-    postId,
-    userId: 'user-4',
-    user: {
-      id: 'user-4',
-      name: 'Alex Fan',
-      username: '@alexfan',
-      avatar: ''
-    },
-    content: 'This is absolutely gorgeous! Love the minimalist approach 😍',
-    likes: 12,
-    isLiked: false,
-    createdAt: new Date(Date.now() - 30 * 60 * 1000)
-  },
-  {
-    id: 'comment-2',
-    postId,
-    userId: 'user-5',
-    user: {
-      id: 'user-5',
-      name: 'Jordan Designer',
-      username: '@jordandesigner',
-      avatar: ''
-    },
-    content: 'What software did you use for this? The lines are so clean!',
-    likes: 8,
-    isLiked: true,
-    createdAt: new Date(Date.now() - 45 * 60 * 1000)
-  }
-];
+// Mock data for features not yet implemented in API v1
+const getMockExtendedFields = () => ({
+  hashtags: [],
+  images: [],
+  shares: 0,
+  saves: 0,
+  views: 1,
+  isSaved: false,
+  isFollowing: false,
+  isPinned: false,
+  category: 'General',
+  location: undefined
+});
 
 const trendingHashtags = [
   { tag: 'minimalist', posts: 2341, growth: 12 },
@@ -193,29 +91,97 @@ const trendingHashtags = [
 ];
 
 export const ImprovedCommunityPage = () => {
-  const { user } = useAppStore();
+  const { user, isLoading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState('feed');
-  const [posts, setPosts] = useState<SocialPost[]>([]);
+  const [posts, setPosts] = useState<ExtendedPost[]>([]);
   const [expandedPost, setExpandedPost] = useState<string | null>(null);
-  const [postComments, setPostComments] = useState<Record<string, Comment[]>>({});
+  const [postComments, setPostComments] = useState<Record<string, ExtendedComment[]>>({});
   const [newPostContent, setNewPostContent] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
+  const [offset, setOffset] = useState(0);
   const pullToRefreshRef = useRef<HTMLDivElement>(null);
 
-  // Initialize mock data
+  // Load initial posts
   useEffect(() => {
-    setPosts(generateMockPosts());
-    
-    const commentsData: Record<string, Comment[]> = {};
-    generateMockPosts().forEach(post => {
-      commentsData[post.id] = generateMockComments(post.id);
-    });
-    setPostComments(commentsData);
+    loadInitialPosts();
   }, []);
+
+  const loadInitialPosts = async () => {
+    setIsLoading(true);
+    const { data, error } = await getFeedPosts(20, 0);
+    
+    if (error) {
+      toast.error(error);
+      setIsLoading(false);
+      return;
+    }
+
+    if (data) {
+      const extendedPosts = data.map(post => ({
+        ...post,
+        ...getMockExtendedFields(),
+        hashtags: extractHashtags(post.content)
+      }));
+      setPosts(extendedPosts);
+      setOffset(20);
+    }
+    setIsLoading(false);
+  };
+
+  const extractHashtags = (content: string): string[] => {
+    const hashtags = content.match(/#[\w]+/g)?.map(tag => tag.slice(1)) || [];
+    return hashtags;
+  };
+
+  const loadMorePosts = async () => {
+    if (!hasMore || isLoading) return;
+    
+    setIsLoading(true);
+    const { data, error } = await getFeedPosts(20, offset);
+    
+    if (error) {
+      toast.error(error);
+      setIsLoading(false);
+      return;
+    }
+
+    if (data) {
+      if (data.length === 0) {
+        setHasMore(false);
+        toast.success('You\'ve reached the end!');
+      } else {
+        const extendedPosts = data.map(post => ({
+          ...post,
+          ...getMockExtendedFields(),
+          hashtags: extractHashtags(post.content)
+        }));
+        setPosts(prev => [...prev, ...extendedPosts]);
+        setOffset(prev => prev + 20);
+      }
+    }
+    setIsLoading(false);
+  };
+
+  const loadCommentsForPost = async (postId: string) => {
+    if (postComments[postId]) return; // Already loaded
+    
+    const { data, error } = await getPostComments(postId);
+    if (!error && data) {
+      setPostComments(prev => ({
+        ...prev,
+        [postId]: data.map(comment => ({
+          ...comment,
+          likes: 0,
+          isLiked: false,
+          replies: []
+        }))
+      }));
+    }
+  };
 
   // Infinite scroll
   const { loadMoreRef } = useInfiniteScroll({
@@ -224,96 +190,124 @@ export const ImprovedCommunityPage = () => {
     onLoadMore: loadMorePosts,
   });
 
-  const formatTimeAgo = (date: Date) => {
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffHours < 1) return 'Just now';
-    if (diffHours < 24) return `${diffHours}h`;
-    if (diffDays < 7) return `${diffDays}d`;
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  // Auth helper
+  const mustBeAuthedOrRedirect = (): boolean => {
+    if (!user) {
+      window.location.href = '/auth/signin';
+      return false;
+    }
+    return true;
   };
 
   const handleLike = async (postId: string) => {
-    if (!(await mustBeAuthedOrRedirect())) return;
+    if (!mustBeAuthedOrRedirect()) return;
     
-    setPosts(prev => prev.map(post => 
-      post.id === postId 
+    // Optimistic update
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+
+    const newLikedState = !post.is_liked_by_user;
+    const newLikesCount = newLikedState ? post.likes_count + 1 : post.likes_count - 1;
+
+    setPosts(prev => prev.map(p => 
+      p.id === postId 
         ? { 
-            ...post, 
-            isLiked: !post.isLiked,
-            likes: post.isLiked ? post.likes - 1 : post.likes + 1
+            ...p, 
+            is_liked_by_user: newLikedState,
+            likes_count: newLikesCount
           }
-        : post
+        : p
     ));
     
-    const post = posts.find(p => p.id === postId);
     // Add haptic feedback for mobile
     if (navigator.vibrate) {
       navigator.vibrate(50);
     }
+
+    // Persist to backend
+    const { error } = await togglePostLike(postId);
+    if (error) {
+      // Revert optimistic update on error
+      setPosts(prev => prev.map(p => 
+        p.id === postId 
+          ? { 
+              ...p, 
+              is_liked_by_user: post.is_liked_by_user,
+              likes_count: post.likes_count
+            }
+          : p
+      ));
+      toast.error(error);
+    }
   };
 
   const handleSave = async (postId: string) => {
-    if (!(await mustBeAuthedOrRedirect())) return;
+    if (!mustBeAuthedOrRedirect()) return;
     
-    setPosts(prev => prev.map(post => 
-      post.id === postId 
+    // Placeholder for future saves functionality
+    const post = posts.find(p => p.id === postId);
+    setPosts(prev => prev.map(p => 
+      p.id === postId 
         ? { 
-            ...post, 
-            isSaved: !post.isSaved,
-            saves: post.isSaved ? post.saves - 1 : post.saves + 1
+            ...p, 
+            isSaved: !p.isSaved,
+            saves: p.isSaved ? (p.saves || 0) - 1 : (p.saves || 0) + 1
           }
-        : post
+        : p
     ));
     
-    const post = posts.find(p => p.id === postId);
     toast(post?.isSaved ? 'Unsaved' : 'Saved!');
   };
 
   const handleComment = async (postId: string, content: string) => {
-    if (!(await mustBeAuthedOrRedirect())) return;
+    if (!mustBeAuthedOrRedirect()) return;
     if (!content.trim()) return;
 
-    const newComment: Comment = {
-      id: `comment-${Date.now()}`,
-      postId,
-      userId: user?.id || 'current-user',
-      user: {
-        id: user?.id || 'current-user',
-        name: user?.name || 'You',
-        username: user?.username || '@you',
-        avatar: user?.avatar
-      },
-      content,
-      likes: 0,
-      isLiked: false,
-      createdAt: new Date()
-    };
+    const { data: commentId, error } = await createComment(postId, content);
+    
+    if (error) {
+      toast.error(error);
+      return;
+    }
 
-    setPostComments(prev => ({
-      ...prev,
-      [postId]: [newComment, ...(prev[postId] || [])]
-    }));
+    if (commentId) {
+      // Refresh comments for this post
+      const { data: comments, error: commentsError } = await getPostComments(postId);
+      if (!commentsError && comments) {
+        setPostComments(prev => ({
+          ...prev,
+          [postId]: comments.map(comment => ({
+            ...comment,
+            likes: 0,
+            isLiked: false,
+            replies: []
+          }))
+        }));
+      }
 
-    setPosts(prev => prev.map(post => 
-      post.id === postId 
-        ? { ...post, comments: post.comments + 1 }
-        : post
-    ));
+      // Update post comment count
+      setPosts(prev => prev.map(post => 
+        post.id === postId 
+          ? { ...post, comments_count: post.comments_count + 1 }
+          : post
+      ));
 
-    toast('Comment added!');
+      toast.success('Comment added!');
+    }
   };
 
-  const handleShare = async (post: SocialPost) => {
+  const handleShare = async (post: ExtendedPost) => {
     const shareUrl = `${window.location.origin}/community/post/${post.id}`;
+    const userName = formatDisplayName({
+      username: post.username,
+      display_name: post.display_name,
+      avatar_url: post.avatar_url
+    });
     
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `Check out this design by ${post.user.name}`,
+          title: `Check out this post by ${userName}`,
           text: post.content,
           url: shareUrl
         });
@@ -322,90 +316,54 @@ export const ImprovedCommunityPage = () => {
       }
     } else {
       await navigator.clipboard.writeText(shareUrl);
-      toast('Link copied to clipboard!');
+      toast.success('Link copied to clipboard!');
     }
     
     setPosts(prev => prev.map(p => 
-      p.id === post.id ? { ...p, shares: p.shares + 1 } : p
+      p.id === post.id ? { ...p, shares: (p.shares || 0) + 1 } : p
     ));
   };
 
   const handleCreatePost = async () => {
-    if (!(await mustBeAuthedOrRedirect())) return;
+    if (!mustBeAuthedOrRedirect()) return;
     if (!newPostContent.trim()) return;
 
-    const hashtags = newPostContent.match(/#[\w]+/g)?.map(tag => tag.slice(1)) || [];
+    const { data: postId, error } = await createPost(newPostContent);
     
-    const newPost: SocialPost = {
-      id: `post-${Date.now()}`,
-      userId: user?.id || 'current-user',
-      user: {
-        id: user?.id || 'current-user',
-        name: user?.name || 'You',
-        username: user?.username || '@you',
-        avatar: user?.avatar,
-        followers: 0
-      },
-      content: newPostContent,
-      hashtags,
-      likes: 0,
-      comments: 0,
-      shares: 0,
-      saves: 0,
-      views: 1,
-      createdAt: new Date()
-    };
-
-    setPosts(prev => [newPost, ...prev]);
-    setNewPostContent('');
-    setShowCreatePost(false);
-    toast('Post created! 🎉');
-  };
-
-  const mustBeAuthedOrRedirect = async (): Promise<boolean> => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      window.location.href = '/auth';
-      return false;
+    if (error) {
+      toast.error(error);
+      return;
     }
-    return true;
-  };
 
-  function loadMorePosts() {
-    if (!hasMore || isLoading) return;
-    
-    setIsLoading(true);
-    setTimeout(() => {
-      const morePosts = generateMockPosts().map(post => ({
-        ...post,
-        id: `${post.id}-more-${Date.now()}`,
-        createdAt: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000)
-      }));
-      setPosts(prev => [...prev, ...morePosts]);
-      setIsLoading(false);
-      
-      if (posts.length > 15) {
-        setHasMore(false);
-        toast('You\'ve reached the end!');
-      }
-    }, 1000);
-  }
+    if (postId) {
+      // Refresh the feed to show the new post
+      await loadInitialPosts();
+      setNewPostContent('');
+      setShowCreatePost(false);
+      toast.success('Post created! 🎉');
+    }
+  };
 
   // Filter posts based on active tab and search
   const filteredPosts = posts.filter(post => {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
+      const displayName = formatDisplayName({
+        username: post.username,
+        display_name: post.display_name,
+        avatar_url: post.avatar_url
+      });
       return (
         post.content.toLowerCase().includes(query) ||
-        post.hashtags.some(tag => tag.toLowerCase().includes(query)) ||
-        post.user.name.toLowerCase().includes(query) ||
-        post.user.username.toLowerCase().includes(query)
+        (post.hashtags && post.hashtags.some(tag => tag.toLowerCase().includes(query))) ||
+        displayName.toLowerCase().includes(query) ||
+        (post.username && post.username.toLowerCase().includes(query))
       );
     }
     
     switch (activeTab) {
       case 'trending':
-        return post.likes > 200;
+        return post.likes_count > 5; // Lower threshold for demo
       case 'following':
         return post.isFollowing;
       case 'saved':
@@ -415,10 +373,29 @@ export const ImprovedCommunityPage = () => {
     }
   });
 
-  const PostCard = ({ post }: { post: SocialPost }) => {
+  const PostCard = ({ post }: { post: ExtendedPost }) => {
     const [showComments, setShowComments] = useState(false);
     const [newComment, setNewComment] = useState('');
     const comments = postComments[post.id] || [];
+
+    const displayName = formatDisplayName({
+      username: post.username,
+      display_name: post.display_name,
+      avatar_url: post.avatar_url
+    });
+
+    const avatarUrl = getAvatarUrl({
+      username: post.username,
+      display_name: post.display_name,
+      avatar_url: post.avatar_url
+    });
+
+    const handleToggleComments = () => {
+      if (!showComments) {
+        loadCommentsForPost(post.id);
+      }
+      setShowComments(!showComments);
+    };
 
     return (
       <Card className="border border-border/10 rounded-3xl overflow-hidden bg-card/50 backdrop-blur-sm hover:shadow-lg transition-all duration-300 mb-4">
@@ -427,24 +404,19 @@ export const ImprovedCommunityPage = () => {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
               <Avatar className="w-11 h-11 ring-2 ring-border/20">
-                <AvatarImage src={post.user.avatar} />
+                <AvatarImage src={avatarUrl} />
                 <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary/20 font-semibold">
-                  {post.user.name.slice(0, 2)}
+                  {displayName.slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-foreground text-sm">
-                    {post.user.name}
+                    {displayName}
                   </span>
-                  {post.user.verified && (
-                    <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700 h-4 px-1">
-                      ✓
-                    </Badge>
-                  )}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {post.user.username} • {formatTimeAgo(post.createdAt)}
+                  {post.username && `@${post.username}`} • {formatTimeAgo(post.created_at)}
                 </p>
               </div>
             </div>
@@ -469,7 +441,7 @@ export const ImprovedCommunityPage = () => {
             )}
 
             {/* Hashtags */}
-            {post.hashtags.length > 0 && (
+            {post.hashtags && post.hashtags.length > 0 && (
               <div className="flex flex-wrap gap-1">
                 {post.hashtags.slice(0, 3).map(tag => (
                   <Badge key={tag} variant="secondary" className="text-xs bg-primary/10 text-primary border-0">
@@ -489,10 +461,10 @@ export const ImprovedCommunityPage = () => {
         {/* Engagement Stats */}
         <div className="px-4 py-2 border-t border-border/10">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{post.likes.toLocaleString()} likes</span>
+            <span>{post.likes_count.toLocaleString()} likes</span>
             <div className="flex items-center gap-3">
-              <span>{post.comments} comments</span>
-              <span>{post.shares} shares</span>
+              <span>{post.comments_count} comments</span>
+              <span>{post.shares || 0} shares</span>
             </div>
           </div>
         </div>
@@ -507,21 +479,21 @@ export const ImprovedCommunityPage = () => {
                 onClick={() => handleLike(post.id)}
                 className={cn(
                   "h-9 px-3 gap-2",
-                  post.isLiked ? "text-red-500" : "text-muted-foreground"
+                  post.is_liked_by_user ? "text-red-500" : "text-muted-foreground"
                 )}
               >
-                <Heart className={cn("h-4 w-4", post.isLiked && "fill-current")} />
-                <span className="text-sm">{post.likes}</span>
+                <Heart className={cn("h-4 w-4", post.is_liked_by_user && "fill-current")} />
+                <span className="text-sm">{post.likes_count}</span>
               </Button>
               
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setShowComments(!showComments)}
+                onClick={handleToggleComments}
                 className="h-9 px-3 gap-2 text-muted-foreground"
               >
                 <MessageCircle className="h-4 w-4" />
-                <span className="text-sm">{post.comments}</span>
+                <span className="text-sm">{post.comments_count}</span>
               </Button>
               
               <Button
@@ -553,9 +525,9 @@ export const ImprovedCommunityPage = () => {
               {/* Add Comment */}
               <div className="flex gap-3">
                 <Avatar className="w-8 h-8 flex-shrink-0">
-                  <AvatarImage src={user?.avatar} />
+                  <AvatarImage src="/placeholder.svg" />
                   <AvatarFallback className="bg-muted text-xs">
-                    {user?.name?.slice(0, 2) || 'You'}
+                    You
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 flex gap-2">
@@ -592,17 +564,31 @@ export const ImprovedCommunityPage = () => {
                 {comments.map(comment => (
                   <div key={comment.id} className="flex gap-3">
                     <Avatar className="w-7 h-7 flex-shrink-0">
-                      <AvatarImage src={comment.user.avatar} />
+                      <AvatarImage src={getAvatarUrl({
+                        username: comment.username,
+                        display_name: comment.display_name,
+                        avatar_url: comment.avatar_url
+                      })} />
                       <AvatarFallback className="bg-muted text-xs">
-                        {comment.user.name.slice(0, 2)}
+                        {formatDisplayName({
+                          username: comment.username,
+                          display_name: comment.display_name,
+                          avatar_url: comment.avatar_url
+                        }).slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <div className="bg-muted/50 rounded-xl px-3 py-2">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-xs">{comment.user.name}</span>
+                          <span className="font-medium text-xs">
+                            {formatDisplayName({
+                              username: comment.username,
+                              display_name: comment.display_name,
+                              avatar_url: comment.avatar_url
+                            })}
+                          </span>
                           <span className="text-xs text-muted-foreground">
-                            {formatTimeAgo(comment.createdAt)}
+                            {formatTimeAgo(comment.created_at)}
                           </span>
                         </div>
                         <p className="text-sm">{comment.content}</p>
@@ -610,7 +596,7 @@ export const ImprovedCommunityPage = () => {
                       <div className="flex items-center gap-4 mt-1 ml-3">
                         <Button variant="ghost" size="sm" className="h-6 px-2 text-xs text-muted-foreground">
                           <Heart className="h-3 w-3 mr-1" />
-                          {comment.likes}
+                          {comment.likes || 0}
                         </Button>
                         <Button variant="ghost" size="sm" className="h-6 px-2 text-xs text-muted-foreground">
                           Reply
@@ -717,6 +703,18 @@ export const ImprovedCommunityPage = () => {
               Loading more posts...
             </div>
           )}
+          {!hasMore && posts.length > 0 && (
+            <p className="text-muted-foreground text-sm">You've reached the end!</p>
+          )}
+          {!isLoading && posts.length === 0 && !authLoading && (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground mb-4">No posts yet. Be the first to share something!</p>
+              <Button onClick={() => setShowCreatePost(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Post
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -735,9 +733,9 @@ export const ImprovedCommunityPage = () => {
             <div className="p-6 space-y-4">
               <div className="flex gap-3">
                 <Avatar className="w-10 h-10 flex-shrink-0">
-                  <AvatarImage src={user?.avatar} />
+                  <AvatarImage src="/placeholder.svg" />
                   <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary/20">
-                    {user?.name?.slice(0, 2) || 'You'}
+                    You
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
