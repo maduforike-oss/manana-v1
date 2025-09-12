@@ -4,7 +4,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppLayout } from "./components/AppLayout";
+import { AuthProvider } from "@/lib/auth-context";
 import Index from "./pages/Index";
+import LandingPage from "./pages/LandingPage";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import OrderDetails from "./pages/OrderDetails";
 import { ProfileSettings } from "./pages/ProfileSettings";
@@ -54,32 +57,114 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <AppLayout>
+          <AuthProvider>
             <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/studio" element={<RequireAuth><StudioPro /></RequireAuth>} />
-              <Route path="/studio/editor" element={<RequireAuth><StudioEditor /></RequireAuth>} />
-              <Route path="/studio/legacy" element={<RequireAuth><StudioPage /></RequireAuth>} />
-              <Route path="/item/:id" element={<ItemDetail />} />
-              <Route path="/product/:id" element={<ProductDetailPage />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route path="/sell/new" element={<RequireAuth><SellNew /></RequireAuth>} />
-              <Route path="/checkout" element={<RequireAuth><Checkout /></RequireAuth>} />
-              <Route path="/checkout/success" element={<RequireAuth><CheckoutSuccess /></RequireAuth>} />
-              <Route path="/orders/:id" element={<RequireAuth><OrderDetails /></RequireAuth>} />
-              <Route path="/profile" element={<RequireAuth><ProfileHub /></RequireAuth>} />
-              <Route path="/profile/edit" element={<RequireAuth><ProfileEdit /></RequireAuth>} />
-              <Route path="/profile/settings" element={<RequireAuth><ProfileSettings /></RequireAuth>} />
-              <Route path="/profile/upgrade" element={<RequireAuth><UpgradePlan /></RequireAuth>} />
-              <Route path="/profile/followers" element={<RequireAuth><Followers /></RequireAuth>} />
-              <Route path="/users/:userId" element={<UserProfile />} />
-              <Route path="/u/:username" element={<UserProfilePublic />} />
-              <Route path="/admin/templates" element={<RequireAuth><AdminTemplates /></RequireAuth>} />
-              <Route path="/admin/templates-uploader" element={<RequireAuth><TemplatesUploader /></RequireAuth>} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/landing" element={<LandingPage />} />
+              <Route path="/" element={
+                <AppLayout>
+                  <Index />
+                </AppLayout>
+              } />
+              <Route path="/studio" element={
+                <AppLayout>
+                  <RequireAuth><StudioPro /></RequireAuth>
+                </AppLayout>
+              } />
+              <Route path="/studio/editor" element={
+                <AppLayout>
+                  <RequireAuth><StudioEditor /></RequireAuth>
+                </AppLayout>
+              } />
+              <Route path="/studio/legacy" element={
+                <AppLayout>
+                  <RequireAuth><StudioPage /></RequireAuth>
+                </AppLayout>
+              } />
+              <Route path="/item/:id" element={
+                <AppLayout>
+                  <ItemDetail />
+                </AppLayout>
+              } />
+              <Route path="/product/:id" element={
+                <AppLayout>
+                  <ProductDetailPage />
+                </AppLayout>
+              } />
+              <Route path="/cart" element={
+                <AppLayout>
+                  <Cart />
+                </AppLayout>
+              } />
+              <Route path="/sell/new" element={
+                <AppLayout>
+                  <RequireAuth><SellNew /></RequireAuth>
+                </AppLayout>
+              } />
+              <Route path="/checkout" element={
+                <AppLayout>
+                  <RequireAuth><Checkout /></RequireAuth>
+                </AppLayout>
+              } />
+              <Route path="/checkout/success" element={
+                <AppLayout>
+                  <RequireAuth><CheckoutSuccess /></RequireAuth>
+                </AppLayout>
+              } />
+              <Route path="/orders/:id" element={
+                <AppLayout>
+                  <RequireAuth><OrderDetails /></RequireAuth>
+                </AppLayout>
+              } />
+              <Route path="/profile" element={
+                <AppLayout>
+                  <RequireAuth><ProfileHub /></RequireAuth>
+                </AppLayout>
+              } />
+              <Route path="/profile/edit" element={
+                <AppLayout>
+                  <RequireAuth><ProfileEdit /></RequireAuth>
+                </AppLayout>
+              } />
+              <Route path="/profile/settings" element={
+                <AppLayout>
+                  <RequireAuth><ProfileSettings /></RequireAuth>
+                </AppLayout>
+              } />
+              <Route path="/profile/upgrade" element={
+                <AppLayout>
+                  <RequireAuth><UpgradePlan /></RequireAuth>
+                </AppLayout>
+              } />
+              <Route path="/profile/followers" element={
+                <AppLayout>
+                  <RequireAuth><Followers /></RequireAuth>
+                </AppLayout>
+              } />
+              <Route path="/users/:userId" element={
+                <AppLayout>
+                  <UserProfile />
+                </AppLayout>
+              } />
+              <Route path="/u/:username" element={
+                <AppLayout>
+                  <UserProfilePublic />
+                </AppLayout>
+              } />
+              <Route path="/admin/templates" element={
+                <AppLayout>
+                  <RequireAuth><AdminTemplates /></RequireAuth>
+                </AppLayout>
+              } />
+              <Route path="/admin/templates-uploader" element={
+                <AppLayout>
+                  <RequireAuth><TemplatesUploader /></RequireAuth>
+                </AppLayout>
+              } />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </AppLayout>
+          </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

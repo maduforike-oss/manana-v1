@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/useAppStore';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import { StudioPage } from '@/components/pages/StudioPage';
@@ -11,10 +12,13 @@ import { SkipToContent } from '@/components/SkipToContent';
 import { OnboardingWalkthrough } from '@/components/OnboardingWalkthrough';
 import { useRouteSync } from '@/hooks/useNavigation';
 import { useAccessibilityAnnouncer } from '@/components/AccessibilityAnnouncer';
+import { useAuth } from '@/lib/auth-context';
 
 
 const Index = () => {
-  const { activeTab, setUser } = useAppStore();
+  const { activeTab } = useAppStore();
+  const { user, isLoading } = useAuth();
+  const navigate = useNavigate();
   const scrollPositions = useRef<Record<string, number>>({});
   const mainContentRef = useRef<HTMLDivElement>(null);
   const { announcer, announce } = useAccessibilityAnnouncer();
@@ -22,28 +26,12 @@ const Index = () => {
   // Sync navigation with routes
   useRouteSync();
 
-  // Initialize mock user for demo
+  // Redirect to landing page if not authenticated
   useEffect(() => {
-    setUser({
-      id: 'user_123',
-      email: 'demo@example.com',
-      name: 'Demo User',
-      username: '@demouser',
-      bio: 'Welcome to the demo!',
-      location: 'Demo Location',
-      website: 'https://demo.com',
-      specialties: ['Demo Design'],
-      plan: 'basic',
-      designsThisMonth: 12,
-      maxDesigns: 30,
-      followers: 0,
-      following: 0,
-      totalDesigns: 5,
-      totalOrders: 2,
-      socialLinks: [],
-      featuredDesigns: [],
-    });
-  }, [setUser]);
+    if (!isLoading && !user) {
+      navigate('/landing', { replace: true });
+    }
+  }, [user, isLoading, navigate]);
 
   // Save scroll position when switching tabs
   useEffect(() => {
@@ -75,6 +63,20 @@ const Index = () => {
     };
     announce(`Navigated to ${tabLabels[activeTab]}`);
   }, [activeTab, announce]);
+
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated (will redirect)
+  if (!user) {
+    return null;
+  }
 
   const renderPage = () => {
     switch (activeTab) {

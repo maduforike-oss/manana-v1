@@ -261,6 +261,7 @@ export default function Profile() {
   const displayData = useMemo(() => ({
     name: profile?.display_name || profile?.username || 'Anonymous User',
     email: user?.email || '',
+    connectedAccount: user?.email ? `Connected: ${user.email}` : 'Not connected',
     bio: profile?.bio || 'Welcome to Manana! Complete your profile to get started.',
     location: profile?.location || '',
     website: profile?.website || '',

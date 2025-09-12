@@ -1046,6 +1046,27 @@ export type Database = {
         Args: { content_text: string }
         Returns: string
       }
+      ensure_my_profile: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          avatar_url: string | null
+          bio: string | null
+          cover_url: string | null
+          created_at: string | null
+          display_name: string | null
+          followers: number | null
+          following: number | null
+          location: string | null
+          metrics_updated_at: string | null
+          preferences: Json | null
+          social_instagram: string | null
+          social_twitter: string | null
+          total_designs: number | null
+          user_id: string | null
+          username: string | null
+          website: string | null
+        }
+      }
       generate_order_number: {
         Args: Record<PropertyKey, never>
         Returns: string
