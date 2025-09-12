@@ -1,0 +1,176 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Manana Design System - Unified Fashion Platform */
+
+@layer base {
+  :root {
+    /* Core Brand Colors - Magenta & Cyan Theme */
+    --background: 0 0% 98%;
+    --foreground: 230 20% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 230 20% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 230 20% 15%;
+
+    /* Primary - Magenta */
+    --primary: 340 82% 52%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 340 82% 65%;
+    --primary-light: 340 82% 75%;
+    --primary-dark: 340 82% 35%;
+
+    /* Secondary - Cyan */
+    --secondary: 187 100% 42%;
+    --secondary-foreground: 0 0% 100%;
+    --secondary-glow: 187 100% 55%;
+    --secondary-light: 187 100% 65%;
+    --secondary-dark: 187 100% 30%;
+
+    /* Studio Workspace */
+    --accent: 187 100% 42%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 230 15% 90%;
+    --input: 230 15% 95%;
+    --ring: 340 82% 52%;
+
+    --muted: 230 15% 95%;
+    --muted-foreground: 230 10% 40%;
+
+    /* Unified Border Radius */
+    --radius-sm: 0.5rem;       /* 8px */
+    --radius: 0.75rem;         /* 12px */
+    --radius-md: 1rem;         /* 16px */
+    --radius-lg: 1.25rem;      /* 20px */
+    --radius-xl: 1.5rem;       /* 24px */
+    --radius-2xl: 2rem;        /* 32px */
+
+    /* Unified Spacing System */
+    --spacing-xs: 0.25rem;     /* 4px */
+    --spacing-sm: 0.5rem;      /* 8px */
+    --spacing-md: 1rem;        /* 16px */
+    --spacing-lg: 1.5rem;      /* 24px */
+    --spacing-xl: 2rem;        /* 32px */
+    --spacing-2xl: 3rem;       /* 48px */
+    --spacing-3xl: 4rem;       /* 64px */
+  }
+
+  .dark {
+    /* Dark Mode - Professional Design Tool Theme */
+    --background: 230 25% 8%;
+    --foreground: 0 0% 95%;
+
+    --card: 230 20% 12%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 230 20% 12%;
+    --popover-foreground: 0 0% 95%;
+
+    /* Enhanced brand colors for dark mode */
+    --primary: 340 82% 58%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 340 82% 70%;
+    --primary-light: 340 82% 80%;
+    --primary-dark: 340 82% 40%;
+
+    --secondary: 187 100% 48%;
+    --secondary-foreground: 0 0% 100%;
+    --secondary-glow: 187 100% 60%;
+    --secondary-light: 187 100% 70%;
+    --secondary-dark: 187 100% 35%;
+
+    --muted: 230 15% 15%;
+    --muted-foreground: 230 10% 75%;
+
+    --accent: 187 100% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 75% 65%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 230 15% 18%;
+    --input: 230 15% 15%;
+    --ring: 340 82% 65%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", system-ui, sans-serif;
+    letter-spacing: -0.01em;
+    line-height: 1.6;
+    font-size: 16px;
+  }
+
+  /* High contrast focus indicators */
+  *:focus-visible {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Unified Typography Scale */
+  h1 {
+    @apply text-2xl sm:text-3xl font-bold tracking-tight;
+    line-height: 1.3;
+  }
+  
+  h2 {
+    @apply text-xl sm:text-2xl font-semibold tracking-tight;
+    line-height: 1.3;
+  }
+  
+  h3 {
+    @apply text-lg sm:text-xl font-semibold tracking-tight;
+    line-height: 1.4;
+  }
+
+  /* Minimum touch target size */
+  button, 
+  [role="button"],
+  a,
+  input[type="button"],
+  input[type="submit"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Modern Scrollbars */
+  .modern-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted)) transparent;
+    scroll-behavior: smooth;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .modern-scroll::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .modern-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .modern-scroll::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted));
+    border-radius: 2px;
+  }
+
+  .modern-scroll::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+}
