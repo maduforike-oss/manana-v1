@@ -326,6 +326,16 @@ export default function Profile() {
           subtitle="Manage your profile and settings"
         >
           <div className="flex items-center gap-2">
+            {/* Connected Account Indicator */}
+            {user?.email && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-green-100 dark:bg-green-900/20 rounded-md text-sm">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span className="text-green-700 dark:text-green-300 font-medium">
+                  {user.email}
+                </span>
+              </div>
+            )}
+            
             {isUserStaff && (
               <Button
                 variant="outline"
