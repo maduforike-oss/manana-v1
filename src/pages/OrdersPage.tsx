@@ -10,7 +10,6 @@ import { BrandHeader } from '@/components/ui/brand-header';
 import { useToast } from '@/hooks/use-toast';
 import { ProductCardSkeleton } from '@/components/marketplace/ProductCardSkeleton';
 import { formatDistanceToNow } from 'date-fns';
-import { formatDistanceToNow } from 'date-fns';
 
 export function OrdersPage() {
   const navigate = useNavigate();
@@ -199,7 +198,7 @@ function OrderCard({ order, onViewDetails }: OrderCardProps) {
             <div className="text-right">
               <p className="text-lg font-bold">${order.total_amount.toFixed(2)}</p>
               <p className="text-sm text-muted-foreground">
-                {order.payment_status === 'paid' ? 'Paid' : 'Payment pending'}
+                Total: ${order.total_amount.toFixed(2)}
               </p>
             </div>
           </div>
@@ -359,9 +358,8 @@ export function OrderDetailPage() {
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>Order {order.order_number}</span>
-              <Badge className={getStatusColor(order.status)}>
-                {getStatusIcon(order.status)}
-                <span className="ml-1 capitalize">{order.status}</span>
+              <Badge variant="secondary">
+                <span className="capitalize">{order.status}</span>
               </Badge>
             </CardTitle>
           </CardHeader>
@@ -468,19 +466,6 @@ export function OrderDetailPage() {
             <CardTitle>Order Summary</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <div className="flex justify-between">
-              <span>Subtotal</span>
-              <span>${order.subtotal.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Shipping</span>
-              <span>${order.shipping_amount.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Tax</span>
-              <span>${order.tax_amount.toFixed(2)}</span>
-            </div>
-            <Separator />
             <div className="flex justify-between font-bold text-lg">
               <span>Total</span>
               <span>${order.total_amount.toFixed(2)}</span>
