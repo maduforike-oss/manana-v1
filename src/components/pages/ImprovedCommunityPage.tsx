@@ -10,6 +10,11 @@ import { BrandHeader } from '@/components/ui/brand-header';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAppStore } from '@/store/useAppStore';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
+import { SearchAndFilters } from '@/components/community/SearchAndFilters';
+import { PostDrafts } from '@/components/community/PostDrafts';
+import { KeyboardShortcuts } from '@/components/community/KeyboardShortcuts';
+import { PullToRefresh } from '@/components/community/PullToRefresh';
 import { 
   Heart, 
   MessageCircle, 
@@ -108,6 +113,32 @@ export const ImprovedCommunityPage = () => {
   const [offset, setOffset] = useState(0);
   const [uploadedMedia, setUploadedMedia] = useState<Array<{ url: string; type: 'image' | 'video' }>>([]);
   const pullToRefreshRef = useRef<HTMLDivElement>(null);
+  
+  // Phase 3: Enhanced features state
+  const [selectedHashtags, setSelectedHashtags] = useState<string[]>([]);
+  const [selectedUser, setSelectedUser] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<'recent' | 'trending' | 'popular'>('recent');
+  const [trendingHashtags] = useState(['fashion', 'design', 'streetwear', 'sustainable', 'vintage']);
+  const [focusedPostIndex, setFocusedPostIndex] = useState(0);
+
+  // Real-time updates
+  const { isConnected } = useRealtimeUpdates({
+    onNewPost: (post) => {
+      setPosts(prev => [post as ExtendedPost, ...prev]);
+      toast.success('New post arrived!');
+    },
+    onPostUpdate: (postId, updates) => {
+      setPosts(prev => prev.map(post => 
+        post.id === postId ? { ...post, ...updates } : post
+      ));
+    },
+    onNewComment: (comment) => {
+      setPostComments(prev => ({
+        ...prev,
+        [comment.post_id]: [...(prev[comment.post_id] || []), comment as ExtendedComment]
+      }));
+    }
+  });
 
   // Load initial posts
   useEffect(() => {
@@ -165,9 +196,9 @@ export const ImprovedCommunityPage = () => {
           ...post,
           ...getMockExtendedFields(),
           hashtags: extractHashtags(post.content),
-          // Map v2 fields properly
-          images: post.media_urls.filter((_, i) => post.media_types[i] === 'image'),
-          isSaved: post.is_saved_by_user
+          // Map v2 fields properly with null checks
+          images: (post.media_urls || []).filter((_, i) => (post.media_types || [])[i] === 'image'),
+          isSaved: post.is_saved_by_user || false
         }));
         setPosts(prev => [...prev, ...extendedPosts]);
         setOffset(prev => prev + 20);
@@ -702,13 +733,13 @@ export const ImprovedCommunityPage = () => {
                 <h3 className="text-lg font-semibold">Trending Hashtags</h3>
                 <div className="space-y-2">
                   {trendingHashtags.map(hashtag => (
-                    <div key={hashtag.tag} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50">
+                    <div key={hashtag} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50">
                       <div>
-                        <span className="font-medium">#{hashtag.tag}</span>
-                        <p className="text-xs text-muted-foreground">{hashtag.posts.toLocaleString()} posts</p>
+                        <span className="font-medium">#{hashtag}</span>
+                        <p className="text-xs text-muted-foreground">{Math.floor(Math.random() * 1000)} posts</p>
                       </div>
                       <Badge variant="secondary" className="text-xs">
-                        +{hashtag.growth}%
+                        +{Math.floor(Math.random() * 50)}%
                       </Badge>
                     </div>
                   ))}
