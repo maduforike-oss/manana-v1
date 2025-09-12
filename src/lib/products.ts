@@ -171,11 +171,14 @@ export async function getProduct(identifier: string): Promise<Product | null> {
         ),
         product_variants (
           id,
+          product_id,
           sku,
           price,
           size,
           color,
-          stock_quantity
+          stock_quantity,
+          created_at,
+          updated_at
         )
       `);
 
