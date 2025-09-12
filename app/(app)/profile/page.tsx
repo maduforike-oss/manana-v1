@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { getMyProfile, updateMyProfile, uploadAvatar, uploadCover, checkUsernameAvailability, type Profile, getProfileMetrics, type ProfileMetrics } from '@/lib/profile';
+import { getMyProfile, updateMyProfile, uploadAvatar, uploadCover, checkUsernameAvailability, type Profile, getProfileMetrics, type ProfileMetrics, ensureProfileMetrics } from '@/lib/profile';
 import { sanitizeUsername, validateUsername } from '@/lib/usernames';
 import { getErrorMessage } from '@/lib/errors';
 import { ProfileTags } from '@/components/ProfileTags';
@@ -20,6 +20,7 @@ import { SocialLinks } from '@/components/SocialLinks';
 import { useAuth } from '@/lib/auth-context';
 import SignOutButton from '@/components/auth/SignOutButton';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 // tiny debounce hook
 function useDebounced<T>(value: T, delay = 400) {
@@ -253,10 +254,27 @@ export default function ProfilePage() {
 
     setSaving(true);
     try {
-      await updateMyProfile(formData);
+      // Update profile data
+      await updateMyProfile({
+        display_name: formData.display_name || null,
+        username: formData.username || null,
+        bio: formData.bio || null,
+        location: formData.location || null,
+        website: formData.website || null,
+        social_instagram: formData.social_instagram || null,
+        social_twitter: formData.social_twitter || null,
+      });
+
+      // Refresh data from Supabase
       const updatedProfile = await getMyProfile();
       setProfile(updatedProfile);
+      
+      // Refresh auth context
       await refreshProfile();
+      
+      // Ensure metrics exist
+      await ensureProfileMetrics();
+      
       setHasChanges(false);
       
       toast({
@@ -264,6 +282,7 @@ export default function ProfilePage() {
         description: 'Your profile has been saved successfully'
       });
     } catch (error) {
+      console.error('Profile save error:', error);
       toast({
         title: 'Save failed',
         description: getErrorMessage(error),
