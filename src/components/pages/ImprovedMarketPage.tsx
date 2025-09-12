@@ -2,189 +2,174 @@ import React, { useState, useCallback, useMemo, Suspense } from 'react';
 import { Filter, Grid, List, SortAsc, ShoppingCart, Sparkles, TrendingUp, Package, Heart, Search, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { BrandHeader } from '@/components/ui/brand-header';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { VirtualizedProductGrid } from '@/components/marketplace/VirtualizedProductGrid';
+import { SearchBar } from '@/components/marketplace/SearchBar';
+import { FiltersModal } from '@/components/marketplace/FiltersModal';
+import { ProductGridView } from '@/components/marketplace/ProductGridView';
+import { ProductListView } from '@/components/marketplace/ProductListView';
 import { EmptyState } from '@/components/marketplace/EmptyState';
-import { ProductCardSkeleton } from '@/components/marketplace/ProductCardSkeleton';
-import { useMarketplace } from '@/hooks/useMarketplace';
-import { useCart } from '@/hooks/useCart';
-import { useImageOptimization } from '@/hooks/useImageOptimization';
+import { useMarketQueryState } from '@/hooks/useMarketQueryState';
 import { useProducts } from '@/hooks/useProducts';
-import { StudioGarmentData } from '@/lib/studio/marketData';
+import { useCartStore } from '@/store/useCartStore';
+import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
 export function ImprovedMarketPage() {
-  // State management
-  const [activeTab, setActiveTab] = useState('all');
+  // URL-synced state management
+  const { query, setQuery, resetFilters, parseFilters, hasActiveFilters } = useMarketQueryState();
   const [showFilters, setShowFilters] = useState(false);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [savedProducts, setSavedProducts] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
 
-  // Custom hooks
-  const {
-    allDesigns,
-    filteredCount,
-    trendingDesigns,
-    dealsDesigns,
-    savedDesigns,
-    activeFilters,
-    sortBy,
-    hasMore,
-    handleSearch,
-    handleFiltersChange,
-    setSortBy,
-    loadMore,
-    toggleSave,
-    isSaved,
-    isUnlocked,
-    clearSearch,
-    clearFilters
-  } = useMarketplace();
-
-  const { addToCart, cart } = useCart();
+  // Data fetching
+  const { data: productsData, isLoading: productsLoading, error: productsError, refetch } = useProducts(query);
+  const cart = useCartStore();
   const { toast } = useToast();
-  const { getOptimizedImageUrl } = useImageOptimization();
-  const { data: realProducts, isLoading: productsLoading, error: productsError } = useProducts();
 
-  // Get current tab data
-  const getCurrentTabData = () => {
-    switch (activeTab) {
-      case 'trending':
-        return trendingDesigns;
-      case 'new':
-        return allDesigns.slice(0, 24);
-      case 'deals':
-        return dealsDesigns;
-      case 'saved':
-        return savedDesigns;
-      default:
-        return allDesigns;
+  // Load saved products for authenticated users
+  React.useEffect(() => {
+    const loadSavedProducts = async () => {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return;
+
+      const { data: wishlist } = await supabase
+        .from('wishlists')
+        .select('product_id')
+        .eq('user_id', user.user.id);
+
+      if (wishlist) {
+        setSavedProducts(new Set(wishlist.map(w => w.product_id)));
+      }
+    };
+
+    loadSavedProducts();
+  }, []);
+
+  // Event handlers
+  const handleSaveProduct = async (productId: string) => {
+    const { data: user } = await supabase.auth.getUser();
+    if (!user.user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to save products to your wishlist",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const wasSaved = savedProducts.has(productId);
+    
+    try {
+      if (wasSaved) {
+        await supabase
+          .from('wishlists')
+          .delete()
+          .eq('user_id', user.user.id)
+          .eq('product_id', productId);
+        
+        setSavedProducts(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(productId);
+          return newSet;
+        });
+      } else {
+        await supabase
+          .from('wishlists')
+          .insert({ user_id: user.user.id, product_id: productId });
+        
+        setSavedProducts(prev => new Set(prev).add(productId));
+      }
+
+      toast({
+        title: wasSaved ? "Removed from saved" : "Product saved",
+        description: wasSaved 
+          ? "Product removed from your wishlist" 
+          : "Product added to your wishlist",
+      });
+
+      // Refetch if we're on the saved tab
+      if (query.tab === 'saved') {
+        refetch();
+      }
+    } catch (error) {
+      console.error('Error toggling save:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update your wishlist",
+        variant: "destructive",
+      });
     }
   };
 
-  // Event handlers
-  const handleSaveDesign = (designId: string) => {
-    const wasSaved = isSaved(designId);
-    toggleSave(designId);
-    
-    toast({
-      title: wasSaved ? "Removed from saved" : "Design saved",
-      description: wasSaved 
-        ? "Design removed from your saved items" 
-        : "Design added to your saved collection",
-    });
-  };
-
-  const handleAddToCart = (design: StudioGarmentData) => {
-    addToCart({
-      id: `${design.id}-${Date.now()}`,
-      designId: design.id,
-      name: design.name,
-      image: design.thumbSrc,
-      price: design.price,
-      size: 'M',
-      color: 'Default',
-      garmentType: design.garmentId,
-      creator: design.creator,
-      listingType: 'print-design'
+  const handleAddToCart = (product: any) => {
+    cart.addItem({
+      id: `${product.id}-${Date.now()}`,
+      productId: product.id,
+      name: product.name,
+      image: "/api/placeholder/300/400", // Placeholder
+      price: product.base_price,
     });
     
     toast({
       title: "Added to cart",
-      description: `${design.name} has been added to your cart`,
+      description: `${product.name} has been added to your cart`,
     });
   };
 
-  const handleShare = async (design: StudioGarmentData) => {
+  const handleShare = async (product: any) => {
+    const url = `${window.location.origin}/product/${product.slug || product.id}`;
+    
     if (navigator.share) {
       try {
         await navigator.share({
-          title: design.name,
-          text: `Check out this design by ${design.creator}`,
-          url: window.location.href + `?design=${design.id}`
+          title: product.name,
+          text: `Check out this product: ${product.name}`,
+          url,
         });
       } catch (err) {
         console.log('Error sharing:', err);
       }
     } else {
-      navigator.clipboard.writeText(window.location.href + `?design=${design.id}`);
+      navigator.clipboard.writeText(url);
       toast({
         title: "Link copied",
-        description: "Design link copied to clipboard",
+        description: "Product link copied to clipboard",
       });
     }
   };
 
-  const currentTabData = getCurrentTabData();
-  const filteredData = currentTabData.filter(design => 
-    !searchQuery || 
-    design.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    design.creator.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    design.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const handleQuickView = (productId: string) => {
+    // TODO: Implement quick view modal
+    console.log('Quick view:', productId);
+  };
+
+  const products = productsData?.items || [];
+  const totalResults = productsData?.total || 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/10">
       {/* Header */}
       <BrandHeader title="Marketplace" className="border-b border-border/30 bg-background/80 backdrop-blur-md sticky top-0 z-50">
         <div className="flex items-center gap-3">
-          <Sheet open={showFilters} onOpenChange={setShowFilters}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="sm" className="lg:hidden">
-                <Filter className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-80">
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold">Filters</h3>
-                {/* Placeholder filter content */}
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium mb-2">Category</h4>
-                    <div className="space-y-2">
-                      {['T-Shirts', 'Hoodies', 'Accessories', 'Prints'].map(category => (
-                        <label key={category} className="flex items-center space-x-2">
-                          <input type="checkbox" className="rounded border-border" />
-                          <span className="text-sm">{category}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="font-medium mb-2">Price Range</h4>
-                    <div className="space-y-2">
-                      {['Under $20', '$20 - $50', '$50 - $100', 'Over $100'].map(range => (
-                        <label key={range} className="flex items-center space-x-2">
-                          <input type="checkbox" className="rounded border-border" />
-                          <span className="text-sm">{range}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </SheetContent>
-          </Sheet>
-
           <Button
             variant="ghost"
             size="sm"
             className="relative rounded-full"
+            onClick={() => navigate('/cart')}
           >
             <ShoppingCart className="h-5 w-5" />
-            <Badge 
-              variant="destructive" 
-              className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center"
-            >
-              {cart.itemCount}
-            </Badge>
+            {cart.count > 0 && (
+              <Badge 
+                variant="destructive" 
+                className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center"
+              >
+                {cart.count}
+              </Badge>
+            )}
           </Button>
         </div>
       </BrandHeader>
@@ -207,68 +192,45 @@ export function ImprovedMarketPage() {
 
           {/* Enhanced Search Bar */}
           <div className="max-w-2xl mx-auto">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Search designs, creators, or styles..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-12 h-12 text-base bg-background/50 border-border/30 rounded-2xl"
-              />
-            </div>
+            <SearchBar
+              value={query.q}
+              onChange={(value) => setQuery({ q: value })}
+              onClear={() => setQuery({ q: '' })}
+              className="w-full"
+            />
           </div>
         </div>
 
         {/* Navigation Tabs - Mobile First */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+        <div className="mb-6">
           <div className="sticky top-20 z-40 bg-background/80 backdrop-blur-md pb-4 border-b border-border/20">
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-11 bg-muted/30 backdrop-blur-sm rounded-2xl gap-1 mb-4">
-              <TabsTrigger value="all" className="rounded-xl text-sm">All</TabsTrigger>
-              <TabsTrigger value="trending" className="rounded-xl text-sm">
-                <TrendingUp className="h-3 w-3 mr-2" />
-                Trending
-              </TabsTrigger>
-              <TabsTrigger value="new" className="rounded-xl text-sm">New</TabsTrigger>
-              <TabsTrigger value="saved" className="rounded-xl text-sm">
-                <Heart className="h-3 w-3 mr-2" />
-                Saved
-              </TabsTrigger>
-            </TabsList>
+            <div className="grid w-full grid-cols-2 sm:grid-cols-4 h-11 bg-muted/30 backdrop-blur-sm rounded-2xl gap-1 mb-4 p-1">
+              {[
+                { value: 'all', label: 'All' },
+                { value: 'trending', label: 'Trending', icon: TrendingUp },
+                { value: 'new', label: 'New' },
+                { value: 'saved', label: 'Saved', icon: Heart },
+              ].map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <Button
+                    key={tab.value}
+                    variant={query.tab === tab.value ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setQuery({ tab: tab.value as any })}
+                    className="rounded-xl text-sm h-9"
+                    aria-pressed={query.tab === tab.value}
+                  >
+                    {Icon && <Icon className="h-3 w-3 mr-2" />}
+                    {tab.label}
+                  </Button>
+                );
+              })}
+            </div>
 
             {/* Mobile Filter Controls - Scrollable horizontal layout */}
             <div className="block sm:hidden mb-4">
               <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                <Button
-                  onClick={() => setActiveTab('new')}
-                  variant={activeTab === 'new' ? 'default' : 'outline'}
-                  size="sm"
-                  className="flex-shrink-0 h-10 px-4 rounded-xl border-border/40"
-                  aria-pressed={activeTab === 'new'}
-                >
-                  New
-                </Button>
-                <Button
-                  onClick={() => {
-                    setSearchQuery('');
-                    clearFilters();
-                  }}
-                  variant="outline"
-                  size="sm"
-                  className="flex-shrink-0 h-10 px-4 rounded-xl border-border/40"
-                  disabled={!searchQuery && !Object.values(activeFilters).some(v => Array.isArray(v) ? v.length > 0 : v)}
-                >
-                  Clear
-                </Button>
-                <Button
-                  onClick={() => setActiveTab('saved')}
-                  variant={activeTab === 'saved' ? 'default' : 'outline'}
-                  size="sm"
-                  className="flex-shrink-0 h-10 px-4 rounded-xl border-border/40"
-                  aria-pressed={activeTab === 'saved'}
-                >
-                  <Heart className="h-3 w-3 mr-2" />
-                  Saved
-                </Button>
                 <Button
                   onClick={() => setShowFilters(true)}
                   variant="outline"
@@ -278,6 +240,20 @@ export function ImprovedMarketPage() {
                   <Filter className="h-4 w-4 mr-2" />
                   Filters
                 </Button>
+                
+                {(query.q || hasActiveFilters()) && (
+                  <Button
+                    onClick={() => {
+                      setQuery({ q: '' });
+                      resetFilters();
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="flex-shrink-0 h-10 px-4 rounded-xl border-border/40"
+                  >
+                    Clear ({totalResults})
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -294,17 +270,17 @@ export function ImprovedMarketPage() {
                   Filters
                 </Button>
                 
-                {(searchQuery || Object.values(activeFilters).some(v => Array.isArray(v) ? v.length > 0 : v)) && (
+                {(query.q || hasActiveFilters()) && (
                   <Button
                     onClick={() => {
-                      setSearchQuery('');
-                      clearFilters();
+                      setQuery({ q: '' });
+                      resetFilters();
                     }}
                     variant="ghost"
                     size="sm"
                     className="text-muted-foreground text-xs"
                   >
-                    Clear ({filteredCount} results)
+                    Clear ({totalResults} results)
                   </Button>
                 )}
               </div>
@@ -316,24 +292,21 @@ export function ImprovedMarketPage() {
                     <Button variant="outline" size="sm" className="rounded-xl border-border/40 flex-1 sm:flex-none">
                       <SortAsc className="h-4 w-4 mr-2" />
                       <span className="hidden sm:inline">Sort: </span>
-                      {sortBy.charAt(0).toUpperCase() + sortBy.slice(1).replace('-', ' ')}
+                      {query.sort.charAt(0).toUpperCase() + query.sort.slice(1).replace('_', ' ')}
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="rounded-xl">
-                    <DropdownMenuItem onClick={() => setSortBy('trending')}>
+                    <DropdownMenuItem onClick={() => setQuery({ sort: 'trending' })}>
                       Trending
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortBy('newest')}>
+                    <DropdownMenuItem onClick={() => setQuery({ sort: 'newest' })}>
                       Newest
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortBy('popularity')}>
-                      Most Popular
-                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => setSortBy('price-low')}>
+                    <DropdownMenuItem onClick={() => setQuery({ sort: 'price_asc' })}>
                       Price: Low to High
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortBy('price-high')}>
+                    <DropdownMenuItem onClick={() => setQuery({ sort: 'price_desc' })}>
                       Price: High to Low
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -342,18 +315,20 @@ export function ImprovedMarketPage() {
                 {/* View Mode Toggle - Desktop Only */}
                 <div className="hidden sm:flex border border-border/40 rounded-xl">
                   <Button
-                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                    variant={query.view === 'grid' ? 'default' : 'ghost'}
                     size="sm"
-                    onClick={() => setViewMode('grid')}
+                    onClick={() => setQuery({ view: 'grid' })}
                     className="rounded-l-xl rounded-r-none"
+                    aria-pressed={query.view === 'grid'}
                   >
                     <Grid className="h-4 w-4" />
                   </Button>
                   <Button
-                    variant={viewMode === 'list' ? 'default' : 'ghost'}
+                    variant={query.view === 'list' ? 'default' : 'ghost'}
                     size="sm"
-                    onClick={() => setViewMode('list')}
+                    onClick={() => setQuery({ view: 'list' })}
                     className="rounded-r-xl rounded-l-none"
+                    aria-pressed={query.view === 'list'}
                   >
                     <List className="h-4 w-4" />
                   </Button>
@@ -362,45 +337,61 @@ export function ImprovedMarketPage() {
             </div>
           </div>
 
-          {/* Tab Content */}
+          {/* Content */}
           <div className="pt-4">
-            {filteredData.length === 0 ? (
+            {products.length === 0 && !productsLoading ? (
               <EmptyState
                 type="search"
-                title="No designs found"
-                description="Try adjusting your search terms or browse by category"
-                onAction={() => setSearchQuery('')}
-                actionLabel="Clear search"
+                title={query.tab === 'saved' ? "No saved products" : "No products found"}
+                description={
+                  query.tab === 'saved' 
+                    ? "Start saving products you love to see them here"
+                    : "Try adjusting your search terms or filters"
+                }
+                onAction={() => {
+                  setQuery({ q: '' });
+                  resetFilters();
+                }}
+                actionLabel={query.tab === 'saved' ? "Browse products" : "Clear search"}
               />
             ) : (
               <>
-                <Suspense fallback={
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
-                    {Array.from({ length: 12 }).map((_, i) => (
-                      <ProductCardSkeleton key={i} />
-                    ))}
-                  </div>
-                }>
-                  <VirtualizedProductGrid
-                    designs={filteredData.map((design) => ({
-                      ...design,
-                      thumbSrc: getOptimizedImageUrl(design.thumbSrc, { format: 'webp', fallback: design.thumbSrc })
-                    }))}
+                {query.view === 'grid' ? (
+                  <ProductGridView
+                    products={products}
                     isLoading={productsLoading}
-                    isSaved={isSaved}
-                    isUnlocked={isUnlocked}
-                    onSave={handleSaveDesign}
-                    onQuickView={() => {}}
-                    onOpenInStudio={() => {}}
+                    onSave={handleSaveProduct}
+                    onQuickView={handleQuickView}
                     onAddToCart={handleAddToCart}
                     onShare={handleShare}
+                    isSaved={(id) => savedProducts.has(id)}
                   />
-                </Suspense>
+                ) : (
+                  <ProductListView
+                    products={products}
+                    isLoading={productsLoading}
+                    onSave={handleSaveProduct}
+                    onQuickView={handleQuickView}
+                    onAddToCart={handleAddToCart}
+                    onShare={handleShare}
+                    isSaved={(id) => savedProducts.has(id)}
+                  />
+                )}
               </>
             )}
           </div>
-        </Tabs>
+        </div>
       </div>
+
+      {/* Filters Modal */}
+      <FiltersModal
+        open={showFilters}
+        onOpenChange={setShowFilters}
+        filters={query.filters}
+        onFiltersChange={(filters) => setQuery({ filters })}
+        onClear={resetFilters}
+        resultCount={totalResults}
+      />
 
       {/* Floating Action Button - Mobile */}
       <Button
