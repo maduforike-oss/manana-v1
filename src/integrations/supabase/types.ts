@@ -421,7 +421,7 @@ export type Database = {
         Returns: string
       }
       get_feed_posts: {
-        Args: { limit_count?: number; offset_count?: number }
+        Args: { limit_count?: number }
         Returns: {
           avatar_url: string
           comments_count: number
@@ -442,7 +442,7 @@ export type Database = {
         }[]
       }
       get_following_feed_posts: {
-        Args: { limit_count?: number; offset_count?: number }
+        Args: { limit_count?: number }
         Returns: {
           avatar_url: string
           comments_count: number
@@ -536,7 +536,7 @@ export type Database = {
         }[]
       }
       get_saved_posts: {
-        Args: { limit_count?: number; offset_count?: number }
+        Args: { limit_count?: number }
         Returns: {
           avatar_url: string
           comments_count: number

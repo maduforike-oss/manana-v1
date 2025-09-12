@@ -71,7 +71,8 @@ export interface UploadMediaResult {
 }
 
 export interface FeedPostsResult {
-  data?: Post[];
+  success: boolean;
+  posts: Post[];
   error?: string;
 }
 
@@ -115,18 +116,13 @@ export async function createPost(content: string): Promise<CreatePostResult> {
   }
 }
 
-export async function getFeedPosts(
-  limit: number = 20,
-  offset: number = 0
-): Promise<FeedPostsResult> {
+export async function getFeedPosts(): Promise<FeedPostsResult> {
   try {
-    const { data, error } = await supabase.rpc('get_feed_posts', {
-      limit_count: limit,
-      offset_count: offset
-    });
+    const { data, error } = await supabase.rpc('get_feed_posts');
 
     if (error) {
-      return { error: getErrorMessage(error) };
+      console.error('Error fetching feed posts:', error);
+      return { success: false, error: getErrorMessage(error), posts: [] };
     }
 
     if (data) {
@@ -137,12 +133,13 @@ export async function getFeedPosts(
         media_urls: post.media_urls || [],
         media_types: post.media_types || []
       }));
-      return { data: transformedData };
+      return { success: true, posts: transformedData };
     }
 
-    return { data: [] };
+    return { success: true, posts: [] };
   } catch (error) {
-    return { error: getErrorMessage(error) };
+    console.error('Unexpected error fetching feed posts:', error);
+    return { success: false, error: getErrorMessage(error), posts: [] };
   }
 }
 
@@ -310,17 +307,18 @@ export async function getPostComments(
 }
 
 // Following feed posts
-export const getFollowingFeedPosts = async (limit = 20, offset = 0): Promise<FeedPostsResult> => {
+export const getFollowingFeedPosts = async (): Promise<FeedPostsResult> => {
   try {
-    const { data, error } = await supabase.rpc('get_following_feed_posts', {
-      limit_count: limit,
-      offset_count: offset
-    });
+    const { data, error } = await supabase.rpc('get_following_feed_posts');
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching following feed posts:', error);
+      return { success: false, error: error.message, posts: [] };
+    }
 
     return {
-      data: (data || []).map(post => ({
+      success: true,
+      posts: (data || []).map(post => ({
         ...post,
         reactions_summary: (post.reactions_summary as any) || {}
       }))
@@ -328,23 +326,26 @@ export const getFollowingFeedPosts = async (limit = 20, offset = 0): Promise<Fee
   } catch (error) {
     console.error('Error fetching following feed posts:', error);
     return {
-      error: error instanceof Error ? error.message : 'Failed to fetch following feed posts'
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch following feed posts',
+      posts: []
     };
   }
 };
 
 // Saved posts
-export const getSavedPosts = async (limit = 20, offset = 0): Promise<FeedPostsResult> => {
+export const getSavedPosts = async (): Promise<FeedPostsResult> => {
   try {
-    const { data, error } = await supabase.rpc('get_saved_posts', {
-      limit_count: limit,
-      offset_count: offset
-    });
+    const { data, error } = await supabase.rpc('get_saved_posts');
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching saved posts:', error);
+      return { success: false, error: error.message, posts: [] };
+    }
 
     return {
-      data: (data || []).map(post => ({
+      success: true,
+      posts: (data || []).map(post => ({
         ...post,
         reactions_summary: (post.reactions_summary as any) || {}
       }))
@@ -352,7 +353,9 @@ export const getSavedPosts = async (limit = 20, offset = 0): Promise<FeedPostsRe
   } catch (error) {
     console.error('Error fetching saved posts:', error);
     return {
-      error: error instanceof Error ? error.message : 'Failed to fetch saved posts'
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch saved posts',
+      posts: []
     };
   }
 };

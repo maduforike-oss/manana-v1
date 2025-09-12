@@ -12,7 +12,6 @@ import { EmptyState } from '@/components/marketplace/EmptyState';
 import { ProductCardSkeleton } from '@/components/marketplace/ProductCardSkeleton';
 import { useMarketplace } from '@/hooks/useMarketplace';
 import { useCart } from '@/hooks/useCart';
-import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { useImageOptimization } from '@/hooks/useImageOptimization';
 import { StudioGarmentData } from '@/lib/studio/marketData';
 import { cn } from '@/lib/utils';
@@ -50,13 +49,6 @@ export function ImprovedMarketPage() {
   const { toast } = useToast();
   const { getOptimizedImageUrl } = useImageOptimization();
   const [isLoading, setIsLoading] = useState(false);
-
-  // Infinite scroll
-  const { loadMoreRef } = useInfiniteScroll({
-    hasMore,
-    isLoading,
-    onLoadMore: loadMore,
-  });
 
   // Get current tab data
   const getCurrentTabData = () => {

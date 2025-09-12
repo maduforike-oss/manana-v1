@@ -17,7 +17,6 @@ import { useCart } from '@/hooks/useCart';
 import { useVirtualScroll } from '@/hooks/useVirtualScroll';
 import { useImageOptimization } from '@/hooks/useImageOptimization';
 import { useCache } from '@/hooks/useCache';
-import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { StudioGarmentData } from '@/lib/studio/marketData';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -68,13 +67,6 @@ export function MarketPage() {
   const { getOptimizedImageUrl, preloadImage } = useImageOptimization();
   const cache = useCache<StudioGarmentData[]>();
   const [isLoading, setIsLoading] = useState(false);
-
-  // Infinite scroll for better performance
-  const { loadMoreRef } = useInfiniteScroll({
-    hasMore,
-    isLoading,
-    onLoadMore: loadMore,
-  });
 
   // Get current tab data
   const getCurrentTabData = () => {
