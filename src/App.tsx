@@ -24,6 +24,7 @@ import SellNew from "./pages/SellNew";
 import Checkout from "./pages/Checkout";
 import CheckoutSuccess from "./pages/CheckoutSuccess";
 import AdminTemplates from "./pages/AdminTemplates";
+import TemplatesUploader from "./pages/admin/TemplatesUploader";
 import RequireAuth from "./components/auth/RequireAuth";
 import { useEffect } from "react";
 
@@ -74,6 +75,7 @@ const App = () => {
               <Route path="/users/:userId" element={<UserProfile />} />
               <Route path="/u/:username" element={<UserProfilePublic />} />
               <Route path="/admin/templates" element={<RequireAuth><AdminTemplates /></RequireAuth>} />
+              <Route path="/admin/templates-uploader" element={<RequireAuth><TemplatesUploader /></RequireAuth>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
