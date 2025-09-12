@@ -24,10 +24,13 @@ import {
 import { sanitizeUsername, validateUsername } from '@/lib/usernames';
 import { getErrorMessage } from '@/lib/errors';
 import { supabase } from '@/integrations/supabase/client';
+import BackButton from '@/components/BackButton';
+import { useProfileStore } from '@/store/useProfileStore';
 
 export default function ProfileSettingsPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { profile: storeProfile, loading: storeLoading, error: storeError, load, refresh, patch } = useProfileStore();
   
   const [profile, setProfile] = useState<ExtendedProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -214,13 +217,11 @@ export default function ProfileSettingsPage() {
     try {
       setSaving(true);
       
-      await updateMyProfile({
+      await patch({
         ...formData,
         preferences: preferences,
       });
 
-      // Reload profile to get updated data
-      await loadProfile();
       setHasChanges(false);
       
       toast({
@@ -237,6 +238,16 @@ export default function ProfileSettingsPage() {
       setSaving(false);
     }
   };
+
+  if (storeError) {
+    return (
+      <div className="p-6 space-y-3">
+        <BackButton fallback="/profile" />
+        <div className="text-destructive">Error: {storeError}</div>
+        <Button variant="outline" onClick={refresh}>Retry</Button>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -255,13 +266,7 @@ export default function ProfileSettingsPage() {
       <div className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => router.back()}
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
+            <BackButton fallback="/profile" />
             <div>
               <h1 className="text-2xl font-bold">Profile Settings</h1>
               {hasChanges && (
