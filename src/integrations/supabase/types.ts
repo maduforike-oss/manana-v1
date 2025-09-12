@@ -67,6 +67,42 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          actor_id: string
+          created_at: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          metadata: Json | null
+          read: boolean | null
+          recipient_id: string
+          type: string
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          metadata?: Json | null
+          read?: boolean | null
+          recipient_id: string
+          type: string
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          metadata?: Json | null
+          read?: boolean | null
+          recipient_id?: string
+          type?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           billing_address: Json | null
@@ -143,6 +179,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      post_media: {
+        Row: {
+          created_at: string | null
+          display_order: number | null
+          id: string
+          media_type: string
+          media_url: string
+          post_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          media_type: string
+          media_url: string
+          post_id: string
+        }
+        Update: {
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          media_type?: string
+          media_url?: string
+          post_id?: string
+        }
+        Relationships: []
+      }
+      post_reactions: {
+        Row: {
+          created_at: string | null
+          id: string
+          post_id: string
+          reaction_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          post_id: string
+          reaction_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          post_id?: string
+          reaction_type?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       posts: {
         Row: {
@@ -237,6 +324,54 @@ export type Database = {
         }
         Relationships: []
       }
+      reports: {
+        Row: {
+          created_at: string | null
+          id: string
+          reason: string
+          reporter_id: string
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          reason: string
+          reporter_id: string
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          reason?: string
+          reporter_id?: string
+          target_id?: string
+          target_type?: string
+        }
+        Relationships: []
+      }
+      saved_posts: {
+        Row: {
+          created_at: string | null
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       me_profile_full: {
@@ -266,6 +401,17 @@ export type Database = {
         Args: { content_text: string; post_id_param: string }
         Returns: string
       }
+      create_notification: {
+        Args: {
+          actor: string
+          entity_id: string
+          entity_type: string
+          metadata?: Json
+          notification_type: string
+          recipient: string
+        }
+        Returns: string
+      }
       create_post: {
         Args: { content_text: string }
         Returns: string
@@ -275,6 +421,27 @@ export type Database = {
         Returns: string
       }
       get_feed_posts: {
+        Args: { limit_count?: number; offset_count?: number }
+        Returns: {
+          avatar_url: string
+          comments_count: number
+          content: string
+          created_at: string
+          display_name: string
+          id: string
+          is_liked_by_user: boolean
+          is_saved_by_user: boolean
+          likes_count: number
+          media_types: string[]
+          media_urls: string[]
+          reactions_summary: Json
+          updated_at: string
+          user_id: string
+          user_reaction: string
+          username: string
+        }[]
+      }
+      get_following_feed_posts: {
         Args: { limit_count?: number; offset_count?: number }
         Returns: {
           avatar_url: string
@@ -347,6 +514,27 @@ export type Database = {
           website: string
         }[]
       }
+      get_saved_posts: {
+        Args: { limit_count?: number; offset_count?: number }
+        Returns: {
+          avatar_url: string
+          comments_count: number
+          content: string
+          created_at: string
+          display_name: string
+          id: string
+          is_liked_by_user: boolean
+          is_saved_by_user: boolean
+          likes_count: number
+          media_types: string[]
+          media_urls: string[]
+          reactions_summary: Json
+          updated_at: string
+          user_id: string
+          user_reaction: string
+          username: string
+        }[]
+      }
       is_username_available: {
         Args: { name: string; self_id?: string } | { username_to_check: string }
         Returns: boolean
@@ -370,6 +558,10 @@ export type Database = {
         Returns: undefined
       }
       toggle_post_like: {
+        Args: { post_id_param: string }
+        Returns: boolean
+      }
+      toggle_post_save: {
         Args: { post_id_param: string }
         Returns: boolean
       }

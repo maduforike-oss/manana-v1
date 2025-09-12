@@ -15,6 +15,9 @@ import { SearchAndFilters } from '@/components/community/SearchAndFilters';
 import { PostDrafts } from '@/components/community/PostDrafts';
 import { KeyboardShortcuts } from '@/components/community/KeyboardShortcuts';
 import { PullToRefresh } from '@/components/community/PullToRefresh';
+import { NotificationsBell } from '@/components/ui/NotificationsBell';
+import { MentionHashtagParser } from '@/components/community/MentionHashtagParser';
+import { ReportModal } from '@/components/community/ReportModal';
 import { 
   Heart, 
   MessageCircle, 
@@ -41,8 +44,10 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-context';
 import {
-  createPost,
   getFeedPosts,
+  getFollowingFeedPosts,
+  getSavedPosts,
+  createPost,
   togglePostLike,
   togglePostSave,
   createComment,
@@ -50,6 +55,7 @@ import {
   formatTimeAgo,
   formatDisplayName,
   getAvatarUrl,
+  extractHashtags,
   type Post,
   type Comment
 } from '@/lib/community';

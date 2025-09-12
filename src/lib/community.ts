@@ -56,6 +56,7 @@ export interface ToggleLikeResult {
 }
 
 export interface ToggleSaveResult {
+  success?: boolean;
   data?: boolean; // true if saved, false if unsaved
   error?: string;
 }
@@ -168,21 +169,21 @@ export async function togglePostLike(postId: string): Promise<ToggleLikeResult> 
 
 export async function togglePostSave(postId: string): Promise<ToggleSaveResult> {
   if (!postId) {
-    return { error: 'Post ID is required' };
+    return { success: false, error: 'Post ID is required' };
   }
 
   try {
-    const { data, error } = await supabase.rpc('toggle_post_save' as any, {
+    const { data, error } = await supabase.rpc('toggle_post_save', {
       post_id_param: postId
     });
 
     if (error) {
-      return { error: getErrorMessage(error) };
+      return { success: false, error: getErrorMessage(error) };
     }
 
-    return { data: data as boolean };
+    return { success: true, data: data as boolean };
   } catch (error) {
-    return { error: getErrorMessage(error) };
+    return { success: false, error: getErrorMessage(error) };
   }
 }
 
@@ -308,6 +309,60 @@ export async function getPostComments(
     return { error: getErrorMessage(error) };
   }
 }
+
+// Following feed posts
+export const getFollowingFeedPosts = async (limit = 20, offset = 0): Promise<FeedPostsResult> => {
+  try {
+    const { data, error } = await supabase.rpc('get_following_feed_posts', {
+      limit_count: limit,
+      offset_count: offset
+    });
+
+    if (error) throw error;
+
+    return {
+      data: (data || []).map(post => ({
+        ...post,
+        reactions_summary: (post.reactions_summary as any) || {}
+      }))
+    };
+  } catch (error) {
+    console.error('Error fetching following feed posts:', error);
+    return {
+      error: error instanceof Error ? error.message : 'Failed to fetch following feed posts'
+    };
+  }
+};
+
+// Saved posts
+export const getSavedPosts = async (limit = 20, offset = 0): Promise<FeedPostsResult> => {
+  try {
+    const { data, error } = await supabase.rpc('get_saved_posts', {
+      limit_count: limit,
+      offset_count: offset
+    });
+
+    if (error) throw error;
+
+    return {
+      data: (data || []).map(post => ({
+        ...post,
+        reactions_summary: (post.reactions_summary as any) || {}
+      }))
+    };
+  } catch (error) {
+    console.error('Error fetching saved posts:', error);
+    return {
+      error: error instanceof Error ? error.message : 'Failed to fetch saved posts'
+    };
+  }
+};
+
+// Utility function to extract hashtags
+export const extractHashtags = (content: string): string[] => {
+  const hashtags = content.match(/#[\w]+/g) || [];
+  return hashtags.map(hashtag => hashtag.slice(1));
+};
 
 // Helper function to format reaction counts
 export function formatReactionCounts(reactions: Record<string, number> | null): string {
