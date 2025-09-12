@@ -145,11 +145,11 @@ export async function addReview(
     }
 
     return {
-      ...data,
-      user: data.profiles ? {
-        username: data.profiles.username,
-        display_name: data.profiles.display_name,
-        avatar_url: data.profiles.avatar_url
+      ...(data as any),
+      user: (data as any)?.profiles ? {
+        username: (data as any).profiles.username,
+        display_name: (data as any).profiles.display_name,
+        avatar_url: (data as any).profiles.avatar_url
       } : undefined
     };
   } catch (error) {
@@ -193,11 +193,11 @@ export async function updateReview(
     }
 
     return {
-      ...data,
-      user: data.profiles ? {
-        username: data.profiles.username,
-        display_name: data.profiles.display_name,
-        avatar_url: data.profiles.avatar_url
+      ...(data as any),
+      user: (data as any)?.profiles ? {
+        username: (data as any).profiles.username,
+        display_name: (data as any).profiles.display_name,
+        avatar_url: (data as any).profiles.avatar_url
       } : undefined
     };
   } catch (error) {
@@ -330,11 +330,11 @@ export async function getUserReview(productId: string): Promise<ProductReview | 
     if (!data) return null;
 
     return {
-      ...data,
-      user: data.profiles ? {
-        username: data.profiles.username,
-        display_name: data.profiles.display_name,
-        avatar_url: data.profiles.avatar_url
+      ...(data as any),
+      user: (data as any)?.profiles ? {
+        username: (data as any).profiles.username,
+        display_name: (data as any).profiles.display_name,
+        avatar_url: (data as any).profiles.avatar_url
       } : undefined
     };
   } catch (error) {

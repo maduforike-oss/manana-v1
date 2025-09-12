@@ -86,10 +86,21 @@ export async function add(productId: string): Promise<WishlistItem> {
     }
 
     return {
-      ...data,
-      product: data.products ? {
-        ...data.products,
-        images: data.products.product_images || []
+      id: (data as any).id,
+      user_id: (data as any).user_id,
+      product_id: (data as any).product_id,
+      added_at: (data as any).added_at,
+      created_at: ((data as any).added_at ?? new Date().toISOString()),
+      product: (data as any).products ? {
+        id: (data as any).products.id,
+        name: (data as any).products.name,
+        slug: (data as any).products.slug,
+        base_price: (data as any).products.base_price,
+        status: (data as any).products.status,
+        images: ((data as any).products.product_images || []).map((img: any) => ({
+          url: img.url,
+          alt_text: img.alt_text
+        }))
       } : undefined
     };
   } catch (error) {
@@ -176,9 +187,17 @@ export async function listMine(
     }
 
     return data?.map((item: any) => ({
-      ...item,
+      id: item.id,
+      user_id: item.user_id,
+      product_id: item.product_id,
+      added_at: item.added_at,
+      created_at: item.added_at ?? new Date().toISOString(),
       product: item.products ? {
-        ...item.products,
+        id: item.products.id,
+        name: item.products.name,
+        slug: item.products.slug,
+        base_price: item.products.base_price,
+        status: item.products.status,
         images: item.products.product_images
           ?.sort((a: any, b: any) => a.display_order - b.display_order)
           ?.map((img: any) => ({

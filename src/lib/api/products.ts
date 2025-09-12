@@ -90,7 +90,10 @@ export async function listProducts(params: ProductListParams = {}): Promise<Prod
       throw new Error(`Failed to fetch products: ${error.message}`);
     }
 
-    return data || [];
+    return (data || []).map((p: any) => ({
+      ...p,
+      status: ((["active","draft","archived"] as const).includes(p.status) ? p.status : "active") as Product["status"]
+    }));
   } catch (error) {
     console.error('Error in listProducts:', error);
     throw error;
@@ -151,10 +154,11 @@ export async function getProduct(identifier: string): Promise<ProductWithDetails
     if (!data) return null;
 
     return {
-      ...data,
-      category: data.categories || undefined,
-      images: data.product_images?.sort((a: any, b: any) => a.display_order - b.display_order) || [],
-      variants: data.product_variants || []
+      ...(data as any),
+      status: ((["active","draft","archived"] as const).includes((data as any).status) ? (data as any).status : "active") as Product["status"],
+      category: (data as any).categories || undefined,
+      images: (data as any).product_images?.sort((a: any, b: any) => a.display_order - b.display_order) || [],
+      variants: (data as any).product_variants || []
     };
   } catch (error) {
     console.error('Error in getProduct:', error);
@@ -300,15 +304,15 @@ export async function searchProducts(
       throw new Error(`Failed to search products: ${error.message}`);
     }
 
-    const products = data?.map((product: any) => ({
+    const products = (data || []).map((product: any) => ({
       ...product,
       category: product.categories,
       images: product.product_images?.sort((a: any, b: any) => a.display_order - b.display_order) || [],
       variants: product.product_variants || []
-    })) || [];
+    }));
 
     return {
-      products,
+      products: products as ProductWithDetails[],
       total: count || 0
     };
   } catch (error) {

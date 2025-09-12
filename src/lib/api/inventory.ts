@@ -120,7 +120,14 @@ export async function recordMovement(
       throw new Error(`Failed to record movement: ${movementError.message}`);
     }
 
-    return movementData;
+    return {
+      id: movementData.id,
+      variant_id: movementData.variant_id,
+      movement_type: movementData.movement_type as InventoryMovement["movement_type"],
+      quantity: movementData.quantity,
+      reason: movementData.reason,
+      created_at: movementData.created_at
+    };
   } catch (error) {
     console.error('Error in recordMovement:', error);
     throw error;
@@ -146,7 +153,14 @@ export async function getMovements(
       throw new Error(`Failed to fetch movements: ${error.message}`);
     }
 
-    return data || [];
+    return (data || []).map((m: any) => ({
+      id: m.id,
+      variant_id: m.variant_id,
+      movement_type: m.movement_type as InventoryMovement["movement_type"],
+      quantity: m.quantity,
+      reason: m.reason,
+      created_at: m.created_at
+    }));
   } catch (error) {
     console.error('Error in getMovements:', error);
     throw error;
