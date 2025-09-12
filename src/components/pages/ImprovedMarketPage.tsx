@@ -6,6 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Badge } from '@/components/ui/badge';
 import { BrandHeader } from '@/components/ui/brand-header';
 import { SearchBar } from '@/components/marketplace/SearchBar';
+import { ProductQuickViewModal } from '@/components/marketplace/ProductQuickViewModal';
 import { FiltersSheet } from '@/components/marketplace/FiltersSheet';
 import { ProductGridView } from '@/components/marketplace/ProductGridView';
 import { ProductListView } from '@/components/marketplace/ProductListView';
@@ -151,9 +152,15 @@ export function ImprovedMarketPage() {
     }
   };
 
+  const [quickViewProduct, setQuickViewProduct] = useState<any>(null);
+  const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
+
   const handleQuickView = (productId: string) => {
-    // TODO: Implement quick view modal
-    console.log('Quick view:', productId);
+    const product = products.find(p => p.id === productId);
+    if (product) {
+      setQuickViewProduct(product);
+      setIsQuickViewOpen(true);
+    }
   };
 
   const products = productsData?.items || [];
@@ -368,7 +375,7 @@ export function ImprovedMarketPage() {
 
           {/* Content */}
           <div className="pt-4">
-            {products.length === 0 && !productsLoading ? (
+            {!productsLoading && products.length === 0 ? (
               <EmptyState
                 type="search"
                 title={query.tab === 'saved' ? "No saved products" : "No products found"}
@@ -378,8 +385,12 @@ export function ImprovedMarketPage() {
                     : "Try adjusting your search terms or filters"
                 }
                 onAction={() => {
-                  setQuery({ q: '' });
-                  resetFilters();
+                  if (query.tab === 'saved') {
+                    setQuery({ tab: 'all' });
+                  } else {
+                    setQuery({ q: '' });
+                    resetFilters();
+                  }
                 }}
                 actionLabel={query.tab === 'saved' ? "Browse products" : "Clear search"}
               />
@@ -412,6 +423,26 @@ export function ImprovedMarketPage() {
         </div>
       </div>
 
+
+      {/* Quick View Modal */}
+      <ProductQuickViewModal
+        product={quickViewProduct}
+        isOpen={isQuickViewOpen}
+        onClose={() => {
+          setIsQuickViewOpen(false);
+          setQuickViewProduct(null);
+        }}
+        onAddToCart={(product, variant) => {
+          console.log('Add to cart:', product, variant);
+          toast({
+            title: "Added to cart",
+            description: `${product.name} has been added to your cart.`,
+          });
+        }}
+        onSave={(productId) => handleSaveProduct(productId)}
+        onShare={(product) => handleShare(product)}
+        isSaved={savedProducts.has(quickViewProduct?.id || '')}
+      />
 
       {/* Floating Action Button - Mobile */}
       <Button

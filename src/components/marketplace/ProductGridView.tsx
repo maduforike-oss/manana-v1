@@ -1,16 +1,16 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ProductCard } from './ProductCard';
+import { MarketProductCard } from './MarketProductCard';
 import { ProductCardSkeleton } from './ProductCardSkeleton';
-import { Product } from '@/lib/api/products';
+import { ProductWithDetails } from '@/lib/api/products';
 
 interface ProductGridViewProps {
-  products: Product[];
+  products: ProductWithDetails[];
   isLoading: boolean;
   onSave: (id: string) => void;
   onQuickView: (id: string) => void;
-  onAddToCart: (product: Product) => void;
-  onShare: (product: Product) => void;
+  onAddToCart: (product: ProductWithDetails) => void;
+  onShare: (product: ProductWithDetails) => void;
   isSaved: (id: string) => boolean;
 }
 
@@ -41,39 +41,13 @@ export function ProductGridView({
           key={product.id} 
           className="block group"
         >
-          <ProductCard
-            design={{
-              id: product.id,
-              name: product.name,
-              thumbSrc: `/api/placeholder/300/400`,
-              price: product.base_price,
-              creator: "Unknown",
-              tags: [],
-              garmentId: 'tshirt',
-              orientation: 'front' as const,
-              fabric: 'cotton',
-              baseColor: 'light' as const,
-              printArea: { width: 250, height: 300 },
-              availableOrientations: ['front'],
-              rating: 0,
-              featured: false,
-              dpi: 300,
-              safeArea: { x: 25, y: 25, w: 200, h: 250 },
-              mmToPx: 3.779,
-              studioReady: [],
-              likes: 0,
-              views: 0,
-              downloads: 0,
-              avatar: '',
-              shippingDays: '3-5 days',
-            }}
+          <MarketProductCard
+            product={product}
             isSaved={isSaved(product.id)}
-            isUnlocked={true}
             onSave={() => onSave(product.id)}
-            onQuickView={(design) => onQuickView(design.id)}
-            onOpenInStudio={() => {}}
-            onAddToCart={(design) => onAddToCart(product)}
-            onShare={(design) => onShare(product)}
+            onQuickView={(product) => onQuickView(product.id)}
+            onAddToCart={(product) => onAddToCart(product)}
+            onShare={(product) => onShare(product)}
           />
         </Link>
       ))}
