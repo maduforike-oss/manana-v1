@@ -25,6 +25,11 @@ export function ImprovedMarketPage() {
   const [savedProducts, setSavedProducts] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
 
+  const handleApplyFilters = (newFilters: any) => {
+    setQuery({ filters: newFilters });
+    setShowFilters(false);
+  };
+
   // Data fetching
   const { data: productsData, isLoading: productsLoading, error: productsError, refetch } = useProducts(query);
   const cart = useCartStore();
@@ -231,15 +236,25 @@ export function ImprovedMarketPage() {
             {/* Mobile Filter Controls - Scrollable horizontal layout */}
             <div className="block sm:hidden mb-4">
               <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                <Button
-                  onClick={() => setShowFilters(true)}
-                  variant="outline"
-                  size="sm"
-                  className="flex-shrink-0 h-10 px-4 rounded-xl border-border/40"
-                >
-                  <Filter className="h-4 w-4 mr-2" />
-                  Filters
-                </Button>
+                  <FiltersSheet
+                    filters={query.filters}
+                    onFiltersChange={(newFilters) => setQuery({ filters: newFilters })}
+                    onClear={resetFilters}
+                    resultCount={totalResults}
+                    onApply={handleApplyFilters}
+                    onClose={() => setShowFilters(false)}
+                    open={showFilters}
+                  >
+                    <Button
+                      onClick={() => setShowFilters(true)}
+                      variant="outline"
+                      size="sm"
+                      className="flex-shrink-0 h-10 px-4 rounded-xl border-border/40"
+                    >
+                      <Filter className="h-4 w-4 mr-2" />
+                      Filters
+                    </Button>
+                  </FiltersSheet>
                 
                 {(query.q || hasActiveFilters()) && (
                   <Button
@@ -260,15 +275,25 @@ export function ImprovedMarketPage() {
             {/* Desktop Controls Row */}
             <div className="hidden sm:flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 flex-wrap">
-                <Button
-                  onClick={() => setShowFilters(true)}
-                  variant="outline"
-                  size="sm"
-                  className="rounded-xl border-border/40"
+                <FiltersSheet
+                  filters={query.filters}
+                  onFiltersChange={(newFilters) => setQuery({ filters: newFilters })}
+                  onClear={resetFilters}
+                  resultCount={totalResults}
+                  onApply={handleApplyFilters}
+                  onClose={() => setShowFilters(false)}
+                  open={showFilters}
                 >
-                  <Filter className="h-4 w-4 mr-2" />
-                  Filters
-                </Button>
+                  <Button
+                    onClick={() => setShowFilters(true)}
+                    variant="outline"
+                    size="sm"
+                    className="rounded-xl border-border/40"
+                  >
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filters
+                  </Button>
+                </FiltersSheet>
                 
                 {(query.q || hasActiveFilters()) && (
                   <Button

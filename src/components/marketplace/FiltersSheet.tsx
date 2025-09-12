@@ -18,6 +18,9 @@ interface FiltersSheetProps {
   onFiltersChange: (filters: MarketFilters) => void;
   onClear: () => void;
   resultCount: number;
+  onApply?: (filters: MarketFilters) => void;
+  onClose?: () => void;
+  open?: boolean;
 }
 
 const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
@@ -29,6 +32,9 @@ export function FiltersSheet({
   onFiltersChange,
   onClear,
   resultCount,
+  onApply,
+  onClose,
+  open = false,
 }: FiltersSheetProps) {
   const { data: categories } = useCategories();
   const isMobile = useIsMobile();
@@ -169,6 +175,7 @@ export function FiltersSheet({
         </Button>
         <Button
           className="flex-1 h-11 bg-gradient-to-r from-primary to-secondary hover:shadow-lg"
+          onClick={() => onApply?.(filters)}
         >
           Show {resultCount} Results
         </Button>
@@ -177,7 +184,7 @@ export function FiltersSheet({
   );
 
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={onClose}>
       <SheetTrigger asChild>
         {children || (
           <Button variant="outline" className="relative">

@@ -18,6 +18,7 @@ import { StudioPage } from "./components/pages/StudioPage";
 import StudioEditor from "./pages/StudioEditor";
 import StudioPro from "./pages/StudioPro";
 import ItemDetail from "./pages/ItemDetail";
+import { ProductDetailPage } from "./pages/ProductDetailPage";
 import Cart from "./pages/Cart";
 import SellNew from "./pages/SellNew";
 import Checkout from "./pages/Checkout";
@@ -58,6 +59,7 @@ const App = () => {
               <Route path="/studio/editor" element={<RequireAuth><StudioEditor /></RequireAuth>} />
               <Route path="/studio/legacy" element={<RequireAuth><StudioPage /></RequireAuth>} />
               <Route path="/item/:id" element={<ItemDetail />} />
+              <Route path="/product/:id" element={<ProductDetailPage />} />
               <Route path="/cart" element={<Cart />} />
               <Route path="/sell/new" element={<RequireAuth><SellNew /></RequireAuth>} />
               <Route path="/checkout" element={<RequireAuth><Checkout /></RequireAuth>} />
