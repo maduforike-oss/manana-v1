@@ -151,16 +151,90 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      me_profile_full: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          cover_url: string | null
+          display_name: string | null
+          followers: number | null
+          following: number | null
+          location: string | null
+          metrics_updated_at: string | null
+          preferences: Json | null
+          social_instagram: string | null
+          social_twitter: string | null
+          total_designs: number | null
+          user_id: string | null
+          username: string | null
+          website: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       generate_order_number: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_my_profile: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          avatar_url: string | null
+          bio: string | null
+          cover_url: string | null
+          display_name: string | null
+          followers: number | null
+          following: number | null
+          location: string | null
+          metrics_updated_at: string | null
+          preferences: Json | null
+          social_instagram: string | null
+          social_twitter: string | null
+          total_designs: number | null
+          user_id: string | null
+          username: string | null
+          website: string | null
+        }
+      }
+      get_public_profile: {
+        Args: { u: string }
+        Returns: {
+          avatar_url: string
+          bio: string
+          cover_url: string
+          display_name: string
+          followers: number
+          following: number
+          location: string
+          social_instagram: string
+          social_twitter: string
+          user_id: string
+          username: string
+          website: string
+        }[]
+      }
       is_username_available: {
         Args: { name: string; self_id?: string } | { username_to_check: string }
         Returns: boolean
+      }
+      list_followers: {
+        Args: { lim?: number; off?: number; target: string }
+        Returns: {
+          created_at: string
+          follower_id: string
+        }[]
+      }
+      list_following: {
+        Args: { lim?: number; off?: number; target: string }
+        Returns: {
+          created_at: string
+          followee_id: string
+        }[]
+      }
+      set_my_profile: {
+        Args: { patch: Json }
+        Returns: undefined
       }
     }
     Enums: {
