@@ -23,6 +23,7 @@ import Cart from "./pages/Cart";
 import SellNew from "./pages/SellNew";
 import Checkout from "./pages/Checkout";
 import CheckoutSuccess from "./pages/CheckoutSuccess";
+import AdminTemplates from "./pages/AdminTemplates";
 import RequireAuth from "./components/auth/RequireAuth";
 import { useEffect } from "react";
 
@@ -72,6 +73,7 @@ const App = () => {
               <Route path="/profile/followers" element={<RequireAuth><Followers /></RequireAuth>} />
               <Route path="/users/:userId" element={<UserProfile />} />
               <Route path="/u/:username" element={<UserProfilePublic />} />
+              <Route path="/admin/templates" element={<RequireAuth><AdminTemplates /></RequireAuth>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
