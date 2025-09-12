@@ -28,7 +28,9 @@ import { useProfileStore } from '@/store/useProfileStore';
 import { getOrderStats } from '@/lib/orders';
 import { getProfileMetrics } from '@/lib/profile';
 import RequireAuth from '@/components/auth/RequireAuth';
-import BackButton from '@/components/BackButton';
+import { Logo } from '@/components/brand/Logo';
+import { ProfileInfoSection } from '@/components/profile/ProfileInfoSection';
+import { QuickImageUpload } from '@/components/profile/QuickImageUpload';
 
 interface OrderStats {
   total_orders: number;
@@ -123,73 +125,75 @@ export default function ProfileHub() {
   return (
     <RequireAuth>
       <div className="h-full bg-background overflow-auto modern-scroll">
-        <BrandHeader 
-          title="Profile Hub" 
-          subtitle="Manage your profile and account"
-        >
-          <BackButton fallback="/" />
-        </BrandHeader>
+        <div className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center gap-3">
+              <Logo size={28} showWordmark={false} />
+              <div>
+                <h1 className="text-2xl font-bold">Profile Hub</h1>
+                <p className="text-muted-foreground">Manage your profile and account</p>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div className="container mx-auto py-6 px-4 max-w-4xl space-y-6">
-          {/* Mini Profile Preview */}
-          <Card className="overflow-hidden">
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">Profile Preview</CardTitle>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate(`/u/${profile?.username || user?.id}`)}
-                  disabled={!profile?.username}
-                >
-                  <Eye className="w-4 h-4 mr-2" />
-                  View Public Profile
-                  <ExternalLink className="w-3 h-3 ml-1" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-start gap-4">
-                <Avatar className="w-16 h-16">
-                  <AvatarImage src={avatarUrl} />
-                  <AvatarFallback className="bg-gradient-to-r from-primary to-secondary text-white text-lg font-bold">
-                    {displayName.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-semibold truncate">{displayName}</h3>
-                    {profile?.username && (
-                      <span className="text-muted-foreground text-sm">@{profile.username}</span>
-                    )}
-                  </div>
-                  <p className="text-muted-foreground text-sm line-clamp-2 mb-2">{bio}</p>
-                  
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span>{metrics.total_designs} designs</span>
-                    <span>{metrics.followers} followers</span>
-                    <span>{metrics.following} following</span>
-                  </div>
-                  
-                  {profile?.location && (
-                    <div className="flex items-center gap-1 mt-2 text-sm text-muted-foreground">
-                      <MapPin className="w-3 h-3" />
-                      {profile.location}
-                    </div>
-                  )}
-                </div>
-              </div>
+          {/* Profile Information Sections */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">Profile Information</h2>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate(`/u/${profile?.username || user?.id}`)}
+                disabled={!profile?.username}
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                View Public Profile
+                <ExternalLink className="w-3 h-3 ml-1" />
+              </Button>
+            </div>
+            
+            <div className="grid gap-4">
+              <ProfileInfoSection
+                title="Display Name"
+                value={profile?.display_name || ''}
+                field="display_name"
+                placeholder="Your display name"
+              />
+              
+              <ProfileInfoSection
+                title="Username"
+                value={profile?.username || ''}
+                field="username"
+                placeholder="your_username"
+              />
+              
+              <ProfileInfoSection
+                title="Bio"
+                value={profile?.bio || ''}
+                field="bio"
+                placeholder="Tell people about yourself..."
+                isTextarea={true}
+                maxLength={200}
+              />
+            </div>
 
-              {isProfileIncomplete && (
-                <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
-                  <p className="text-amber-800 dark:text-amber-200 text-sm">
-                    Your profile is incomplete. Add a display name, bio, and profile picture to improve your visibility.
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+            {isProfileIncomplete && (
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                <p className="text-amber-800 dark:text-amber-200 text-sm">
+                  Your profile is incomplete. Add a display name, bio, and profile picture to improve your visibility.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Quick Image Upload */}
+          <QuickImageUpload
+            avatarUrl={avatarUrl}
+            coverUrl={profile?.cover_url || ''}
+            displayName={displayName}
+          />
 
           {/* Quick Actions Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
