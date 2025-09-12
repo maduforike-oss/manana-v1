@@ -127,28 +127,28 @@ export const ImprovedCommunityPage = () => {
 
   // Real-time updates integration
   useRealtimeUpdates({
-    onNewPost: () => {
+    onNewPost: (post) => {
       if (activeTab === 'feed') {
         loadPosts();
       }
     },
-    onPostUpdate: (payload) => {
+    onPostUpdate: (postId, updates) => {
       // Update specific post in the list
       setPosts(prev => prev.map(post => 
-        post.id === payload.new?.id ? { ...post, ...payload.new } : post
+        post.id === postId ? { ...post, ...updates } : post
       ));
     },
-    onNewComment: (payload) => {
+    onNewComment: (comment) => {
       // Update comment count for the post
       setPosts(prev => prev.map(post => 
-        post.id === payload.new?.post_id 
+        post.id === comment.post_id 
           ? { ...post, comments_count: post.comments_count + 1 }
           : post
       ));
       
       // If comments are expanded for this post, refresh them
-      if (payload.new?.post_id && expandedComments.has(payload.new.post_id)) {
-        loadCommentsForPost(payload.new.post_id);
+      if (expandedComments.has(comment.post_id)) {
+        loadCommentsForPost(comment.post_id);
       }
     }
   });
