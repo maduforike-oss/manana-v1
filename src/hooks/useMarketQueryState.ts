@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 export interface MarketFilters {
@@ -59,9 +59,11 @@ const decodeFilters = (encoded: string): MarketFilters => {
 export function useMarketQueryState() {
   const navigate = useNavigate();
   const location = useLocation();
+  const updateTimeoutRef = useRef<NodeJS.Timeout>();
+  const lastUpdateRef = useRef<string>('');
   
-  // Get initial state from URL or localStorage
-  const getInitialState = useCallback((): MarketQueryState => {
+  // Parse URL params into state
+  const parseUrlToState = useCallback((): MarketQueryState => {
     const searchParams = new URLSearchParams(location.search);
     const savedView = localStorage.getItem('marketplace-view') as 'grid' | 'list' | null;
     
@@ -75,37 +77,13 @@ export function useMarketQueryState() {
     };
   }, [location.search]);
 
-  const [query, setQueryState] = useState<MarketQueryState>(getInitialState);
+  const [query, setQueryState] = useState<MarketQueryState>(parseUrlToState);
 
-  // Update URL when state changes
+  // Update state when URL changes (back/forward navigation)
   useEffect(() => {
-    const searchParams = new URLSearchParams();
-    
-    if (query.q) searchParams.set('q', query.q);
-    if (query.tab !== DEFAULT_STATE.tab) searchParams.set('tab', query.tab);
-    if (query.sort !== DEFAULT_STATE.sort) searchParams.set('sort', query.sort);
-    if (query.view !== DEFAULT_STATE.view) searchParams.set('view', query.view);
-    if (query.page !== DEFAULT_STATE.page) searchParams.set('page', query.page.toString());
-    
-    const encodedFilters = encodeFilters(query.filters);
-    if (encodedFilters) searchParams.set('filters', encodedFilters);
-
-    // Save view preference to localStorage
-    localStorage.setItem('marketplace-view', query.view);
-    
-    const newSearch = searchParams.toString();
-    const currentSearch = location.search.slice(1);
-    
-    if (newSearch !== currentSearch) {
-      navigate(`${location.pathname}${newSearch ? `?${newSearch}` : ''}`, { replace: true });
-    }
-  }, [query, navigate, location.pathname, location.search]);
-
-  // Update state from URL changes (back/forward navigation)
-  useEffect(() => {
-    const newState = getInitialState();
+    const newState = parseUrlToState();
     setQueryState(newState);
-  }, [getInitialState]);
+  }, [parseUrlToState]);
 
   const setQuery = useCallback((partial: Partial<MarketQueryState>) => {
     setQueryState(prev => {
@@ -114,9 +92,42 @@ export function useMarketQueryState() {
       if ('q' in partial || 'tab' in partial || 'sort' in partial || 'filters' in partial) {
         newState.page = 1;
       }
+
+      // Debounce URL updates to prevent rapid fire
+      const searchParams = new URLSearchParams();
+      
+      if (newState.q) searchParams.set('q', newState.q);
+      if (newState.tab !== DEFAULT_STATE.tab) searchParams.set('tab', newState.tab);
+      if (newState.sort !== DEFAULT_STATE.sort) searchParams.set('sort', newState.sort);
+      if (newState.view !== DEFAULT_STATE.view) searchParams.set('view', newState.view);
+      if (newState.page !== DEFAULT_STATE.page) searchParams.set('page', newState.page.toString());
+      
+      const encodedFilters = encodeFilters(newState.filters);
+      if (encodedFilters) searchParams.set('filters', encodedFilters);
+
+      // Save view preference to localStorage
+      localStorage.setItem('marketplace-view', newState.view);
+      
+      const newSearch = searchParams.toString();
+      const newUrl = `${location.pathname}${newSearch ? `?${newSearch}` : ''}`;
+      
+      // Only update URL if it's different and not the same as last update
+      if (newUrl !== `${location.pathname}${location.search}` && newUrl !== lastUpdateRef.current) {
+        // Clear existing timeout
+        if (updateTimeoutRef.current) {
+          clearTimeout(updateTimeoutRef.current);
+        }
+        
+        // Debounce the URL update
+        updateTimeoutRef.current = setTimeout(() => {
+          lastUpdateRef.current = newUrl;
+          navigate(newUrl, { replace: true });
+        }, 100);
+      }
+
       return newState;
     });
-  }, []);
+  }, [navigate, location.pathname, location.search]);
 
   const resetFilters = useCallback(() => {
     setQuery({ 
