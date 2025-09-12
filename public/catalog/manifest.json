@@ -54,6 +54,56 @@
         }
       ],
       "sizes": ["S", "M", "L", "XL", "XXL"]
+    },
+    {
+      "slug": "zip-up-hoodie",
+      "name": "Zip-Up Hoodie",
+      "colors": [
+        {
+          "name": "White",
+          "hex": "#FFFFFF",
+          "views": {
+            "front": { "mockup": "/catalog/zip-up-hoodie/white/front.png" },
+            "back": { "mockup": "/catalog/zip-up-hoodie/white/back.png" }
+          },
+          "printArea": {
+            "unit": "mm",
+            "safe": [
+              {"x": -120, "y": -180},
+              {"x": 120, "y": -180},
+              {"x": 120, "y": 180},
+              {"x": -120, "y": 180}
+            ],
+            "mmToPx": 3.543307
+          }
+        }
+      ],
+      "sizes": ["S", "M", "L", "XL", "XXL"]
+    },
+    {
+      "slug": "sweatshirt",
+      "name": "Sweatshirt",
+      "colors": [
+        {
+          "name": "White",
+          "hex": "#FFFFFF",
+          "views": {
+            "front": { "mockup": "/catalog/sweatshirt/white/front.png" },
+            "back": { "mockup": "/catalog/sweatshirt/white/back.png" }
+          },
+          "printArea": {
+            "unit": "mm",
+            "safe": [
+              {"x": -130, "y": -180},
+              {"x": 130, "y": -180},
+              {"x": 130, "y": 180},
+              {"x": -130, "y": 180}
+            ],
+            "mmToPx": 3.543307
+          }
+        }
+      ],
+      "sizes": ["S", "M", "L", "XL", "XXL"]
     }
   ]
 }
