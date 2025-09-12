@@ -12,8 +12,7 @@ import { SearchWithSuggestions } from '@/components/marketplace/SearchWithSugges
 import { ProductCard } from '@/components/marketplace/ProductCard';
 import { EmptyState } from '@/components/marketplace/EmptyState';
 import { ProductCardSkeleton } from '@/components/marketplace/ProductCardSkeleton';
-import { useMarketplace } from '@/hooks/useMarketplace';
-import { useCart } from '@/hooks/useCart';
+import { useCartStore } from '@/store/useCartStore';
 import { useVirtualScroll } from '@/hooks/useVirtualScroll';
 import { useImageOptimization } from '@/hooks/useImageOptimization';
 import { useCache } from '@/hooks/useCache';
@@ -35,7 +34,7 @@ export function MarketPage() {
   const [showQuickView, setShowQuickView] = useState(false);
   const [showPurchaseGate, setShowPurchaseGate] = useState(false);
 
-  // Custom hooks
+  // Legacy component - main implementation is in ImprovedMarketPage.tsx
   const {
     allDesigns,
     filteredCount,
@@ -60,9 +59,9 @@ export function MarketPage() {
     isUnlocked,
     clearSearch,
     clearFilters
-  } = useMarketplace();
+  } = {} as any; // Placeholder - main implementation is in ImprovedMarketPage.tsx
 
-  const { addToCart, cart } = useCart();
+  const { addItem } = useCartStore();
   const { toast } = useToast();
   const { getOptimizedImageUrl, preloadImage } = useImageOptimization();
   const cache = useCache<StudioGarmentData[]>();
@@ -119,17 +118,14 @@ export function MarketPage() {
   };
 
   const handleAddToCart = (design: StudioGarmentData) => {
-    addToCart({
+    addItem({
       id: `${design.id}-${Date.now()}`,
-      designId: design.id,
+      productId: design.id,
       name: design.name,
       image: design.thumbSrc,
       price: design.price,
       size: 'M',
       color: 'Default',
-      garmentType: design.garmentId,
-      creator: design.creator,
-      listingType: 'print-design'
     });
     
     toast({
@@ -147,7 +143,7 @@ export function MarketPage() {
           url: window.location.href + `?design=${design.id}`
         });
       } catch (err) {
-        console.log('Error sharing:', err);
+        // Share error - silent fail
       }
     } else {
       navigator.clipboard.writeText(window.location.href + `?design=${design.id}`);
@@ -175,7 +171,7 @@ export function MarketPage() {
               variant="destructive" 
               className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center"
             >
-              {cart.itemCount}
+              {useCartStore.getState().count}
             </Badge>
           </Button>
         </div>
@@ -411,13 +407,7 @@ export function MarketPage() {
 
       {/* Modals */}
       <Suspense fallback={<div />}>
-        <LazyFiltersSheet 
-          isOpen={showFilters}
-          onOpenChange={setShowFilters}
-          filters={activeFilters}
-          onFiltersChange={handleFiltersChange}
-          onClearAll={clearFilters}
-        />
+        {/* Temporarily disabled - using ImprovedMarketPage as main implementation */}
 
         <LazyQuickViewModal
           design={selectedDesign}

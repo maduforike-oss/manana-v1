@@ -168,6 +168,86 @@ export type Database = {
         }
         Relationships: []
       }
+      garment_categories: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+      garment_template_images: {
+        Row: {
+          category_id: string
+          color_slug: string
+          created_at: string
+          created_by: string | null
+          dpi: number
+          height_px: number
+          id: string
+          meta: Json
+          print_area: Json
+          safe_area: Json
+          storage_path: string
+          view: string
+          width_px: number
+        }
+        Insert: {
+          category_id: string
+          color_slug?: string
+          created_at?: string
+          created_by?: string | null
+          dpi?: number
+          height_px: number
+          id?: string
+          meta?: Json
+          print_area?: Json
+          safe_area?: Json
+          storage_path: string
+          view: string
+          width_px: number
+        }
+        Update: {
+          category_id?: string
+          color_slug?: string
+          created_at?: string
+          created_by?: string | null
+          dpi?: number
+          height_px?: number
+          id?: string
+          meta?: Json
+          print_area?: Json
+          safe_area?: Json
+          storage_path?: string
+          view?: string
+          width_px?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "garment_template_images_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "garment_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_movements: {
         Row: {
           created_at: string
@@ -854,6 +934,18 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_users: {
+        Row: {
+          user_id: string
+        }
+        Insert: {
+          user_id: string
+        }
+        Update: {
+          user_id?: string
+        }
+        Relationships: []
+      }
       stock_alerts: {
         Row: {
           created_at: string
@@ -953,6 +1045,27 @@ export type Database = {
       create_post: {
         Args: { content_text: string }
         Returns: string
+      }
+      ensure_my_profile: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          avatar_url: string | null
+          bio: string | null
+          cover_url: string | null
+          created_at: string | null
+          display_name: string | null
+          followers: number | null
+          following: number | null
+          location: string | null
+          metrics_updated_at: string | null
+          preferences: Json | null
+          social_instagram: string | null
+          social_twitter: string | null
+          total_designs: number | null
+          user_id: string | null
+          username: string | null
+          website: string | null
+        }
       }
       generate_order_number: {
         Args: Record<PropertyKey, never>

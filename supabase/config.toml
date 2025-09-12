@@ -1,1 +1,7 @@
 project_id = "ajnbtevgzhkilokflntj"
+
+[functions.upload-garment-template]
+verify_jwt = false
+
+[functions.templates-upload]
+verify_jwt = false

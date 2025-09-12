@@ -137,10 +137,12 @@ export function ProductCard({
               {/* Actions */}
               <div className="flex flex-col gap-1 sm:gap-2 ml-2 sm:ml-4">{/* Smaller gaps on mobile */}
                 <Button
+                  onClick={() => onSave(design.id)}
                   variant="outline"
                   size="sm"
-                  onClick={() => onSave(design.id)}
-                  className={cn("h-7 w-7 sm:h-8 sm:w-8 p-0 touch:h-11 touch:w-11", isSaved && "bg-primary/10 border-primary text-primary")}
+                  aria-label={isSaved ? 'Remove from wishlist' : 'Save to wishlist'}
+                  aria-pressed={isSaved}
+                  className={cn("h-7 w-7 sm:h-8 sm:w-8 p-0 min-h-[44px] min-w-[44px]", isSaved && "bg-primary/10 border-primary text-primary")}
                 >
                   <Heart className={cn("h-3 w-3", isSaved && "fill-current")} />
                 </Button>
@@ -183,11 +185,13 @@ export function ProductCard({
           <img
             src={design.thumbSrc}
             alt={design.name}
+            loading="lazy"
             className={cn(
               "w-full h-full object-cover transition-all duration-300 group-hover:scale-105",
               imageLoaded ? "opacity-100" : "opacity-0"
             )}
             onLoad={() => setImageLoaded(true)}
+            onError={() => setImageError(true)}
           />
           
           {/* Overlay */}

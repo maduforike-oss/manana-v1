@@ -10,6 +10,7 @@ import { getCart, updateCartItemQuantity, removeFromCart, type Cart, type CartIt
 import { BrandHeader } from '@/components/ui/brand-header';
 import { useToast } from '@/hooks/use-toast';
 import { ProductCardSkeleton } from '@/components/marketplace/ProductCardSkeleton';
+import { supabase } from '@/integrations/supabase/client';
 
 export function CartPage() {
   const navigate = useNavigate();
@@ -21,6 +22,21 @@ export function CartPage() {
 
   useEffect(() => {
     loadCart();
+    
+    // Merge guest cart when user logs in
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        try {
+          const { mergeGuestCartWithUserCart } = await import('@/lib/cart');
+          await mergeGuestCartWithUserCart(session.user.id);
+          await loadCart();
+        } catch (error) {
+          console.error('Error merging guest cart:', error);
+        }
+      }
+    });
+    
+    return () => subscription.unsubscribe();
   }, []);
 
   const loadCart = async () => {
@@ -42,6 +58,20 @@ export function CartPage() {
 
   const handleQuantityChange = async (itemId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
+
+    // Get current item to check stock limits
+    const currentItem = cart?.items.find(item => item.id === itemId);
+    if (currentItem?.variant) {
+      const maxStock = currentItem.variant.stock_quantity;
+      if (newQuantity > maxStock) {
+        toast({
+          title: "Stock limit reached",
+          description: `Only ${maxStock} items available in stock`,
+          variant: "destructive"
+        });
+        return;
+      }
+    }
 
     setUpdatingItems(prev => new Set(prev).add(itemId));
     
@@ -295,13 +325,28 @@ export function CartPage() {
                               <Input
                                 type="number"
                                 min="1"
+                                max={item.variant?.stock_quantity || 99}
                                 value={item.quantity}
                                 onChange={(e) => {
-                                  const newQty = parseInt(e.target.value);
-                                  if (newQty > 0) {
+                                  const value = e.target.value;
+                                  if (value === '') return; // Allow empty value during editing
+                                  
+                                  const newQty = Math.max(1, Math.min(
+                                    parseInt(value) || 1,
+                                    item.variant?.stock_quantity || 99
+                                  ));
+                                  
+                                  if (newQty !== item.quantity) {
                                     handleQuantityChange(item.id, newQty);
                                   }
                                 }}
+                                onBlur={(e) => {
+                                  // Ensure valid value on blur
+                                  if (e.target.value === '' || parseInt(e.target.value) < 1) {
+                                    handleQuantityChange(item.id, 1);
+                                  }
+                                }}
+                                aria-label={`Quantity for ${item.product_name}`}
                                 className="w-16 h-8 text-center"
                                 disabled={updatingItems.has(item.id)}
                               />
