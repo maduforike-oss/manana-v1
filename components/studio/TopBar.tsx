@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
   Undo2, Redo2, Grid3x3, Ruler, Download, 
-  HelpCircle, Eye, ZoomIn, ZoomOut, Maximize2 
+  HelpCircle, Eye, ZoomIn, ZoomOut, Maximize2, Camera
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -15,6 +15,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useStudioStore } from '../../lib/studio/store';
 import { exportPNG, exportSVG, exportPDF } from '../../lib/studio/export';
+import { useStaffStatus } from '@/hooks/useStaffStatus';
+import { StudioTemplateUploader } from './StudioTemplateUploader';
 
 export const TopBar = () => {
   const { 
@@ -36,6 +38,8 @@ export const TopBar = () => {
   
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showTemplateUploader, setShowTemplateUploader] = useState(false);
+  const { isStaff } = useStaffStatus();
 
   const handleExport = async (format: 'png' | 'png-transparent' | 'svg' | 'pdf' | 'print-150' | 'print-300') => {
     const canvas = document.querySelector('canvas');
@@ -230,6 +234,19 @@ export const TopBar = () => {
             </Button>
           </div>
 
+          {/* Admin Template Upload Button */}
+          {isStaff && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowTemplateUploader(true)}
+              className="studio-tool mr-2"
+              title="Upload garment template (Admin only)"
+            >
+              <Camera className="w-4 h-4" />
+            </Button>
+          )}
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 
@@ -290,6 +307,12 @@ export const TopBar = () => {
           </Button>
         </div>
       </div>
+
+      {/* Template Uploader Modal */}
+      <StudioTemplateUploader
+        open={showTemplateUploader}
+        onOpenChange={setShowTemplateUploader}
+      />
     </div>
   );
 };
