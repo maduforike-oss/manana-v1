@@ -59,9 +59,9 @@ export function MarketPage() {
     isUnlocked,
     clearSearch,
     clearFilters
-  } = useMarketplace();
+  } = {} as any; // Placeholder - main implementation is in ImprovedMarketPage.tsx
 
-  const { addToCart, cart } = useCart();
+  const { addItem } = useCartStore();
   const { toast } = useToast();
   const { getOptimizedImageUrl, preloadImage } = useImageOptimization();
   const cache = useCache<StudioGarmentData[]>();
@@ -118,17 +118,14 @@ export function MarketPage() {
   };
 
   const handleAddToCart = (design: StudioGarmentData) => {
-    addToCart({
+    addItem({
       id: `${design.id}-${Date.now()}`,
-      designId: design.id,
+      productId: design.id,
       name: design.name,
       image: design.thumbSrc,
       price: design.price,
       size: 'M',
       color: 'Default',
-      garmentType: design.garmentId,
-      creator: design.creator,
-      listingType: 'print-design'
     });
     
     toast({
@@ -174,7 +171,7 @@ export function MarketPage() {
               variant="destructive" 
               className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center"
             >
-              {cart.itemCount}
+              {useCartStore.getState().count}
             </Badge>
           </Button>
         </div>
