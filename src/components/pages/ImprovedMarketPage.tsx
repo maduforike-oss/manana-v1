@@ -6,7 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Badge } from '@/components/ui/badge';
 import { BrandHeader } from '@/components/ui/brand-header';
 import { SearchBar } from '@/components/marketplace/SearchBar';
-import { FiltersModal } from '@/components/marketplace/FiltersModal';
+import { FiltersSheet } from '@/components/marketplace/FiltersSheet';
 import { ProductGridView } from '@/components/marketplace/ProductGridView';
 import { ProductListView } from '@/components/marketplace/ProductListView';
 import { EmptyState } from '@/components/marketplace/EmptyState';
@@ -383,15 +383,6 @@ export function ImprovedMarketPage() {
         </div>
       </div>
 
-      {/* Filters Modal */}
-      <FiltersModal
-        open={showFilters}
-        onOpenChange={setShowFilters}
-        filters={query.filters}
-        onFiltersChange={(filters) => setQuery({ filters })}
-        onClear={resetFilters}
-        resultCount={totalResults}
-      />
 
       {/* Floating Action Button - Mobile */}
       <Button

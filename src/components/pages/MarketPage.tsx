@@ -12,8 +12,7 @@ import { SearchWithSuggestions } from '@/components/marketplace/SearchWithSugges
 import { ProductCard } from '@/components/marketplace/ProductCard';
 import { EmptyState } from '@/components/marketplace/EmptyState';
 import { ProductCardSkeleton } from '@/components/marketplace/ProductCardSkeleton';
-import { useMarketplace } from '@/hooks/useMarketplace';
-import { useCart } from '@/hooks/useCart';
+import { useCartStore } from '@/store/useCartStore';
 import { useVirtualScroll } from '@/hooks/useVirtualScroll';
 import { useImageOptimization } from '@/hooks/useImageOptimization';
 import { useCache } from '@/hooks/useCache';
@@ -35,7 +34,7 @@ export function MarketPage() {
   const [showQuickView, setShowQuickView] = useState(false);
   const [showPurchaseGate, setShowPurchaseGate] = useState(false);
 
-  // Custom hooks
+  // Legacy component - main implementation is in ImprovedMarketPage.tsx
   const {
     allDesigns,
     filteredCount,
@@ -411,13 +410,7 @@ export function MarketPage() {
 
       {/* Modals */}
       <Suspense fallback={<div />}>
-        <LazyFiltersSheet 
-          isOpen={showFilters}
-          onOpenChange={setShowFilters}
-          filters={activeFilters}
-          onFiltersChange={handleFiltersChange}
-          onClearAll={clearFilters}
-        />
+        {/* Temporarily disabled - using ImprovedMarketPage as main implementation */}
 
         <LazyQuickViewModal
           design={selectedDesign}

@@ -1,368 +1,218 @@
-import { useState, useEffect } from 'react';
-import { X, Check, RotateCcw } from 'lucide-react';
+import React from 'react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn } from '@/lib/utils';
+import { Filter, X } from 'lucide-react';
+import { MarketFilters } from '@/hooks/useMarketQueryState';
+import { useCategories } from '@/hooks/useProducts';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface FiltersSheetProps {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-  filters: {
-    garmentTypes: string[];
-    baseColors: string[];
-    tags: string[];
-    priceRange: [number, number];
-    inStock: boolean;
-    size: string[];
-  };
-  onFiltersChange: (filters: any) => void;
-  onClearAll: () => void;
+  children?: React.ReactNode;
+  filters: MarketFilters;
+  onFiltersChange: (filters: MarketFilters) => void;
+  onClear: () => void;
+  resultCount: number;
 }
 
-export const FiltersSheet = ({ 
-  isOpen, 
-  onOpenChange, 
-  filters, 
+const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+const COLORS = ['Black', 'White', 'Gray', 'Navy', 'Red', 'Blue', 'Green', 'Pink', 'Yellow'];
+
+export function FiltersSheet({
+  children,
+  filters,
   onFiltersChange,
-  onClearAll 
-}: FiltersSheetProps) => {
-  const [localFilters, setLocalFilters] = useState(filters);
+  onClear,
+  resultCount,
+}: FiltersSheetProps) {
+  const { data: categories } = useCategories();
+  const isMobile = useIsMobile();
 
-  useEffect(() => {
-    setLocalFilters(filters);
-  }, [filters]);
-
-  const applyFilters = () => {
-    onFiltersChange(localFilters);
-    onOpenChange(false);
+  const updateFilters = (key: keyof MarketFilters, value: any) => {
+    onFiltersChange({ ...filters, [key]: value });
   };
 
-  const handleClearAll = () => {
-    const emptyFilters = {
-      garmentTypes: [],
-      baseColors: [],
-      tags: [],
-      priceRange: [0, 100] as [number, number],
-      inStock: false,
-      size: []
-    };
-    setLocalFilters(emptyFilters);
-    onClearAll();
+  const toggleArrayItem = (array: string[], item: string) => {
+    return array.includes(item)
+      ? array.filter(i => i !== item)
+      : [...array, item];
   };
 
-  const garmentTypeOptions = [
-    { id: 'tshirt', label: 'T-Shirts', count: 245 },
-    { id: 'hoodie', label: 'Hoodies', count: 128 },
-    { id: 'crewneck', label: 'Crewnecks', count: 89 },
-    { id: 'tank', label: 'Tank Tops', count: 67 },
-    { id: 'longsleeve', label: 'Long Sleeves', count: 156 },
-    { id: 'polo', label: 'Polo Shirts', count: 43 }
-  ];
+  const hasActiveFilters = () => {
+    return filters.categories.length > 0 || 
+           filters.sizes.length > 0 || 
+           filters.colors.length > 0 || 
+           filters.price_min !== undefined || 
+           filters.price_max !== undefined;
+  };
 
-  const colorOptions = [
-    { id: 'black', label: 'Black', color: '#000000', count: 189 },
-    { id: 'white', label: 'White', color: '#FFFFFF', count: 234 },
-    { id: 'gray', label: 'Gray', color: '#6B7280', count: 145 },
-    { id: 'navy', label: 'Navy', color: '#1E3A8A', count: 98 },
-    { id: 'red', label: 'Red', color: '#DC2626', count: 76 },
-    { id: 'blue', label: 'Blue', color: '#2563EB', count: 134 }
-  ];
+  const getFilterCount = () => {
+    return filters.categories.length + filters.sizes.length + filters.colors.length + 
+           (filters.price_min !== undefined || filters.price_max !== undefined ? 1 : 0);
+  };
 
-  const sizeOptions = [
-    { id: 'xs', label: 'XS' },
-    { id: 's', label: 'S' },
-    { id: 'm', label: 'M' },
-    { id: 'l', label: 'L' },
-    { id: 'xl', label: 'XL' },
-    { id: 'xxl', label: 'XXL' }
-  ];
-
-  const tagOptions = [
-    { id: 'minimalist', label: 'Minimalist', count: 156 },
-    { id: 'streetwear', label: 'Streetwear', count: 234 },
-    { id: 'vintage', label: 'Vintage', count: 89 },
-    { id: 'abstract', label: 'Abstract', count: 145 },
-    { id: 'typography', label: 'Typography', count: 198 },
-    { id: 'nature', label: 'Nature', count: 87 },
-    { id: 'geometric', label: 'Geometric', count: 112 },
-    { id: 'retro', label: 'Retro', count: 76 }
-  ];
-
-  const hasActiveFilters = localFilters.garmentTypes.length > 0 || 
-                          localFilters.baseColors.length > 0 || 
-                          localFilters.tags.length > 0 || 
-                          localFilters.size.length > 0 ||
-                          localFilters.inStock ||
-                          localFilters.priceRange[0] > 0 || 
-                          localFilters.priceRange[1] < 100;
-
-  return (
-    <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-[400px] sm:w-[540px] p-0">
-        <div className="flex flex-col h-full">
-          {/* Header */}
-          <SheetHeader className="px-6 py-4 border-b border-border/30">
-            <div className="flex items-center justify-between">
-              <SheetTitle className="text-xl font-bold">Filters</SheetTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClearAll}
-                disabled={!hasActiveFilters}
-                className="text-muted-foreground hover:text-foreground disabled:opacity-50"
-              >
-                <RotateCcw className="h-4 w-4 mr-2" />
-                Clear All
-              </Button>
-            </div>
-          </SheetHeader>
-
-          {/* Filters Content */}
-          <ScrollArea className="flex-1 px-6">
-            <div className="py-6 space-y-8">
-              {/* Garment Types */}
-              <div>
-                <h3 className="text-sm font-semibold text-foreground mb-4">Garment Type</h3>
-                <div className="space-y-3">
-                  {garmentTypeOptions.map((option) => (
-                    <div key={option.id} className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <Checkbox
-                          id={`garment-${option.id}`}
-                          checked={localFilters.garmentTypes.includes(option.id)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setLocalFilters(prev => ({
-                                ...prev,
-                                garmentTypes: [...prev.garmentTypes, option.id]
-                              }));
-                            } else {
-                              setLocalFilters(prev => ({
-                                ...prev,
-                                garmentTypes: prev.garmentTypes.filter(type => type !== option.id)
-                              }));
-                            }
-                          }}
-                          className="border-border/50"
-                        />
-                        <label 
-                          htmlFor={`garment-${option.id}`}
-                          className="text-sm text-foreground cursor-pointer"
-                        >
-                          {option.label}
-                        </label>
-                      </div>
-                      <span className="text-xs text-muted-foreground">({option.count})</span>
-                    </div>
-                  ))}
-                </div>
+  const FilterContent = () => (
+    <div className="space-y-6">
+      {/* Categories */}
+      <div>
+        <Label className="text-base font-semibold mb-4 block">Categories</Label>
+        <ScrollArea className="h-32">
+          <div className="space-y-3 pr-4">
+            {categories?.map((category) => (
+              <div key={category.id} className="flex items-center space-x-3">
+                <Checkbox
+                  id={`category-${category.id}`}
+                  checked={filters.categories.includes(category.id)}
+                  onCheckedChange={(checked) => {
+                    updateFilters(
+                      'categories',
+                      checked
+                        ? [...filters.categories, category.id]
+                        : filters.categories.filter(id => id !== category.id)
+                    );
+                  }}
+                  className="rounded-md"
+                />
+                <Label 
+                  htmlFor={`category-${category.id}`} 
+                  className="text-sm font-medium cursor-pointer"
+                >
+                  {category.name}
+                </Label>
               </div>
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
 
-              <Separator className="bg-border/30" />
+      <Separator className="my-6" />
 
-              {/* Colors */}
-              <div>
-                <h3 className="text-sm font-semibold text-foreground mb-4">Colors</h3>
-                <div className="grid grid-cols-3 gap-3">
-                  {colorOptions.map((option) => (
-                    <div
-                      key={option.id}
-                      onClick={() => {
-                        if (localFilters.baseColors.includes(option.id)) {
-                          setLocalFilters(prev => ({
-                            ...prev,
-                            baseColors: prev.baseColors.filter(color => color !== option.id)
-                          }));
-                        } else {
-                          setLocalFilters(prev => ({
-                            ...prev,
-                            baseColors: [...prev.baseColors, option.id]
-                          }));
-                        }
-                      }}
-                      className={cn(
-                        "flex items-center justify-center gap-2 p-3 rounded-lg border cursor-pointer transition-all duration-200",
-                        localFilters.baseColors.includes(option.id)
-                          ? "border-primary bg-primary/10"
-                          : "border-border/30 hover:border-primary/30"
-                      )}
-                    >
-                      <div 
-                        className="w-4 h-4 rounded-full border border-border/50"
-                        style={{ backgroundColor: option.color }}
-                      />
-                      <span className="text-xs font-medium">{option.label}</span>
-                      {localFilters.baseColors.includes(option.id) && (
-                        <Check className="h-3 w-3 text-primary" />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
+      {/* Sizes */}
+      <div>
+        <Label className="text-base font-semibold mb-4 block">Sizes</Label>
+        <div className="flex flex-wrap gap-2">
+          {SIZES.map((size) => (
+            <Button
+              key={size}
+              variant={filters.sizes.includes(size) ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => updateFilters('sizes', toggleArrayItem(filters.sizes, size))}
+              className="h-9 min-w-[3rem] text-sm hover:scale-105 transition-transform"
+            >
+              {size}
+            </Button>
+          ))}
+        </div>
+      </div>
 
-              <Separator className="bg-border/30" />
+      <Separator className="my-6" />
 
-              {/* Size */}
-              <div>
-                <h3 className="text-sm font-semibold text-foreground mb-4">Size</h3>
-                <div className="flex flex-wrap gap-2">
-                  {sizeOptions.map((option) => (
-                    <Badge
-                      key={option.id}
-                      variant={localFilters.size.includes(option.id) ? "default" : "outline"}
-                      className={cn(
-                        "cursor-pointer transition-all duration-200 px-4 py-2",
-                        localFilters.size.includes(option.id)
-                          ? "bg-primary text-primary-foreground"
-                          : "border-border/40 hover:border-primary/30"
-                      )}
-                      onClick={() => {
-                        if (localFilters.size.includes(option.id)) {
-                          setLocalFilters(prev => ({
-                            ...prev,
-                            size: prev.size.filter(s => s !== option.id)
-                          }));
-                        } else {
-                          setLocalFilters(prev => ({
-                            ...prev,
-                            size: [...prev.size, option.id]
-                          }));
-                        }
-                      }}
-                    >
-                      {option.label}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
+      {/* Colors */}
+      <div>
+        <Label className="text-base font-semibold mb-4 block">Colors</Label>
+        <div className="grid grid-cols-3 gap-2">
+          {COLORS.map((color) => (
+            <Button
+              key={color}
+              variant={filters.colors.includes(color) ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => updateFilters('colors', toggleArrayItem(filters.colors, color))}
+              className="h-9 text-sm hover:scale-105 transition-transform"
+            >
+              {color}
+            </Button>
+          ))}
+        </div>
+      </div>
 
-              <Separator className="bg-border/30" />
+      <Separator className="my-6" />
 
-              {/* Price Range */}
-              <div>
-                <h3 className="text-sm font-semibold text-foreground mb-4">
-                  Price Range: ${localFilters.priceRange[0]} - ${localFilters.priceRange[1]}
-                </h3>
-                <div className="px-2">
-                  <Slider
-                    value={localFilters.priceRange}
-                    onValueChange={(value) => setLocalFilters(prev => ({
-                      ...prev,
-                      priceRange: value as [number, number]
-                    }))}
-                    max={100}
-                    min={0}
-                    step={5}
-                    className="w-full"
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                    <span>$0</span>
-                    <span>$100+</span>
-                  </div>
-                </div>
-              </div>
-
-              <Separator className="bg-border/30" />
-
-              {/* Tags/Categories */}
-              <div>
-                <h3 className="text-sm font-semibold text-foreground mb-4">Categories</h3>
-                <div className="space-y-3">
-                  {tagOptions.map((option) => (
-                    <div key={option.id} className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <Checkbox
-                          id={`tag-${option.id}`}
-                          checked={localFilters.tags.includes(option.id)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setLocalFilters(prev => ({
-                                ...prev,
-                                tags: [...prev.tags, option.id]
-                              }));
-                            } else {
-                              setLocalFilters(prev => ({
-                                ...prev,
-                                tags: prev.tags.filter(tag => tag !== option.id)
-                              }));
-                            }
-                          }}
-                          className="border-border/50"
-                        />
-                        <label 
-                          htmlFor={`tag-${option.id}`}
-                          className="text-sm text-foreground cursor-pointer"
-                        >
-                          {option.label}
-                        </label>
-                      </div>
-                      <span className="text-xs text-muted-foreground">({option.count})</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <Separator className="bg-border/30" />
-
-              {/* Availability */}
-              <div>
-                <h3 className="text-sm font-semibold text-foreground mb-4">Availability</h3>
-                <div className="flex items-center space-x-3">
-                  <Checkbox
-                    id="in-stock"
-                    checked={localFilters.inStock}
-                    onCheckedChange={(checked) => setLocalFilters(prev => ({
-                      ...prev,
-                      inStock: checked as boolean
-                    }))}
-                    className="border-border/50"
-                  />
-                  <label 
-                    htmlFor="in-stock"
-                    className="text-sm text-foreground cursor-pointer"
-                  >
-                    In stock only
-                  </label>
-                </div>
-              </div>
-            </div>
-          </ScrollArea>
-
-          {/* Footer */}
-          <div className="p-6 border-t border-border/30 bg-muted/20">
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                className="flex-1 rounded-xl border-border/40"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={applyFilters}
-                className="flex-1 rounded-xl bg-primary hover:bg-primary/90"
-              >
-                Apply Filters
-                {hasActiveFilters && (
-                  <Badge variant="secondary" className="ml-2 bg-primary-foreground text-primary text-xs h-5 px-2">
-                    {[
-                      ...localFilters.garmentTypes,
-                      ...localFilters.baseColors,
-                      ...localFilters.tags,
-                      ...localFilters.size
-                    ].length + (localFilters.inStock ? 1 : 0) + (localFilters.priceRange[0] > 0 || localFilters.priceRange[1] < 100 ? 1 : 0)}
-                  </Badge>
-                )}
-              </Button>
-            </div>
+      {/* Price Range */}
+      <div>
+        <Label className="text-base font-semibold mb-4 block">Price Range</Label>
+        <div className="space-y-4">
+          <div className="px-3">
+            <Slider
+              value={[filters.price_min || 0, filters.price_max || 200]}
+              min={0}
+              max={200}
+              step={5}
+              onValueChange={([min, max]) => {
+                updateFilters('price_min', min > 0 ? min : undefined);
+                updateFilters('price_max', max < 200 ? max : undefined);
+              }}
+              className="w-full"
+            />
+          </div>
+          <div className="flex justify-between text-sm text-muted-foreground font-medium">
+            <span>${filters.price_min || 0}</span>
+            <span>${filters.price_max || 200}</span>
           </div>
         </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex gap-3 pt-6 sticky bottom-0 bg-background border-t pt-4">
+        <Button
+          variant="outline"
+          onClick={onClear}
+          className="flex-1 h-11"
+          disabled={!hasActiveFilters()}
+        >
+          <X className="h-4 w-4 mr-2" />
+          Clear All
+        </Button>
+        <Button
+          className="flex-1 h-11 bg-gradient-to-r from-primary to-secondary hover:shadow-lg"
+        >
+          Show {resultCount} Results
+        </Button>
+      </div>
+    </div>
+  );
+
+  return (
+    <Sheet>
+      <SheetTrigger asChild>
+        {children || (
+          <Button variant="outline" className="relative">
+            <Filter className="h-4 w-4 mr-2" />
+            Filters
+            {getFilterCount() > 0 && (
+              <Badge className="ml-2 px-1.5 py-0.5 text-xs bg-primary text-primary-foreground">
+                {getFilterCount()}
+              </Badge>
+            )}
+          </Button>
+        )}
+      </SheetTrigger>
+      <SheetContent 
+        side={isMobile ? "bottom" : "left"} 
+        className={isMobile 
+          ? "h-[85vh] rounded-t-2xl border-t-2 border-border/20" 
+          : "w-80 sm:w-96"
+        }
+      >
+        <SheetHeader className="pb-4">
+          <SheetTitle className="text-xl font-bold">
+            Filter Products
+            {getFilterCount() > 0 && (
+              <Badge className="ml-2 px-2 py-1 text-xs bg-primary/10 text-primary border border-primary/20">
+                {getFilterCount()} active
+              </Badge>
+            )}
+          </SheetTitle>
+        </SheetHeader>
+        
+        <ScrollArea className={isMobile ? "h-[calc(85vh-8rem)]" : "h-[calc(100vh-8rem)]"}>
+          <FilterContent />
+        </ScrollArea>
       </SheetContent>
     </Sheet>
   );
-};
+}
