@@ -420,3 +420,84 @@ class TemplateCache {
 }
 
 export const templateCache = new TemplateCache()
+
+// ============= SIMPLIFIED API =============
+// Backward compatible aliases and simple helper functions
+
+export type Category = Pick<GarmentCategory, 'id' | 'slug' | 'name'>
+export type TemplateImage = GarmentTemplateImage
+
+/**
+ * Simple function to list all categories
+ */
+export async function listCategories(): Promise<Category[]> {
+  const categories = await getGarmentCategories()
+  return categories.map(cat => ({
+    id: cat.id,
+    slug: cat.slug,
+    name: cat.name
+  }))
+}
+
+/**
+ * Simple function to list template images for a category
+ */
+export async function listTemplateImages(
+  categorySlug: string, 
+  opts?: { color?: string; views?: GarmentView[] }
+): Promise<TemplateImage[]> {
+  const templates = await getTemplatesByCategorySlug(categorySlug)
+  
+  let filtered = templates
+  
+  if (opts?.color) {
+    filtered = filtered.filter(t => t.color_slug === opts.color)
+  }
+  
+  if (opts?.views?.length) {
+    filtered = filtered.filter(t => opts.views!.includes(t.view))
+  }
+  
+  return filtered
+}
+
+/**
+ * Get public URL for a storage path
+ */
+export function publicUrl(storagePath: string): string {
+  const { data } = supabase.storage
+    .from('design-templates')
+    .getPublicUrl(storagePath)
+  
+  return data.publicUrl
+}
+
+/**
+ * Call the Edge Function to upsert metadata after uploading image to storage
+ */
+export async function upsertTemplateImage(params: {
+  category_slug: string
+  view: GarmentView
+  color_slug?: string
+  storage_path: string
+  width_px: number
+  height_px: number
+  dpi?: number
+  print_area?: PrintArea
+  safe_area?: PrintArea
+}): Promise<{ image: TemplateImage }> {
+  const { data, error } = await supabase.functions.invoke('templates-upload', {
+    body: params
+  })
+
+  if (error) {
+    console.error('Error upserting template:', error)
+    throw new Error('Failed to upsert template metadata')
+  }
+
+  if (!data.image) {
+    throw new Error('No image data returned from upsert')
+  }
+
+  return data
+}
