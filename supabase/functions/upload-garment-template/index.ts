@@ -6,7 +6,7 @@ const corsHeaders = {
 }
 
 interface UploadTemplateRequest {
-  categoryId: string
+  categorySlug: string
   view: 'front' | 'back' | 'left' | 'right' | 'angle_left' | 'angle_right'
   colorSlug: string
   file: string // base64 encoded image
@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
 
     const requestBody: UploadTemplateRequest = await req.json()
     const {
-      categoryId,
+      categorySlug,
       view,
       colorSlug,
       file,
@@ -90,31 +90,30 @@ Deno.serve(async (req) => {
     } = requestBody
 
     // Validate required fields
-    if (!categoryId || !view || !colorSlug || !file || !fileName || !widthPx || !heightPx) {
+    if (!categorySlug || !view || !colorSlug || !file || !widthPx || !heightPx) {
       return new Response(
         JSON.stringify({ error: 'Missing required fields' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // Verify category exists
+    // Verify category exists and get ID
     const { data: category, error: categoryError } = await supabase
       .from('garment_categories')
-      .select('id')
-      .eq('id', categoryId)
+      .select('id, slug')
+      .eq('slug', categorySlug)
       .single()
 
     if (categoryError || !category) {
       return new Response(
-        JSON.stringify({ error: 'Invalid category ID' }),
+        JSON.stringify({ error: 'Invalid category slug' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // Convert base64 to file
+    // Convert base64 to file and enforce storage path convention
     const fileData = Uint8Array.from(atob(file), c => c.charCodeAt(0))
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-    const storagePath = `templates/${categoryId}/${view}/${colorSlug}/${timestamp}-${fileName}`
+    const storagePath = `garment-templates/${categorySlug}/${colorSlug}/${view}.png`
 
     // Upload file to storage
     const { data: uploadData, error: uploadError } = await supabase.storage
@@ -136,7 +135,7 @@ Deno.serve(async (req) => {
     const { data: existing } = await supabase
       .from('garment_template_images')
       .select('id, storage_path')
-      .eq('category_id', categoryId)
+      .eq('category_id', category.id)
       .eq('view', view)
       .eq('color_slug', colorSlug)
       .single()
@@ -150,7 +149,7 @@ Deno.serve(async (req) => {
 
     // Insert or update template record
     const templateData = {
-      category_id: categoryId,
+      category_id: category.id,
       view,
       color_slug: colorSlug,
       storage_path: storagePath,

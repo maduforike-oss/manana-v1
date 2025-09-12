@@ -58,7 +58,7 @@ export interface GarmentTemplateWithCategory extends GarmentTemplateImage {
 }
 
 export interface UploadTemplateData {
-  categoryId: string
+  categorySlug: string
   view: GarmentView
   colorSlug: string
   file: File
@@ -248,7 +248,7 @@ export async function uploadGarmentTemplate(data: UploadTemplateData): Promise<G
 
   const { data: response, error } = await supabase.functions.invoke('upload-garment-template', {
     body: {
-      categoryId: data.categoryId,
+      categorySlug: data.categorySlug,
       view: data.view,
       colorSlug: data.colorSlug,
       file: base64File,

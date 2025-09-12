@@ -21,7 +21,7 @@ import {
   type UploadTemplateData
 } from '@/lib/garmentTemplates'
 
-const AVAILABLE_VIEWS: GarmentView[] = ['front', 'back', 'left', 'right', 'angle_left', 'angle_right']
+const AVAILABLE_VIEWS: GarmentView[] = ['front', 'back']
 const COMMON_COLORS = ['white', 'black', 'navy', 'gray', 'red', 'blue', 'green', 'yellow', 'pink', 'purple']
 
 export const GarmentTemplateManager: React.FC = () => {
@@ -147,11 +147,22 @@ export const GarmentTemplateManager: React.FC = () => {
       return
     }
 
+    // Get selected category slug
+    const selectedCat = categories.find(c => c.id === selectedCategory)
+    if (!selectedCat) {
+      toast({
+        title: 'Error',
+        description: 'Selected category not found',
+        variant: 'destructive'
+      })
+      return
+    }
+
     try {
       setUploading(true)
 
       const data: UploadTemplateData = {
-        categoryId: selectedCategory,
+        categorySlug: selectedCat.slug,
         view: uploadData.view as GarmentView,
         colorSlug: uploadData.colorSlug,
         file: uploadFile,
@@ -322,15 +333,18 @@ export const GarmentTemplateManager: React.FC = () => {
                 </DialogHeader>
                 
                 <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="file">Image File</Label>
-                    <Input
-                      id="file"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileSelect}
-                    />
-                  </div>
+                    <div>
+                      <Label htmlFor="file">Image File (will be saved as PNG)</Label>
+                      <Input
+                        id="file"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileSelect}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Storage path: garment-templates/{selectedCategory ? categories.find(c => c.id === selectedCategory)?.slug : 'category'}/{uploadData.colorSlug || 'color'}/{uploadData.view || 'view'}.png
+                      </p>
+                    </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
