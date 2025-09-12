@@ -21,6 +21,8 @@ import { useAuth } from '@/lib/auth-context';
 import SignOutButton from '@/components/auth/SignOutButton';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { useProfileStore } from '@/store/useProfileStore';
+import BackButton from '@/components/BackButton';
 
 // tiny debounce hook
 function useDebounced<T>(value: T, delay = 400) {
@@ -46,10 +48,9 @@ export default function ProfilePage() {
   const { user, profile: authProfile, refreshProfile } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
+  const { profile, loading, error, load, refresh, patch, setLocal } = useProfileStore();
   const [metrics, setMetrics] = useState<ProfileMetrics | null>(null);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [profile, setProfile] = useState<Profile | null>(null);
   
   // Form state
   const [formData, setFormData] = useState<FormData>({
@@ -76,46 +77,42 @@ export default function ProfilePage() {
 
   // Load profile data and metrics
   useEffect(() => {
-    const loadData = async () => {
-      if (!user) {
-        setLoading(false);
-        return;
-      }
+    if (!profile && user) {
+      load();
+    }
+  }, [profile, user, load]);
 
-      try {
-        const profileData = await getMyProfile();
-        setProfile(profileData);
-        
-        if (profileData) {
+  useEffect(() => {
+    const loadMetrics = async () => {
+      if (profile) {
+        try {
           setFormData({
-            display_name: profileData.display_name || '',
-            username: profileData.username || '',
-            bio: profileData.bio || '',
-            location: profileData.location || '',
-            website: profileData.website || '',
-            social_instagram: profileData.social_instagram || '',
-            social_twitter: profileData.social_twitter || '',
+            display_name: profile.display_name || '',
+            username: profile.username || '',
+            bio: profile.bio || '',
+            location: profile.location || '',
+            website: profile.website || '',
+            social_instagram: profile.social_instagram || '',
+            social_twitter: profile.social_twitter || '',
           });
-          setAvatarPreview(profileData.avatar_url || '');
-          setCoverPreview(profileData.cover_url || '');
+          setAvatarPreview(profile.avatar_url || '');
+          setCoverPreview(profile.cover_url || '');
           
           // Load metrics
-          const metricsData = await getProfileMetrics(profileData.id);
+          const metricsData = await getProfileMetrics(profile.id);
           setMetrics(metricsData);
+        } catch (error) {
+          toast({
+            title: "Error loading metrics",
+            description: getErrorMessage(error),
+            variant: "destructive"
+          });
         }
-      } catch (error) {
-        toast({
-          title: "Error loading profile",
-          description: getErrorMessage(error),
-          variant: "destructive"
-        });
-      } finally {
-        setLoading(false);
       }
     };
 
-    loadData();
-  }, [user, toast]);
+    loadMetrics();
+  }, [profile, toast]);
 
   // Username availability check
   useEffect(() => {
@@ -254,8 +251,8 @@ export default function ProfilePage() {
 
     setSaving(true);
     try {
-      // Update profile data
-      await updateMyProfile({
+      // Update profile data using store
+      await patch({
         display_name: formData.display_name || null,
         username: formData.username || null,
         bio: formData.bio || null,
@@ -265,10 +262,6 @@ export default function ProfilePage() {
         social_twitter: formData.social_twitter || null,
       });
 
-      // Refresh data from Supabase
-      const updatedProfile = await getMyProfile();
-      setProfile(updatedProfile);
-      
       // Refresh auth context
       await refreshProfile();
       
@@ -459,13 +452,46 @@ export default function ProfilePage() {
     );
   }
 
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="border-b border-border bg-card">
+          <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+            <BackButton fallback="/" />
+            <h1 className="text-2xl font-bold">Profile</h1>
+            <div />
+          </div>
+        </div>
+        <div className="container mx-auto px-4 py-8 max-w-md">
+          <Card className="glass-effect border-0 text-center">
+            <CardHeader>
+              <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="h-8 w-8 text-destructive" />
+              </div>
+              <CardTitle className="text-destructive">Error Loading Profile</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-muted-foreground">{error}</p>
+              <Button onClick={refresh} variant="outline">
+                Try Again
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   if (loading || !profile) {
     return (
       <div className="min-h-screen bg-background">
         {/* Header */}
         <div className="border-b border-border bg-card">
-          <div className="container mx-auto px-4 py-4">
+          <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+            <BackButton fallback="/" />
             <h1 className="text-2xl font-bold">Profile</h1>
+            <div />
           </div>
         </div>
 
@@ -494,6 +520,7 @@ export default function ProfilePage() {
       {/* Header */}
       <div className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <BackButton fallback="/" />
           <h1 className="text-2xl font-bold">Profile</h1>
           <Button
             variant="ghost"
