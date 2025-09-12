@@ -241,6 +241,7 @@ function OrderCard({ order, onViewDetails }: OrderCardProps) {
               variant="outline"
               className="flex-1 min-h-[44px]"
               onClick={onViewDetails}
+              aria-label={`View details for order ${order.order_number}`}
             >
               View Details
             </Button>
@@ -342,11 +343,12 @@ export function OrderDetailPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       <BrandHeader title={`Order ${order.order_number}`}>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => navigate('/orders')}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate(-1)}
           className="min-h-[44px] min-w-[44px]"
+          aria-label="Back to Orders"
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>

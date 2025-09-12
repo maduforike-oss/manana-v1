@@ -10,6 +10,7 @@ import { getCart, updateCartItemQuantity, removeFromCart, type Cart, type CartIt
 import { BrandHeader } from '@/components/ui/brand-header';
 import { useToast } from '@/hooks/use-toast';
 import { ProductCardSkeleton } from '@/components/marketplace/ProductCardSkeleton';
+import { supabase } from '@/integrations/supabase/client';
 
 export function CartPage() {
   const navigate = useNavigate();
@@ -21,6 +22,14 @@ export function CartPage() {
 
   useEffect(() => {
     loadCart();
+    // merge guest cart when user logs in
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN') {
+        // mergeGuestCartWithUser(); // TODO: implement this function
+        loadCart();
+      }
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
   const loadCart = async () => {
@@ -297,11 +306,10 @@ export function CartPage() {
                                 min="1"
                                 value={item.quantity}
                                 onChange={(e) => {
-                                  const newQty = parseInt(e.target.value);
-                                  if (newQty > 0) {
-                                    handleQuantityChange(item.id, newQty);
-                                  }
+                                  const newQty = Math.max(1, Math.min(Number(e.target.value), item.variant?.stock_quantity || 99));
+                                  handleQuantityChange(item.id, newQty);
                                 }}
+                                aria-label="Quantity"
                                 className="w-16 h-8 text-center"
                                 disabled={updatingItems.has(item.id)}
                               />

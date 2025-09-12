@@ -38,9 +38,16 @@ export function FiltersSheet({
 }: FiltersSheetProps) {
   const { data: categories } = useCategories();
   const isMobile = useIsMobile();
+  const [localFilters, setLocalFilters] = React.useState(filters);
 
   const updateFilters = (key: keyof MarketFilters, value: any) => {
-    onFiltersChange({ ...filters, [key]: value });
+    const newFilters = { ...localFilters, [key]: value };
+    setLocalFilters(newFilters);
+    onFiltersChange(newFilters);
+  };
+
+  const handleApply = () => {
+    onApply?.(localFilters);
   };
 
   const toggleArrayItem = (array: string[], item: string) => {
@@ -50,16 +57,16 @@ export function FiltersSheet({
   };
 
   const hasActiveFilters = () => {
-    return filters.categories.length > 0 || 
-           filters.sizes.length > 0 || 
-           filters.colors.length > 0 || 
-           filters.price_min !== undefined || 
-           filters.price_max !== undefined;
+    return localFilters.categories.length > 0 || 
+           localFilters.sizes.length > 0 || 
+           localFilters.colors.length > 0 || 
+           localFilters.price_min !== undefined || 
+           localFilters.price_max !== undefined;
   };
 
   const getFilterCount = () => {
-    return filters.categories.length + filters.sizes.length + filters.colors.length + 
-           (filters.price_min !== undefined || filters.price_max !== undefined ? 1 : 0);
+    return localFilters.categories.length + localFilters.sizes.length + localFilters.colors.length + 
+           (localFilters.price_min !== undefined || localFilters.price_max !== undefined ? 1 : 0);
   };
 
   const FilterContent = () => (
@@ -73,13 +80,13 @@ export function FiltersSheet({
               <div key={category.id} className="flex items-center space-x-3">
                 <Checkbox
                   id={`category-${category.id}`}
-                  checked={filters.categories.includes(category.id)}
+                  checked={localFilters.categories.includes(category.id)}
                   onCheckedChange={(checked) => {
                     updateFilters(
                       'categories',
                       checked
-                        ? [...filters.categories, category.id]
-                        : filters.categories.filter(id => id !== category.id)
+                        ? [...localFilters.categories, category.id]
+                        : localFilters.categories.filter(id => id !== category.id)
                     );
                   }}
                   className="rounded-md"
@@ -105,9 +112,9 @@ export function FiltersSheet({
           {SIZES.map((size) => (
             <Button
               key={size}
-              variant={filters.sizes.includes(size) ? 'default' : 'outline'}
+              variant={localFilters.sizes.includes(size) ? 'default' : 'outline'}
               size="sm"
-              onClick={() => updateFilters('sizes', toggleArrayItem(filters.sizes, size))}
+              onClick={() => updateFilters('sizes', toggleArrayItem(localFilters.sizes, size))}
               className="h-9 min-w-[3rem] text-sm hover:scale-105 transition-transform"
             >
               {size}
@@ -125,9 +132,9 @@ export function FiltersSheet({
           {COLORS.map((color) => (
             <Button
               key={color}
-              variant={filters.colors.includes(color) ? 'default' : 'outline'}
+              variant={localFilters.colors.includes(color) ? 'default' : 'outline'}
               size="sm"
-              onClick={() => updateFilters('colors', toggleArrayItem(filters.colors, color))}
+              onClick={() => updateFilters('colors', toggleArrayItem(localFilters.colors, color))}
               className="h-9 text-sm hover:scale-105 transition-transform"
             >
               {color}
@@ -144,7 +151,7 @@ export function FiltersSheet({
         <div className="space-y-4">
           <div className="px-3">
             <Slider
-              value={[filters.price_min || 0, filters.price_max || 200]}
+              value={[localFilters.price_min || 0, localFilters.price_max || 200]}
               min={0}
               max={200}
               step={5}
@@ -156,8 +163,8 @@ export function FiltersSheet({
             />
           </div>
           <div className="flex justify-between text-sm text-muted-foreground font-medium">
-            <span>${filters.price_min || 0}</span>
-            <span>${filters.price_max || 200}</span>
+            <span>${localFilters.price_min || 0}</span>
+            <span>${localFilters.price_max || 200}</span>
           </div>
         </div>
       </div>
@@ -175,7 +182,7 @@ export function FiltersSheet({
         </Button>
         <Button
           className="flex-1 h-11 bg-gradient-to-r from-primary to-secondary hover:shadow-lg"
-          onClick={() => onApply?.(filters)}
+          onClick={handleApply}
         >
           Show {resultCount} Results
         </Button>

@@ -23,6 +23,7 @@ export function ImprovedMarketPage() {
   const { query, setQuery, resetFilters, parseFilters, hasActiveFilters } = useMarketQueryState();
   const [showFilters, setShowFilters] = useState(false);
   const [savedProducts, setSavedProducts] = useState<Set<string>>(new Set());
+  const [loadingSaved, setLoadingSaved] = useState(false);
   const navigate = useNavigate();
 
   const handleApplyFilters = (newFilters: any) => {
@@ -38,21 +39,24 @@ export function ImprovedMarketPage() {
   // Load saved products for authenticated users
   React.useEffect(() => {
     const loadSavedProducts = async () => {
+      setLoadingSaved(true);
       const { data: user } = await supabase.auth.getUser();
-      if (!user.user) return;
-
+      if (!user.user) {
+        setSavedProducts(new Set());
+        setLoadingSaved(false);
+        return;
+      }
       const { data: wishlist } = await supabase
         .from('wishlists')
         .select('product_id')
         .eq('user_id', user.user.id);
-
-      if (wishlist) {
-        setSavedProducts(new Set(wishlist.map(w => w.product_id)));
-      }
+      setSavedProducts(new Set((wishlist || []).map(w => w.product_id)));
+      setLoadingSaved(false);
     };
-
-    loadSavedProducts();
-  }, []);
+    if (query.tab === 'saved') {
+      loadSavedProducts();
+    }
+  }, [query.tab]);
 
   // Event handlers
   const handleSaveProduct = async (productId: string) => {
