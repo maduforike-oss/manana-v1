@@ -18,6 +18,8 @@ import { PullToRefresh } from '@/components/community/PullToRefresh';
 import { NotificationsBell } from '@/components/ui/NotificationsBell';
 import { MentionHashtagParser } from '@/components/community/MentionHashtagParser';
 import { ReportModal } from '@/components/community/ReportModal';
+import { EmptyStates } from '@/components/community/EmptyStates';
+import { PostCreator } from '@/components/community/PostCreator';
 import { 
   Heart, 
   MessageCircle, 
@@ -124,7 +126,7 @@ export const ImprovedCommunityPage = () => {
   const [selectedHashtags, setSelectedHashtags] = useState<string[]>([]);
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'recent' | 'trending' | 'popular'>('recent');
-  const [trendingHashtags] = useState(['fashion', 'design', 'streetwear', 'sustainable', 'vintage']);
+  const [trendingHashtagsData] = useState(['fashion', 'design', 'streetwear', 'sustainable', 'vintage']);
   const [focusedPostIndex, setFocusedPostIndex] = useState(0);
 
   // Real-time updates
@@ -146,14 +148,29 @@ export const ImprovedCommunityPage = () => {
     }
   });
 
-  // Load initial posts
+  // Load posts based on active tab
   useEffect(() => {
     loadInitialPosts();
-  }, []);
+  }, [activeTab]);
 
   const loadInitialPosts = async () => {
     setIsLoading(true);
-    const { data, error } = await getFeedPosts(20, 0);
+    setPosts([]);
+    setOffset(0);
+    
+    let result;
+    switch (activeTab) {
+      case 'following':
+        result = await getFollowingFeedPosts(20, 0);
+        break;
+      case 'saved':
+        result = await getSavedPosts(20, 0);
+        break;
+      default:
+        result = await getFeedPosts(20, 0);
+    }
+    
+    const { data, error } = result;
     
     if (error) {
       toast.error(error);
@@ -167,16 +184,17 @@ export const ImprovedCommunityPage = () => {
         ...getMockExtendedFields(),
         hashtags: extractHashtags(post.content),
         // Map v2 fields properly
-        images: post.media_urls.filter((_, i) => post.media_types[i] === 'image'),
+        images: post.media_urls?.filter((_, i) => post.media_types?.[i] === 'image') || [],
         isSaved: post.is_saved_by_user
       }));
       setPosts(extendedPosts);
-      setOffset(20);
+      setOffset(data.length);
+      setHasMore(data.length === 20); // If we got fewer than requested, no more data
     }
     setIsLoading(false);
   };
 
-  const extractHashtags = (content: string): string[] => {
+  const extractHashtagsLocal = (content: string): string[] => {
     const hashtags = content.match(/#[\w]+/g)?.map(tag => tag.slice(1)) || [];
     return hashtags;
   };
@@ -185,7 +203,20 @@ export const ImprovedCommunityPage = () => {
     if (!hasMore || isLoading) return;
     
     setIsLoading(true);
-    const { data, error } = await getFeedPosts(20, offset);
+    
+    let result;
+    switch (activeTab) {
+      case 'following':
+        result = await getFollowingFeedPosts(20, offset);
+        break;
+      case 'saved':
+        result = await getSavedPosts(20, offset);
+        break;
+      default:
+        result = await getFeedPosts(20, offset);
+    }
+    
+    const { data, error } = result;
     
     if (error) {
       toast.error(error);
@@ -196,18 +227,20 @@ export const ImprovedCommunityPage = () => {
     if (data) {
       if (data.length === 0) {
         setHasMore(false);
-        toast.success('You\'ve reached the end!');
+        if (posts.length > 0) {
+          toast.success('You\'ve reached the end!');
+        }
       } else {
         const extendedPosts = data.map(post => ({
           ...post,
           ...getMockExtendedFields(),
-          hashtags: extractHashtags(post.content),
+          hashtags: extractHashtagsLocal(post.content),
           // Map v2 fields properly with null checks
           images: (post.media_urls || []).filter((_, i) => (post.media_types || [])[i] === 'image'),
           isSaved: post.is_saved_by_user || false
         }));
         setPosts(prev => [...prev, ...extendedPosts]);
-        setOffset(prev => prev + 20);
+        setOffset(prev => prev + data.length); // Use actual data length, not hardcoded 20
       }
     }
     setIsLoading(false);
@@ -391,27 +424,12 @@ export const ImprovedCommunityPage = () => {
   };
 
   const handleCreatePost = async () => {
-    if (!mustBeAuthedOrRedirect()) return;
-    if (!newPostContent.trim()) return;
-
-    const { data: postId, error } = await createPost(newPostContent);
-    
-    if (error) {
-      toast.error(error);
-      return;
-    }
-
-    if (postId) {
-      // Refresh the feed to show the new post
-      await loadInitialPosts();
-      setNewPostContent('');
-      setUploadedMedia([]);
-      setShowCreatePost(false);
-      toast.success('Post created! 🎉');
-    }
+    // Refresh the feed to show the new post
+    await loadInitialPosts();
+    setShowCreatePost(false);
   };
 
-  // Filter posts based on active tab and search
+  // Filter posts based on search only - tabs handle server-side filtering
   const filteredPosts = posts.filter(post => {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -428,16 +446,12 @@ export const ImprovedCommunityPage = () => {
       );
     }
     
-    switch (activeTab) {
-      case 'trending':
-        return post.likes_count > 5; // Lower threshold for demo
-      case 'following':
-        return post.isFollowing;
-      case 'saved':
-        return post.isSaved;
-      default:
-        return true;
+    // For trending tab, apply client-side filter for popular posts
+    if (activeTab === 'trending') {
+      return post.likes_count > 5; // Lower threshold for demo
     }
+    
+    return true;
   });
 
   const PostCard = ({ post }: { post: ExtendedPost }) => {
@@ -499,90 +513,85 @@ export const ImprovedCommunityPage = () => {
                 </p>
               </div>
             </div>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <ReportModal
+                targetType="post"
+                targetId={post.id}
+                triggerButton={
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                }
+              />
+            </div>
           </div>
 
           {/* Post Content */}
-          <div className="space-y-3">
-            <p className="text-sm leading-relaxed">{post.content}</p>
-            
-            {/* Post Image/Media Gallery */}
-            {post.images && post.images.length > 0 && (
-              <div className={cn(
-                "rounded-2xl overflow-hidden bg-muted/30",
-                post.images.length === 1 ? "aspect-square" : "aspect-[4/3]"
-              )}>
-                {post.images.length === 1 ? (
-                  <img 
-                    src={post.images[0]} 
-                    alt="Post content"
+          <div className="mb-4">
+            <MentionHashtagParser content={post.content} />
+          </div>
+
+          {/* Post Images */}
+          {post.images && post.images.length > 0 && (
+            <div className={cn(
+              "grid gap-2 rounded-2xl overflow-hidden mb-4",
+              post.images.length === 1 ? "grid-cols-1" : 
+              post.images.length === 2 ? "grid-cols-2" : 
+              "grid-cols-2"
+            )}>
+              {post.images.slice(0, 4).map((image, index) => (
+                <div
+                  key={index}
+                  className={cn(
+                    "relative aspect-square overflow-hidden",
+                    post.images!.length === 3 && index === 0 ? "col-span-2" : ""
+                  )}
+                >
+                  <img
+                    src={image}
+                    alt={`Post image ${index + 1}`}
                     className="w-full h-full object-cover"
                   />
-                ) : (
-                  <div className="grid grid-cols-2 gap-1 h-full">
-                    {post.images.slice(0, 4).map((image, idx) => (
-                      <div key={idx} className="relative">
-                        <img 
-                          src={image} 
-                          alt={`Post content ${idx + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                        {idx === 3 && post.images.length > 4 && (
-                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                            <span className="text-white font-semibold">
-                              +{post.images.length - 4}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+                  {post.images!.length > 4 && index === 3 && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <span className="text-white font-medium">+{post.images!.length - 4}</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
 
-            {/* Hashtags */}
-            {post.hashtags && post.hashtags.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {post.hashtags.slice(0, 3).map(tag => (
-                  <Badge key={tag} variant="secondary" className="text-xs bg-primary/10 text-primary border-0">
-                    #{tag}
-                  </Badge>
-                ))}
-                {post.hashtags.length > 3 && (
-                  <Badge variant="secondary" className="text-xs">
-                    +{post.hashtags.length - 3} more
-                  </Badge>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Engagement Stats */}
-        <div className="px-4 py-2 border-t border-border/10">
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{post.likes_count.toLocaleString()} likes</span>
-            <div className="flex items-center gap-3">
-              <span>{post.comments_count} comments</span>
-              <span>{post.shares || 0} shares</span>
+          {/* Engagement Stats */}
+          <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
+            <div className="flex items-center gap-4">
+              {post.likes_count > 0 && (
+                <span>{post.likes_count} likes</span>
+              )}
+              {post.comments_count > 0 && (
+                <span>{post.comments_count} comments</span>
+              )}
+              {(post.shares || 0) > 0 && (
+                <span>{post.shares} shares</span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {post.views && post.views > 1 && (
+                <span>{post.views} views</span>
+              )}
             </div>
           </div>
-        </div>
 
-        {/* Action Buttons */}
-        <div className="p-4 pt-2 border-t border-border/10">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
+          {/* Action Buttons */}
+          <div className="flex items-center justify-between border-t border-border/10 pt-3">
+            <div className="flex items-center gap-1">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => handleLike(post.id)}
                 className={cn(
                   "h-9 px-3 gap-2",
-                  post.is_liked_by_user ? "text-red-500" : "text-muted-foreground"
+                  post.is_liked_by_user ? "text-red-500 hover:text-red-600" : "text-muted-foreground"
                 )}
               >
                 <Heart className={cn("h-4 w-4", post.is_liked_by_user && "fill-current")} />
@@ -738,7 +747,7 @@ export const ImprovedCommunityPage = () => {
               <div className="space-y-6">
                 <h3 className="text-lg font-semibold">Trending Hashtags</h3>
                 <div className="space-y-2">
-                  {trendingHashtags.map(hashtag => (
+                  {trendingHashtagsData.map(hashtag => (
                     <div key={hashtag} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50">
                       <div>
                         <span className="font-medium">#{hashtag}</span>
@@ -796,106 +805,89 @@ export const ImprovedCommunityPage = () => {
               Saved
             </TabsTrigger>
           </TabsList>
+
+          {/* Posts Feed or Empty States */}
+          <TabsContent value="feed" className="space-y-0 mt-0">
+            {filteredPosts.length > 0 ? (
+              filteredPosts.map(post => <PostCard key={post.id} post={post} />)
+            ) : !isLoading ? (
+              <EmptyStates 
+                type="feed" 
+                onCreatePost={() => setShowCreatePost(true)}
+                onExplore={() => setActiveTab('trending')}
+              />
+            ) : null}
+          </TabsContent>
+
+          <TabsContent value="trending" className="space-y-0 mt-0">
+            {filteredPosts.length > 0 ? (
+              filteredPosts.map(post => <PostCard key={post.id} post={post} />)
+            ) : !isLoading ? (
+              <EmptyStates 
+                type="trending" 
+                onCreatePost={() => setShowCreatePost(true)}
+                onExplore={() => setActiveTab('feed')}
+              />
+            ) : null}
+          </TabsContent>
+
+          <TabsContent value="following" className="space-y-0 mt-0">
+            {filteredPosts.length > 0 ? (
+              filteredPosts.map(post => <PostCard key={post.id} post={post} />)
+            ) : !isLoading ? (
+              <EmptyStates 
+                type="following" 
+                onCreatePost={() => setShowCreatePost(true)}
+                onExplore={() => setActiveTab('feed')}
+              />
+            ) : null}
+          </TabsContent>
+
+          <TabsContent value="saved" className="space-y-0 mt-0">
+            {filteredPosts.length > 0 ? (
+              filteredPosts.map(post => <PostCard key={post.id} post={post} />)
+            ) : !isLoading ? (
+              <EmptyStates 
+                type="saved" 
+                onCreatePost={() => setShowCreatePost(true)}
+                onExplore={() => setActiveTab('feed')}
+              />
+            ) : null}
+          </TabsContent>
+
+          {/* Infinite scroll trigger */}
+          <div ref={loadMoreRef} className="h-20 flex items-center justify-center">
+            {hasMore && isLoading && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full" />
+                Loading more posts...
+              </div>
+            )}
+            {!hasMore && filteredPosts.length > 0 && (
+              <p className="text-muted-foreground text-sm">You've reached the end!</p>
+            )}
+          </div>
         </Tabs>
-
-        {/* Posts Feed */}
-        <div className="space-y-0">
-          {filteredPosts.map(post => (
-            <PostCard key={post.id} post={post} />
-          ))}
-        </div>
-
-        {/* Infinite scroll trigger */}
-        <div ref={loadMoreRef} className="h-20 flex items-center justify-center">
-          {hasMore && isLoading && (
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full" />
-              Loading more posts...
-            </div>
-          )}
-          {!hasMore && posts.length > 0 && (
-            <p className="text-muted-foreground text-sm">You've reached the end!</p>
-          )}
-          {!isLoading && posts.length === 0 && !authLoading && (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground mb-4">No posts yet. Be the first to share something!</p>
-              <Button onClick={() => setShowCreatePost(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Create Post
-              </Button>
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Create Post Modal */}
       {showCreatePost && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
           <div className="bg-background rounded-t-3xl sm:rounded-3xl w-full max-w-lg max-h-[80vh] sm:max-h-[70vh] overflow-hidden">
-            <div className="p-6 border-b border-border/20">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Create Post</h3>
-                <Button variant="ghost" size="sm" onClick={() => setShowCreatePost(false)}>
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            <div className="p-6 space-y-4">
-              <div className="flex gap-3">
-                <Avatar className="w-10 h-10 flex-shrink-0">
-                  <AvatarImage src="/placeholder.svg" />
-                  <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary/20">
-                    You
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <Textarea
-                    placeholder="What's on your mind?"
-                    value={newPostContent}
-                    onChange={(e) => setNewPostContent(e.target.value)}
-                    className="min-h-32 resize-none border-0 bg-transparent p-0 text-base focus-visible:ring-0"
-                  />
-                </div>
-              </div>
-
-              {/* Media Upload */}
-              <MediaUpload
-                onMediaUploaded={(url, type) => {
-                  setUploadedMedia(prev => [...prev, { url, type }]);
-                }}
-                onError={(error) => {
-                  toast.error(error);
-                }}
-                maxFiles={10}
-              />
-
-              <div className="flex items-center justify-between pt-4 border-t border-border/20">
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
-                    <Camera className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <Smile className="h-4 w-4" />
-                  </Button>
-                </div>
-                <Button 
-                  onClick={handleCreatePost}
-                  disabled={!newPostContent.trim()}
-                  className="rounded-full px-6"
-                >
-                  Post
-                </Button>
-              </div>
-            </div>
+            <PostCreator
+              onPostCreated={handleCreatePost}
+              onCancel={() => setShowCreatePost(false)}
+              className="border-0 shadow-none"
+            />
           </div>
         </div>
       )}
 
-      {/* Floating Action Button - Mobile */}
+      {/* Floating Action Button for Mobile */}
       <Button
         onClick={() => setShowCreatePost(true)}
-        className="fixed bottom-20 right-4 w-14 h-14 rounded-full shadow-lg lg:hidden z-40"
-        size="sm"
+        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg sm:hidden z-40"
+        size="lg"
       >
         <Plus className="h-6 w-6" />
       </Button>
