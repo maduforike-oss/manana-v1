@@ -1,5 +1,8 @@
 project_id = "ajnbtevgzhkilokflntj"
 
+[functions.set-user-password]
+verify_jwt = false
+
 [functions.upload-garment-template]
 verify_jwt = false
 
