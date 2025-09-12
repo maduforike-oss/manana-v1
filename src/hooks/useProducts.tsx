@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAllProducts, getProductById, getProductsByCategory } from '@/lib/api/products';
+import { listProducts, getProduct } from '@/lib/api/products';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface Product {
@@ -34,7 +34,7 @@ const QUERY_KEYS = {
 export function useProducts() {
   return useQuery({
     queryKey: QUERY_KEYS.products,
-    queryFn: getAllProducts,
+    queryFn: () => listProducts(),
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
@@ -44,7 +44,7 @@ export function useProducts() {
 export function useProduct(id: string) {
   return useQuery({
     queryKey: QUERY_KEYS.productById(id),
-    queryFn: () => getProductById(id),
+    queryFn: () => getProduct(id),
     enabled: !!id,
     staleTime: 5 * 60 * 1000,
     retry: 3,
@@ -55,7 +55,7 @@ export function useProduct(id: string) {
 export function useProductsByCategory(categoryId: string) {
   return useQuery({
     queryKey: QUERY_KEYS.productsByCategory(categoryId),
-    queryFn: () => getProductsByCategory(categoryId),
+    queryFn: () => listProducts({ category_id: categoryId }),
     enabled: !!categoryId,
     staleTime: 5 * 60 * 1000,
     retry: 3,

@@ -47,7 +47,7 @@ export const BottomNavigation = () => {
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             const Icon = tab.icon;
-            const showBadge = tab.id === 'orders' ? cart.itemCount > 0 : false;
+            const showBadge = false; // TODO: Connect to cart store when implemented
 
             return (
               <button
