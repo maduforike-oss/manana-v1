@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          post_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          post_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       follows: {
         Row: {
           created_at: string
@@ -75,6 +110,59 @@ export type Database = {
           shipping_address?: Json | null
           status?: string
           total_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      post_likes: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      posts: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
           updated_at?: string
           user_id?: string
         }
@@ -174,9 +262,33 @@ export type Database = {
       }
     }
     Functions: {
+      create_comment: {
+        Args: { content_text: string; post_id_param: string }
+        Returns: string
+      }
+      create_post: {
+        Args: { content_text: string }
+        Returns: string
+      }
       generate_order_number: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_feed_posts: {
+        Args: { limit_count?: number; offset_count?: number }
+        Returns: {
+          avatar_url: string
+          comments_count: number
+          content: string
+          created_at: string
+          display_name: string
+          id: string
+          is_liked_by_user: boolean
+          likes_count: number
+          updated_at: string
+          user_id: string
+          username: string
+        }[]
       }
       get_my_profile: {
         Args: Record<PropertyKey, never>
@@ -198,6 +310,20 @@ export type Database = {
           username: string | null
           website: string | null
         }
+      }
+      get_post_comments: {
+        Args: { limit_count?: number; post_id_param: string }
+        Returns: {
+          avatar_url: string
+          content: string
+          created_at: string
+          display_name: string
+          id: string
+          post_id: string
+          updated_at: string
+          user_id: string
+          username: string
+        }[]
       }
       get_public_profile: {
         Args: { u: string }
@@ -237,6 +363,10 @@ export type Database = {
       set_my_profile: {
         Args: { patch: Json }
         Returns: undefined
+      }
+      toggle_post_like: {
+        Args: { post_id_param: string }
+        Returns: boolean
       }
     }
     Enums: {
