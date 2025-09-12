@@ -25,10 +25,7 @@ import Checkout from "./pages/Checkout";
 import CheckoutSuccess from "./pages/CheckoutSuccess";
 import AdminTemplates from "./pages/AdminTemplates";
 import TemplatesUploader from "./pages/admin/TemplatesUploader";
-import Auth from "./pages/Auth";
-import LandingPage from "./pages/LandingPage";
 import RequireAuth from "./components/auth/RequireAuth";
-import { AuthProvider } from "./lib/auth-context";
 import { useEffect } from "react";
 
 const queryClient = new QueryClient({
@@ -54,16 +51,13 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <AuthProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AppLayout>
-              <Routes>
-                <Route path="/" element={<LandingPage />} />
-                <Route path="/app" element={<Index />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/studio" element={<RequireAuth><StudioPro /></RequireAuth>} />
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AppLayout>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/studio" element={<RequireAuth><StudioPro /></RequireAuth>} />
               <Route path="/studio/editor" element={<RequireAuth><StudioEditor /></RequireAuth>} />
               <Route path="/studio/legacy" element={<RequireAuth><StudioPage /></RequireAuth>} />
               <Route path="/item/:id" element={<ItemDetail />} />
@@ -87,7 +81,6 @@ const App = () => {
             </Routes>
           </AppLayout>
         </BrowserRouter>
-        </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

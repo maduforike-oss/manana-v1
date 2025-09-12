@@ -42,14 +42,13 @@ function uid() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
-/** Get the signed-in user's profile via RPC - ensures profile exists */
+/** Get the signed-in user's profile via RPC */
 export async function getMyProfile(): Promise<MyProfile | null> {
   const { data: { user }, error } = await supabase.auth.getUser();
   if (error) throw error;
   if (!user) return null;
   
-  // Use ensure_my_profile to guarantee profile and metrics exist
-  const { data, error: rpcErr } = await supabase.rpc('ensure_my_profile');
+  const { data, error: rpcErr } = await supabase.rpc('get_my_profile');
   if (rpcErr) throw rpcErr;
   return data as MyProfile;
 }
