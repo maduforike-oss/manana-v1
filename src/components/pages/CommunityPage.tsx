@@ -365,7 +365,7 @@ export const CommunityPage = () => {
           url: shareUrl
         });
       } catch (err) {
-        // Share cancelled - silent fail
+        console.log('Share cancelled');
       }
     } else {
       await navigator.clipboard.writeText(shareUrl);

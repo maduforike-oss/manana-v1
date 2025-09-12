@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Settings, Palette, Package, Crown, LogOut, Trash2, Users, CreditCard, ArrowRight, MapPin, Globe, User as UserIcon, Upload, ImagePlus, ShieldCheck } from 'lucide-react';
+import { Settings, Palette, Package, Crown, LogOut, Trash2, Users, CreditCard, ArrowRight, MapPin, Globe, User as UserIcon, Upload, ImagePlus } from 'lucide-react';
 import { BrandHeader } from '@/components/ui/brand-header';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,8 +22,7 @@ import { sanitizeUsername, validateUsername } from '@/lib/usernames';
 import { getErrorMessage } from '@/lib/errors';
 import SignOutButton from '@/components/auth/SignOutButton';
 import RequireAuth from '@/components/auth/RequireAuth';
-
-import { isStaff } from '@/lib/auth';
+import BackButton from '@/components/BackButton';
 
 // Debounce hook
 function useDebounced<T>(value: T, delay = 400): T {
@@ -80,7 +79,6 @@ export default function Profile() {
   const [uploading, setUploading] = useState({ avatar: false, cover: false });
   const [hasChanges, setHasChanges] = useState(false);
   const [orderStats, setOrderStats] = useState({ total_orders: 0, total_spent: 0, pending_orders: 0 });
-  const [isUserStaff, setIsUserStaff] = useState(false);
 
   const debouncedUsername = useDebounced(formData.username, 500);
 
@@ -104,22 +102,6 @@ export default function Profile() {
     
     if (user) {
       loadOrderStats();
-    }
-  }, [user]);
-
-  // Check staff status
-  useEffect(() => {
-    const checkStaffStatus = async () => {
-      try {
-        const staffStatus = await isStaff();
-        setIsUserStaff(staffStatus);
-      } catch (error) {
-        console.error('Failed to check staff status:', error);
-      }
-    };
-    
-    if (user) {
-      checkStaffStatus();
     }
   }, [user]);
 
@@ -261,7 +243,6 @@ export default function Profile() {
   const displayData = useMemo(() => ({
     name: profile?.display_name || profile?.username || 'Anonymous User',
     email: user?.email || '',
-    connectedAccount: user?.email ? `Connected: ${user.email}` : 'Not connected',
     bio: profile?.bio || 'Welcome to Manana! Complete your profile to get started.',
     location: profile?.location || '',
     website: profile?.website || '',
@@ -327,17 +308,7 @@ export default function Profile() {
           subtitle="Manage your profile and settings"
         >
           <div className="flex items-center gap-2">
-            {isUserStaff && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate('/admin/templates-uploader')}
-                className="h-12 px-4"
-              >
-                <ShieldCheck className="w-4 h-4 mr-2" />
-                Admin Templates
-              </Button>
-            )}
+            <BackButton fallback="/" />
             <Button
               onClick={handleSave}
               disabled={!hasChanges || loading}
@@ -639,20 +610,6 @@ export default function Profile() {
                 </div>
                 <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
               </Button>
-              
-              {isUserStaff && (
-                <Button 
-                  variant="ghost" 
-                  onClick={() => navigate('/admin/templates-uploader')} 
-                  className="w-full justify-between group h-12 sm:h-10 text-left"
-                >
-                  <div className="flex items-center">
-                    <ShieldCheck className="w-4 h-4 mr-3" />
-                    <span className="text-sm sm:text-base">Admin Templates</span>
-                  </div>
-                  <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </Button>
-              )}
               
               <div className="border-t border-border my-2"></div>
               

@@ -1,5 +1,4 @@
 import { useAppStore } from '@/store/useAppStore';
-import { useCartStore } from '@/store/useCartStore';
 import { cn } from '@/lib/utils';
 import { ShoppingCart, Users, Palette, User, Store } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -17,7 +16,6 @@ const tabs = [
 
 export const BottomNavigation = () => {
   const { activeTab, setActiveTab } = useAppStore();
-  const { count } = useCartStore();
   const location = useLocation();
 
   // Sync tab highlighting with current route
@@ -49,7 +47,7 @@ export const BottomNavigation = () => {
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             const Icon = tab.icon;
-            const showBadge = tab.id === 'orders' && count > 0;
+            const showBadge = tab.id === 'orders' ? true : false; // TODO: Add cart functionality
 
             return (
               <button
@@ -82,9 +80,9 @@ export const BottomNavigation = () => {
                   {showBadge && (
                     <Badge 
                       className="absolute -top-1 -right-1 min-w-[18px] h-[18px] text-xs p-0 flex items-center justify-center bg-destructive text-destructive-foreground border border-background rounded-full"
-                      aria-label={`${count} items in cart`}
+                      aria-label="2 items"
                     >
-                      {count}
+                      2
                     </Badge>
                   )}
                 </div>

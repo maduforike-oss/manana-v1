@@ -10,17 +10,12 @@ import { BrandHeader } from '@/components/ui/brand-header';
 import { useToast } from '@/hooks/use-toast';
 import { ProductCardSkeleton } from '@/components/marketplace/ProductCardSkeleton';
 import { formatDistanceToNow } from 'date-fns';
-import { ReviewModal } from '@/components/orders/ReviewModal';
-import { CancelOrderModal } from '@/components/orders/CancelOrderModal';
 
 export function OrdersPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [reviewModalOrderId, setReviewModalOrderId] = useState<string | null>(null);
-  const [cancelModalOrderId, setCancelModalOrderId] = useState<string | null>(null);
-  const [cancelModalOrderNumber, setCancelModalOrderNumber] = useState<string>('');
 
   useEffect(() => {
     loadOrders();
@@ -128,37 +123,10 @@ export function OrdersPage() {
                   key={order.id} 
                   order={order} 
                   onViewDetails={() => navigate(`/orders/${order.id}`)}
-                  onWriteReview={() => setReviewModalOrderId(order.id)}
-                  onCancelOrder={() => {
-                    setCancelModalOrderId(order.id);
-                    setCancelModalOrderNumber(order.order_number);
-                  }}
                 />
               ))}
             </div>
           </div>
-        )}
-        
-        {/* Modals */}
-        {reviewModalOrderId && (
-          <ReviewModal
-            orderId={reviewModalOrderId}
-            onClose={() => setReviewModalOrderId(null)}
-          />
-        )}
-        {cancelModalOrderId && (
-          <CancelOrderModal
-            orderId={cancelModalOrderId}
-            orderNumber={cancelModalOrderNumber}
-            onClose={() => {
-              setCancelModalOrderId(null);
-              setCancelModalOrderNumber('');
-            }}
-            onConfirm={() => {
-              // Refresh orders after cancellation
-              loadOrders();
-            }}
-          />
         )}
       </div>
     </div>
@@ -168,11 +136,9 @@ export function OrdersPage() {
 interface OrderCardProps {
   order: Order;
   onViewDetails: () => void;
-  onWriteReview?: () => void;
-  onCancelOrder?: () => void;
 }
 
-function OrderCard({ order, onViewDetails, onWriteReview, onCancelOrder }: OrderCardProps) {
+function OrderCard({ order, onViewDetails }: OrderCardProps) {
   const getStatusIcon = (status: Order['status']) => {
     switch (status) {
       case 'pending':
@@ -275,28 +241,31 @@ function OrderCard({ order, onViewDetails, onWriteReview, onCancelOrder }: Order
               variant="outline"
               className="flex-1 min-h-[44px]"
               onClick={onViewDetails}
-              aria-label={`View details for order ${order.order_number}`}
             >
               View Details
             </Button>
             
-            {order.status === 'delivered' && onWriteReview && (
+            {order.status === 'delivered' && (
               <Button
                 variant="outline"
                 className="flex-1 min-h-[44px]"
-                onClick={onWriteReview}
-                aria-label={`Write review for order ${order.order_number}`}
+                onClick={() => {
+                  // Navigate to review products
+                  // This would open a review modal or page
+                }}
               >
                 Write Review
               </Button>
             )}
             
-            {['pending', 'processing'].includes(order.status) && onCancelOrder && (
+            {['pending', 'processing'].includes(order.status) && (
               <Button
                 variant="destructive"
                 className="flex-1 min-h-[44px]"
-                onClick={onCancelOrder}
-                aria-label={`Cancel order ${order.order_number}`}
+                onClick={() => {
+                  // Handle order cancellation
+                  // This would open a confirmation modal
+                }}
               >
                 Cancel Order
               </Button>
@@ -373,12 +342,11 @@ export function OrderDetailPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       <BrandHeader title={`Order ${order.order_number}`}>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate(-1)}
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => navigate('/orders')}
           className="min-h-[44px] min-w-[44px]"
-          aria-label="Back to Orders"
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>

@@ -7,13 +7,13 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Heading } from '@/components/ui/heading';
-import { useCartStore } from '@/store/useCartStore';
+import { useCart } from '@/hooks/useCart';
 import { useToast } from '@/hooks/use-toast';
 import { useAppStore } from '@/store/useAppStore';
 
 export default function Cart() {
   const navigate = useNavigate();
-  const { items, total, count, updateQuantity, removeItem, clearCart } = useCartStore();
+  const { cart, updateQuantity, removeFromCart, clearCart } = useCart();
   const { toast } = useToast();
   const { setActiveTab } = useAppStore();
   const [promoCode, setPromoCode] = useState('');
@@ -50,12 +50,12 @@ export default function Cart() {
     },
   ];
 
-  const shipping = total > 50 ? 0 : 9.99;
-  const tax = total * 0.08; // 8% tax
-  const finalTotal = total + shipping + tax;
+  const shipping = cart.total > 50 ? 0 : 9.99;
+  const tax = cart.total * 0.08; // 8% tax
+  const finalTotal = cart.total + shipping + tax;
 
   const handleCheckout = () => {
-    if (items.length === 0) {
+    if (cart.items.length === 0) {
       toast({ 
         title: "Cart is empty", 
         description: "Add some items to your cart first",
@@ -119,7 +119,7 @@ export default function Cart() {
     setActiveTab('studio');
   };
 
-  const cartTabTitle = items.length > 0 ? `Cart (${count})` : 'Cart';
+  const cartTabTitle = cart.items.length > 0 ? `Cart (${cart.itemCount})` : 'Cart';
   const ordersTabTitle = mockOrders.length > 0 ? `Orders (${mockOrders.length})` : 'Orders';
 
   return (
@@ -162,7 +162,7 @@ export default function Cart() {
           </TabsList>
 
           <TabsContent value="cart" className="mt-4 animate-fade-in">
-            {items.length === 0 ? (
+            {cart.items.length === 0 ? (
               <div className="text-center py-12 animate-scale-in">
                 <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-full flex items-center justify-center mx-auto mb-6">
                   <ShoppingBag className="h-10 w-10 text-primary" />
@@ -192,7 +192,7 @@ export default function Cart() {
                       Clear All
                     </Button>
                   </div>
-                  {items.map((item, index) => (
+                  {cart.items.map((item, index) => (
                     <Card key={item.id} className="hover:shadow-md transition-all duration-200 animate-fade-in" style={{ animationDelay: `${index * 100}ms` }}>
                       <CardContent className="p-4">
                         <div className="flex gap-3">
@@ -208,18 +208,18 @@ export default function Cart() {
                             <div className="flex justify-between items-start mb-2">
                               <div>
                                 <h3 className="font-medium text-sm">{item.name}</h3>
-                                <p className="text-xs text-muted-foreground">Design #{item.id.slice(0, 8)}</p>
+                                <p className="text-xs text-muted-foreground">by {item.creator}</p>
                               </div>
                               <Button 
                                 variant="ghost" 
                                 size="icon"
-                      onClick={() => {
-                        removeItem(item.id);
-                        toast({ 
-                          title: "Removed from cart", 
-                          description: `${item.name} has been removed`
-                        });
-                      }}
+                                onClick={() => {
+                                  removeFromCart(item.id);
+                                  toast({ 
+                                    title: "Removed from cart", 
+                                    description: `${item.name} has been removed`
+                                  });
+                                }}
                                 className="text-destructive hover:text-destructive h-8 w-8 hover:-translate-y-0.5 transition-all duration-200"
                               >
                                 <Trash2 className="h-3 w-3" />
@@ -229,7 +229,7 @@ export default function Cart() {
                             <div className="flex flex-wrap gap-1.5 mb-3">
                               <Badge variant="outline" className="text-xs px-2 py-0.5">Size: {item.size}</Badge>
                               <Badge variant="outline" className="text-xs px-2 py-0.5">Color: {item.color}</Badge>
-                              <Badge variant="outline" className="text-xs px-2 py-0.5">{item.productId.includes('design') ? 'Design' : 'Product'}</Badge>
+                              <Badge variant="outline" className="text-xs px-2 py-0.5">{item.listingType}</Badge>
                             </div>
                             
                             <div className="flex items-center justify-between">
@@ -284,11 +284,11 @@ export default function Cart() {
                         <Heading as="h3" size="h5" variant="default">Order Summary</Heading>
                       </div>
                       
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span>Subtotal ({count} items)</span>
-                            <span className="font-medium">${total.toFixed(2)}</span>
-                          </div>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span>Subtotal ({cart.itemCount} items)</span>
+                          <span className="font-medium">${cart.total.toFixed(2)}</span>
+                        </div>
                         
                         <div className="flex justify-between">
                           <span>Shipping</span>
@@ -316,12 +316,12 @@ export default function Cart() {
                         </div>
                       </div>
                       
-                      {total < 50 && (
+                      {cart.total < 50 && (
                         <div className="mt-3 p-3 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-lg border border-primary/20">
                           <div className="flex items-center gap-2 text-primary">
                             <Truck className="h-3 w-3" />
                             <span className="text-xs font-medium">
-                              Add ${(50 - total).toFixed(2)} more for free shipping
+                              Add ${(50 - cart.total).toFixed(2)} more for free shipping
                             </span>
                           </div>
                         </div>
