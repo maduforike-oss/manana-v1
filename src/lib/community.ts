@@ -56,7 +56,6 @@ export interface ToggleLikeResult {
 }
 
 export interface ToggleSaveResult {
-  success?: boolean;
   data?: boolean; // true if saved, false if unsaved
   error?: string;
 }
@@ -169,7 +168,7 @@ export async function togglePostLike(postId: string): Promise<ToggleLikeResult> 
 
 export async function togglePostSave(postId: string): Promise<ToggleSaveResult> {
   if (!postId) {
-    return { success: false, error: 'Post ID is required' };
+    return { error: 'Post ID is required' };
   }
 
   try {
@@ -178,12 +177,12 @@ export async function togglePostSave(postId: string): Promise<ToggleSaveResult> 
     });
 
     if (error) {
-      return { success: false, error: getErrorMessage(error) };
+      return { error: getErrorMessage(error) };
     }
 
-    return { success: true, data: data as boolean };
+    return { data };
   } catch (error) {
-    return { success: false, error: getErrorMessage(error) };
+    return { error: getErrorMessage(error) };
   }
 }
 
