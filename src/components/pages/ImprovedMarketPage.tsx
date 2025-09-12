@@ -405,16 +405,6 @@ export function ImprovedMarketPage() {
             )}
           </div>
         </Tabs>
-
-        {/* Infinite scroll trigger */}
-        <div ref={loadMoreRef} className="h-20 flex items-center justify-center">
-          {hasMore && isLoading && (
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full" />
-              Loading more designs...
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Floating Action Button - Mobile */}
