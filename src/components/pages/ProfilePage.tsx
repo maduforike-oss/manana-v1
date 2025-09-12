@@ -90,7 +90,7 @@ export const ProfilePage = () => {
   };
 
   const handleSignIn = () => {
-    navigate('/auth/signin');
+    navigate('/auth');
   };
 
   const handleDeleteAccount = () => {

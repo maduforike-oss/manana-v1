@@ -365,7 +365,7 @@ export const ImprovedCommunityPage = () => {
   const mustBeAuthedOrRedirect = async (): Promise<boolean> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      window.location.href = '/auth/signin';
+      window.location.href = '/auth';
       return false;
     }
     return true;

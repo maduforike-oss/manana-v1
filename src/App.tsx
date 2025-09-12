@@ -19,7 +19,6 @@ import Cart from "./pages/Cart";
 import AddListing from "./pages/AddListing";
 import Checkout from "./pages/Checkout";
 import CheckoutSuccess from "./pages/CheckoutSuccess";
-import SignIn from "./pages/SignIn";
 import RequireAuth from "./components/auth/RequireAuth";
 
 const queryClient = new QueryClient();
@@ -33,7 +32,6 @@ const App = () => (
         <AppLayout>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/auth/signin" element={<SignIn />} />
             <Route path="/studio" element={<RequireAuth><StudioPro /></RequireAuth>} />
             <Route path="/studio/editor" element={<RequireAuth><StudioEditor /></RequireAuth>} />
             <Route path="/studio/legacy" element={<RequireAuth><StudioPage /></RequireAuth>} />

@@ -13,7 +13,7 @@ interface SignOutButtonProps {
 export default function SignOutButton({ 
   className = '', 
   children, 
-  redirectTo = '/auth/signin' 
+  redirectTo = '/auth' 
 }: SignOutButtonProps) {
   const [loading, setLoading] = useState(false);
   const { signOut } = useAuth();

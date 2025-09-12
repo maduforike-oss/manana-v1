@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react";
-import { ArrowLeft, User, Camera, Save, AlertTriangle, Loader2 } from 'lucide-react';
+import { User, Camera, Save, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,31 +11,25 @@ import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { 
-  getMyProfile, 
-  updateMyProfile, 
   uploadAvatar, 
   uploadCover, 
   checkUsernameAvailability,
-  type ExtendedProfile 
+  updateMyProfile 
 } from '@/lib/profile';
 import { sanitizeUsername, validateUsername } from '@/lib/usernames';
 import { getErrorMessage } from '@/lib/errors';
-import { supabase } from '@/integrations/supabase/client';
 import BackButton from '@/components/BackButton';
 import { useProfileStore } from '@/store/useProfileStore';
 
 export default function ProfileSettingsPage() {
-  const router = useRouter();
   const { toast } = useToast();
-  const { profile: storeProfile, loading: storeLoading, error: storeError, load, refresh, patch } = useProfileStore();
+  const { profile, loading, error, load, refresh, patch } = useProfileStore();
   
-  const [profile, setProfile] = useState<ExtendedProfile | null>(null);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState({ avatar: false, cover: false });
+  const [hasChanges, setHasChanges] = useState(false);
   
   const [formData, setFormData] = useState({
     display_name: "",
@@ -63,54 +57,26 @@ export default function ProfileSettingsPage() {
     error: null,
   });
 
-  const [hasChanges, setHasChanges] = useState(false);
-
   useEffect(() => {
-    loadProfile();
-  }, []);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        router.push('/auth');
-      }
-    };
-    checkAuth();
-  }, [router]);
-
-  const loadProfile = async () => {
-    try {
-      setLoading(true);
-      const profileData = await getMyProfile();
-      
-      if (profileData) {
-        setProfile(profileData);
-        setFormData({
-          display_name: profileData.display_name || "",
-          username: profileData.username || "",
-          bio: profileData.bio || "",
-          location: profileData.location || "",
-          website: profileData.website || "",
-          social_instagram: profileData.social_instagram || "",
-          social_twitter: profileData.social_twitter || "",
-        });
-        setPreferences({
-          show_email: profileData.preferences?.show_email !== false,
-          show_socials: profileData.preferences?.show_socials !== false,
-          discoverable: profileData.preferences?.discoverable !== false,
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: getErrorMessage(error),
-        variant: "destructive"
+    if (!profile) {
+      load();
+    } else {
+      setFormData({
+        display_name: profile.display_name || "",
+        username: profile.username || "",
+        bio: profile.bio || "",
+        location: profile.location || "",
+        website: profile.website || "",
+        social_instagram: profile.social_instagram || "",
+        social_twitter: profile.social_twitter || "",
       });
-    } finally {
-      setLoading(false);
+      setPreferences({
+        show_email: profile.preferences?.show_email !== false,
+        show_socials: profile.preferences?.show_socials !== false,
+        discoverable: profile.preferences?.discoverable !== false,
+      });
     }
-  };
+  }, [profile, load]);
 
   const handleFormChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -181,8 +147,8 @@ export default function ProfileSettingsPage() {
       const updateField = type === 'avatar' ? 'avatar_url' : 'cover_url';
       await updateMyProfile({ [updateField]: publicUrl });
       
-      // Update local state
-      setProfile(prev => prev ? { ...prev, [updateField]: publicUrl } : null);
+      // Refresh the store to get updated data
+      await refresh();
       
       toast({
         title: "Success",
@@ -239,11 +205,11 @@ export default function ProfileSettingsPage() {
     }
   };
 
-  if (storeError) {
+  if (error) {
     return (
       <div className="p-6 space-y-3">
         <BackButton fallback="/profile" />
-        <div className="text-destructive">Error: {storeError}</div>
+        <div className="text-destructive">Error: {error}</div>
         <Button variant="outline" onClick={refresh}>Retry</Button>
       </div>
     );
@@ -501,12 +467,21 @@ export default function ProfileSettingsPage() {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">Show social links</p>
-                <p className="text-sm text-muted-foreground">
-                  Display your social media links on your profile
-                </p>
+                <Label>Show Email</Label>
+                <p className="text-sm text-muted-foreground">Display your email address on your profile</p>
               </div>
-              <Switch
+              <Switch 
+                checked={preferences.show_email}
+                onCheckedChange={(checked) => handlePreferenceChange('show_email', checked)}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <Label>Show Social Links</Label>
+                <p className="text-sm text-muted-foreground">Display your social media links on your profile</p>
+              </div>
+              <Switch 
                 checked={preferences.show_socials}
                 onCheckedChange={(checked) => handlePreferenceChange('show_socials', checked)}
               />
@@ -514,12 +489,10 @@ export default function ProfileSettingsPage() {
 
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">Discoverable profile</p>
-                <p className="text-sm text-muted-foreground">
-                  Allow your profile to be found in search and recommendations
-                </p>
+                <Label>Profile Discoverable</Label>
+                <p className="text-sm text-muted-foreground">Allow others to find your profile in search</p>
               </div>
-              <Switch
+              <Switch 
                 checked={preferences.discoverable}
                 onCheckedChange={(checked) => handlePreferenceChange('discoverable', checked)}
               />

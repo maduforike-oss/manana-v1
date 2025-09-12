@@ -21,7 +21,7 @@ export function ProfileSettings() {
   // Redirect non-authenticated users
   useEffect(() => {
     if (!isLoading && !user) {
-      navigate('/auth/signin');
+      navigate('/auth');
     }
   }, [user, isLoading, navigate]);
 

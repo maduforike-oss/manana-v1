@@ -9,7 +9,7 @@ interface RequireAuthProps {
   redirectTo?: string;
 }
 
-export default function RequireAuth({ children, redirectTo = '/auth/signin' }: RequireAuthProps) {
+export default function RequireAuth({ children, redirectTo = '/auth' }: RequireAuthProps) {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
 
