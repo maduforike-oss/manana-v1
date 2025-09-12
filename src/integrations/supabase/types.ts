@@ -32,6 +32,54 @@ export type Database = {
         }
         Relationships: []
       }
+      orders: {
+        Row: {
+          billing_address: Json | null
+          created_at: string
+          currency: string
+          id: string
+          items: Json
+          notes: string | null
+          order_number: string
+          payment_method: Json | null
+          shipping_address: Json | null
+          status: string
+          total_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          billing_address?: Json | null
+          created_at?: string
+          currency?: string
+          id?: string
+          items?: Json
+          notes?: string | null
+          order_number: string
+          payment_method?: Json | null
+          shipping_address?: Json | null
+          status?: string
+          total_amount?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          billing_address?: Json | null
+          created_at?: string
+          currency?: string
+          id?: string
+          items?: Json
+          notes?: string | null
+          order_number?: string
+          payment_method?: Json | null
+          shipping_address?: Json | null
+          status?: string
+          total_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profile_metrics: {
         Row: {
           followers: number | null
@@ -106,8 +154,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_order_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       is_username_available: {
-        Args: { username_to_check: string }
+        Args: { name: string; self_id?: string } | { username_to_check: string }
         Returns: boolean
       }
     }

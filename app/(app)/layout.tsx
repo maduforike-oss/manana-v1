@@ -40,7 +40,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <a href="/dashboard" className="transition-colors hover:text-foreground/80">Dashboard</a>
             <a href="/designs" className="transition-colors hover:text-foreground/80">Designs</a>
             <a href="/orders" className="transition-colors hover:text-foreground/80">Orders</a>
-            <a href="/profile" className="transition-colors hover:text-foreground/80">Profile</a>
+            <a href="/profile/settings" className="transition-colors hover:text-foreground/80">Profile</a>
           </nav>
         </div>
       </header>
@@ -53,7 +53,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <a href="/dashboard" className="flex items-center px-4 py-3 rounded-xl hover:bg-glass-light/50 transition-all duration-300 hover:scale-105 font-medium">Dashboard</a>
               <a href="/designs" className="flex items-center px-4 py-3 rounded-xl hover:bg-glass-light/50 transition-all duration-300 hover:scale-105 font-medium">Designs</a>
               <a href="/orders" className="flex items-center px-4 py-3 rounded-xl hover:bg-glass-light/50 transition-all duration-300 hover:scale-105 font-medium">Orders</a>
-              <a href="/profile" className="flex items-center px-4 py-3 rounded-xl hover:bg-glass-light/50 transition-all duration-300 hover:scale-105 font-medium">Profile</a>
+              <a href="/profile/settings" className="flex items-center px-4 py-3 rounded-xl hover:bg-glass-light/50 transition-all duration-300 hover:scale-105 font-medium">Profile</a>
             </nav>
           </aside>
           <section className="min-w-0">{children}</section>

@@ -56,9 +56,19 @@ export async function updateMyProfile(fields: Partial<Omit<Profile, 'id' | 'crea
   if (userErr) throw userErr;
   if (!user) throw new Error('Not signed in');
 
+  // Safely merge preferences if provided
+  let updateFields = { ...fields };
+  if (fields.preferences) {
+    const currentProfile = await getMyProfile();
+    updateFields.preferences = {
+      ...(currentProfile?.preferences || {}),
+      ...fields.preferences
+    };
+  }
+
   const { error } = await supabase
     .from('profiles')
-    .update(fields)
+    .update(updateFields)
     .eq('id', user.id);
 
   if (error) throw error;
