@@ -1,14 +1,14 @@
 import { create } from 'zustand';
-import { getMyProfile, updateMyProfile, type Profile } from '@/lib/profile';
+import { getMyProfile, setMyProfile, type MyProfile } from '@/lib/profile-api';
 
 type State = {
-  profile: Profile | null;
+  profile: MyProfile | null;
   loading: boolean;
   error: string | null;
   load: () => Promise<void>;
   refresh: () => Promise<void>;
-  patch: (fields: Partial<Omit<Profile,'id'|'created_at'>>) => Promise<void>;
-  setLocal: (p: Profile | null) => void;
+  patch: (fields: Partial<Omit<MyProfile,'user_id'|'total_designs'|'followers'|'following'|'metrics_updated_at'>>) => Promise<void>;
+  setLocal: (p: MyProfile | null) => void;
 };
 
 export const useProfileStore = create<State>((set, get) => ({
@@ -36,7 +36,7 @@ export const useProfileStore = create<State>((set, get) => ({
   patch: async (fields) => {
     set({ loading: true, error: null });
     try {
-      await updateMyProfile(fields);
+      await setMyProfile(fields);
       // re-fetch canonical row to avoid stale optimistic state
       const p = await getMyProfile();
       set({ profile: p, loading: false });
