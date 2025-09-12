@@ -462,6 +462,27 @@ export type Database = {
           username: string
         }[]
       }
+      get_me_profile_full: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          avatar_url: string
+          bio: string
+          cover_url: string
+          created_at: string
+          display_name: string
+          followers: number
+          following: number
+          location: string
+          metrics_updated_at: string
+          preferences: Json
+          social_instagram: string
+          social_twitter: string
+          total_designs: number
+          user_id: string
+          username: string
+          website: string
+        }[]
+      }
       get_my_profile: {
         Args: Record<PropertyKey, never>
         Returns: {
