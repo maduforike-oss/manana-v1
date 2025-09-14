@@ -488,6 +488,17 @@ export function ImprovedMarketPage() {
           <Plus className="h-6 w-6" />
         </Button>
       </CreateListingModal>
+
+      {/* Quick View Modal */}
+      <ProductQuickViewModal
+        product={quickViewProduct}
+        isOpen={isQuickViewOpen}
+        onClose={() => setIsQuickViewOpen(false)}
+        onAddToCart={handleAddToCart}
+        onSave={handleSaveProduct}
+        onShare={handleShare}
+        isSaved={quickViewProduct ? savedProducts.has(quickViewProduct.id) : false}
+      />
     </div>
   );
 }

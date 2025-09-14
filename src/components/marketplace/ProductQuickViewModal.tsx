@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { ProductWithDetails } from '@/lib/api/products';
+import { WishlistButton } from './WishlistButton';
 
 interface ProductQuickViewModalProps {
   product: ProductWithDetails | null;
@@ -64,17 +65,17 @@ export const ProductQuickViewModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl w-full h-[90vh] p-0 overflow-hidden">
+      <DialogContent className="max-w-5xl w-full h-[90vh] p-0 overflow-hidden bg-background border-border/30">
         <DialogTitle className="sr-only">Product Details - {product.name}</DialogTitle>
         
         <div className="flex h-full">
           {/* Left Side - Images */}
-          <div className="flex-1 bg-muted/20 relative">
+          <div className="flex-1 bg-muted/30 relative">
             <Button
               variant="ghost"
               size="sm"
               onClick={onClose}
-              className="absolute top-4 right-4 z-10 bg-white/80 hover:bg-white rounded-full h-8 w-8 p-0"
+              className="absolute top-4 right-4 z-10 bg-background/90 hover:bg-background border border-border/30 rounded-full h-9 w-9 p-0 backdrop-blur-sm"
               aria-label="Close modal"
             >
               <X className="h-4 w-4" />
@@ -95,7 +96,7 @@ export const ProductQuickViewModal = ({
                     variant="ghost"
                     size="sm"
                     onClick={() => setSelectedImageIndex(prev => prev > 0 ? prev - 1 : sortedImages.length - 1)}
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full h-8 w-8 p-0"
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-background/90 hover:bg-background border border-border/30 rounded-full h-9 w-9 p-0 backdrop-blur-sm"
                     aria-label="Previous image"
                   >
                     <ChevronLeft className="h-4 w-4" />
@@ -104,7 +105,7 @@ export const ProductQuickViewModal = ({
                     variant="ghost"
                     size="sm"
                     onClick={() => setSelectedImageIndex(prev => prev < sortedImages.length - 1 ? prev + 1 : 0)}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full h-8 w-8 p-0"
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-background/90 hover:bg-background border border-border/30 rounded-full h-9 w-9 p-0 backdrop-blur-sm"
                     aria-label="Next image"
                   >
                     <ChevronRight className="h-4 w-4" />
@@ -120,8 +121,8 @@ export const ProductQuickViewModal = ({
                   key={img.id}
                   onClick={() => setSelectedImageIndex(index)}
                   className={cn(
-                    "flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 cursor-pointer transition-all duration-200",
-                    selectedImageIndex === index ? "border-primary" : "border-transparent hover:border-border"
+                    "flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 cursor-pointer transition-all duration-200",
+                    selectedImageIndex === index ? "border-primary ring-2 ring-primary/20" : "border-border/30 hover:border-primary/50"
                   )}
                 >
                   <img src={img.url} alt={img.alt_text || `View ${index + 1}`} className="w-full h-full object-cover" />
@@ -131,8 +132,8 @@ export const ProductQuickViewModal = ({
           </div>
 
           {/* Right Side - Details */}
-          <div className="w-1/2 flex flex-col">
-            <div className="flex-1 overflow-y-auto">
+          <div className="w-1/2 flex flex-col border-l border-border/30">
+            <div className="flex-1 overflow-y-auto modern-scroll">
               <div className="p-6">
                 {/* Header */}
                 <div className="mb-6">
@@ -167,12 +168,12 @@ export const ProductQuickViewModal = ({
                   <div className="mb-6">
                     <h3 className="text-sm font-semibold text-foreground mb-3">Select Option</h3>
                     <Select value={selectedVariant} onValueChange={setSelectedVariant}>
-                      <SelectTrigger className="w-full">
+                      <SelectTrigger className="w-full rounded-xl border-border/30 bg-background">
                         <SelectValue placeholder="Choose size and color" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-background border-border/30 rounded-xl">
                         {variants.map((variant) => (
-                          <SelectItem key={variant.id} value={variant.id}>
+                          <SelectItem key={variant.id} value={variant.id} className="rounded-lg">
                             {variant.color} - {variant.size} (${variant.price})
                             {variant.stock_quantity === 0 && ' - Out of Stock'}
                           </SelectItem>
@@ -192,18 +193,18 @@ export const ProductQuickViewModal = ({
 
                 {/* Details Tabs */}
                 <Tabs defaultValue="details" className="mb-6">
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="details">Details</TabsTrigger>
-                    <TabsTrigger value="reviews">Reviews</TabsTrigger>
+                  <TabsList className="grid w-full grid-cols-2 bg-muted/50 rounded-xl p-1">
+                    <TabsTrigger value="details" className="rounded-lg">Details</TabsTrigger>
+                    <TabsTrigger value="reviews" className="rounded-lg">Reviews</TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="details" className="space-y-4">
                     <div className="space-y-3">
-                      <Card>
+                      <Card className="border-border/30 bg-muted/20">
                         <CardContent className="p-4">
                           <div className="flex justify-between items-center">
                             <span className="text-sm font-medium">Status</span>
-                            <Badge variant={product.status === 'active' ? 'default' : 'secondary'}>
+                            <Badge variant={product.status === 'active' ? 'default' : 'secondary'} className="rounded-lg">
                               {product.status}
                             </Badge>
                           </div>
@@ -211,7 +212,7 @@ export const ProductQuickViewModal = ({
                       </Card>
                       
                       {selectedVariantData && (
-                        <Card>
+                        <Card className="border-border/30 bg-muted/20">
                           <CardContent className="p-4">
                             <div className="flex justify-between items-center">
                               <span className="text-sm font-medium">Stock</span>
@@ -270,7 +271,7 @@ export const ProductQuickViewModal = ({
                 </Tabs>
 
                 {/* Delivery Info */}
-                <Card className="mb-6">
+                <Card className="mb-6 border-border/30 bg-muted/20">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-2">
                       <Truck className="h-4 w-4 text-primary" />
@@ -285,25 +286,17 @@ export const ProductQuickViewModal = ({
             </div>
 
             {/* Footer Actions */}
-            <div className="p-6 border-t border-border/30 bg-muted/10">
+            <div className="p-6 border-t border-border/30 bg-background/95 backdrop-blur-sm">
               <div className="flex gap-3">
-                <Button
+                <WishlistButton
+                  productId={product.id}
+                  className="rounded-xl min-h-[44px]"
                   variant="outline"
-                  onClick={() => onSave(product.id)}
-                  aria-label={isSaved ? 'Remove from wishlist' : 'Save to wishlist'}
-                  aria-pressed={isSaved}
-                  className={cn(
-                    "flex items-center gap-2 rounded-xl",
-                    isSaved ? "bg-primary/10 border-primary text-primary" : ""
-                  )}
-                >
-                  <Heart className={cn("h-4 w-4", isSaved ? "fill-current" : "")} />
-                  {isSaved ? 'Saved' : 'Save'}
-                </Button>
+                />
                 <Button
                   variant="outline"
                   onClick={() => onShare(product)}
-                  className="flex items-center gap-2 rounded-xl"
+                  className="flex items-center gap-2 rounded-xl border-border/30 min-h-[44px]"
                   aria-label="Share product"
                 >
                   <Share2 className="h-4 w-4" />
@@ -312,7 +305,7 @@ export const ProductQuickViewModal = ({
                 <Button
                   onClick={handleAddToCart}
                   disabled={selectedVariantData?.stock_quantity === 0}
-                  className="flex-1 bg-primary hover:bg-primary/90 rounded-xl"
+                  className="flex-1 bg-primary hover:bg-primary/90 rounded-xl min-h-[44px]"
                 >
                   <ShoppingCart className="h-4 w-4 mr-2" />
                   {selectedVariantData?.stock_quantity === 0 ? 'Out of Stock' : 'Add to Cart'}

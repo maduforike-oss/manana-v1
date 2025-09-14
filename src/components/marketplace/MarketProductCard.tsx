@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { ProductWithDetails } from '@/lib/api/products';
+import { WishlistButton } from './WishlistButton';
 
 interface MarketProductCardProps {
   product: ProductWithDetails;
@@ -177,22 +178,12 @@ export function MarketProductCard({
           {/* Quick Actions Overlay */}
           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <div className="flex gap-2">
-              <Button
+              <WishlistButton
+                productId={product.id}
                 variant="secondary"
                 size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSave(product.id);
-                }}
-                aria-label={isSaved ? 'Remove from wishlist' : 'Save to wishlist'}
-                aria-pressed={isSaved}
-                className={cn(
-                  "h-9 w-9 p-0 bg-white/90 hover:bg-white shadow-lg",
-                  isSaved && "bg-primary text-primary-foreground"
-                )}
-              >
-                <Heart className={cn("h-4 w-4", isSaved && "fill-current")} />
-              </Button>
+                className="h-9 w-9 p-0 bg-background/90 hover:bg-background shadow-lg border border-border/30 backdrop-blur-sm"
+              />
               
               <Button
                 variant="secondary"
@@ -201,7 +192,7 @@ export function MarketProductCard({
                   e.stopPropagation();
                   onAddToCart(product);
                 }}
-                className="h-9 w-9 p-0 bg-white/90 hover:bg-white shadow-lg"
+                className="h-9 w-9 p-0 bg-background/90 hover:bg-background shadow-lg border border-border/30 backdrop-blur-sm"
                 aria-label="Add to cart"
               >
                 <ShoppingCart className="h-4 w-4" />
@@ -214,7 +205,7 @@ export function MarketProductCard({
                   e.stopPropagation();
                   onShare(product);
                 }}
-                className="h-9 w-9 p-0 bg-white/90 hover:bg-white shadow-lg"
+                className="h-9 w-9 p-0 bg-background/90 hover:bg-background shadow-lg border border-border/30 backdrop-blur-sm"
                 aria-label="Share product"
               >
                 <Share2 className="h-4 w-4" />
