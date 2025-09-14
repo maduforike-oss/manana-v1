@@ -720,7 +720,15 @@ export type Database = {
           stock_quantity?: number
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_product_variants_product_id"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       products: {
         Row: {
@@ -731,6 +739,7 @@ export type Database = {
           description: string | null
           id: string
           name: string
+          owner_id: string | null
           slug: string
           status: string
           updated_at: string
@@ -743,6 +752,7 @@ export type Database = {
           description?: string | null
           id?: string
           name: string
+          owner_id?: string | null
           slug: string
           status?: string
           updated_at?: string
@@ -755,6 +765,7 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
+          owner_id?: string | null
           slug?: string
           status?: string
           updated_at?: string
