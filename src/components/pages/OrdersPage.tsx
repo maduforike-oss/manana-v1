@@ -7,42 +7,23 @@ import { Heading } from '@/components/ui/heading';
 import { OrderCardSkeleton } from '@/components/marketplace/OrderCardSkeleton';
 import { useToast } from '@/hooks/use-toast';
 import { useAppStore } from '@/store/useAppStore';
+import { useOrders } from '@/hooks/useOrders';
 import { useState, useMemo } from 'react';
 
 export const OrdersPage = () => {
   const { toast } = useToast();
   const { setActiveTab } = useAppStore();
-  const [isLoading, setIsLoading] = useState(false);
-  
-  const mockOrders = [
-    {
-      id: 'ORD-001',
-      design: 'Sunset Vibes T-Shirt',
-      status: 'delivered',
-      date: '2024-01-15',
-      total: 18.99,
-      quantity: 1,
-      tracking: 'TRK123456789',
-    },
-    {
-      id: 'ORD-002',
-      design: 'Urban Street Hoodie',
-      status: 'shipped',
-      date: '2024-01-18',
-      total: 34.99,
-      quantity: 2,
-      tracking: 'TRK987654321',
-    },
-    {
-      id: 'ORD-003',
-      design: 'Minimal Logo Cap',
-      status: 'processing',
-      date: '2024-01-20',
-      total: 22.99,
-      quantity: 1,
-      tracking: null,
-    },
-  ];
+  const { data: orders = [], isLoading, error } = useOrders();
+
+  const getProgressStage = (status: string) => {
+    switch (status) {
+      case 'pending': return 1;
+      case 'processing': return 2;
+      case 'shipped': return 3;
+      case 'delivered': return 4;
+      default: return 1;
+    }
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -116,7 +97,7 @@ export const OrdersPage = () => {
             </div>
             <div className="flex flex-wrap gap-2 text-xs">
               <span className="px-2 py-1 bg-primary/10 text-primary rounded-full border border-primary/20">
-                {mockOrders.length} Active Orders
+                {orders.length} Active Orders
               </span>
               <span className="px-2 py-1 bg-secondary/10 text-secondary rounded-full border border-secondary/20">
                 Premium Quality ⭐
@@ -135,7 +116,7 @@ export const OrdersPage = () => {
               <OrderCardSkeleton key={i} />
             ))
           ) : (
-            mockOrders.map((order) => (
+            orders.map((order) => (
             <Card key={order.id} className="group border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-card/80 backdrop-blur-sm overflow-hidden">
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -148,7 +129,7 @@ export const OrdersPage = () => {
                           <Package className="w-5 h-5 text-primary" />
                         </div>
                         <Heading as="h3" size="h4" variant="default">
-                          {order.design}
+                          Order {order.order_number}
                         </Heading>
                         <Badge 
                           variant={getStatusVariant(order.status)} 
@@ -161,22 +142,16 @@ export const OrdersPage = () => {
                       
                       <div className="flex flex-wrap gap-4 text-sm">
                         <span className="px-2 py-1 bg-muted/50 rounded-md font-medium">
-                          #{order.id}
+                          #{order.order_number}
                         </span>
                         <span className="flex items-center gap-1 text-muted-foreground">
                           <Calendar className="w-3 h-3" />
-                          {new Date(order.date).toLocaleDateString()}
+                          {new Date(order.created_at).toLocaleDateString()}
                         </span>
                         <span className="flex items-center gap-1 text-muted-foreground">
                           <ShoppingBag className="w-3 h-3" />
-                          Qty: {order.quantity}
+                          Items: {Array.isArray(order.items) ? order.items.length : 0}
                         </span>
-                        {order.tracking && (
-                          <span className="flex items-center gap-1 px-2 py-1 bg-blue-500/10 text-blue-600 rounded-md text-xs font-mono">
-                            <Truck className="w-3 h-3" />
-                            {order.tracking}
-                          </span>
-                        )}
                       </div>
                     </div>
 
@@ -184,23 +159,12 @@ export const OrdersPage = () => {
                     <div className="flex items-center gap-4">
                       <div className="text-right">
                         <p className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-500 bg-clip-text text-transparent">
-                          £{order.total}
+                          {order.currency === 'USD' ? '$' : '£'}{order.total_amount}
                         </p>
                         <p className="text-xs text-muted-foreground">Total</p>
                       </div>
                       
                       <div className="flex gap-2">
-                        {order.tracking && (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            className="gap-2 hover:scale-105 transition-all duration-200 border-primary/20 hover:bg-primary/10"
-                            onClick={() => handleTrackOrder(order.id, order.tracking!)}
-                          >
-                            <Truck className="w-4 h-4" />
-                            Track
-                          </Button>
-                        )}
                         <Button 
                           variant="default" 
                           size="sm"
@@ -215,12 +179,12 @@ export const OrdersPage = () => {
                   </div>
 
                   {/* Enhanced Order Progress */}
-                  {order.status !== 'delivered' && (
+                  {order.status !== 'delivered' && order.status !== 'cancelled' && (
                     <div className="mt-6 pt-4 border-t border-border/50">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium text-muted-foreground">Order Progress</span>
                         <span className="text-xs text-muted-foreground">
-                          {order.status === 'processing' ? '25%' : order.status === 'shipped' ? '75%' : '100%'} Complete
+                          {getProgressStage(order.status) * 25}% Complete
                         </span>
                       </div>
                       <div className="relative">
@@ -231,41 +195,45 @@ export const OrdersPage = () => {
                           </div>
                           
                           <div className={`flex-1 h-0.5 mx-2 ${
-                            order.status !== 'processing' ? 'bg-primary' : 'bg-border'
+                            getProgressStage(order.status) >= 2 ? 'bg-primary' : 'bg-border'
                           }`} />
                           
                           <div className="flex flex-col items-center gap-1">
                             <div className={`w-4 h-4 rounded-full shadow-lg border-2 border-background ${
-                              order.status === 'processing' ? 'bg-amber-500' : order.status === 'shipped' || order.status === 'delivered' ? 'bg-primary' : 'bg-border'
+                              getProgressStage(order.status) === 2 ? 'bg-amber-500' : 
+                              getProgressStage(order.status) > 2 ? 'bg-primary' : 'bg-border'
                             }`} />
                             <span className={`text-xs font-medium ${
-                              order.status === 'processing' ? 'text-amber-500' : order.status === 'shipped' || order.status === 'delivered' ? 'text-primary' : 'text-muted-foreground'
+                              getProgressStage(order.status) === 2 ? 'text-amber-500' : 
+                              getProgressStage(order.status) > 2 ? 'text-primary' : 'text-muted-foreground'
                             }`}>Process</span>
                           </div>
                           
                           <div className={`flex-1 h-0.5 mx-2 ${
-                            order.status === 'shipped' || order.status === 'delivered' ? 'bg-primary' : 'bg-border'
+                            getProgressStage(order.status) >= 3 ? 'bg-primary' : 'bg-border'
                           }`} />
                           
                           <div className="flex flex-col items-center gap-1">
                             <div className={`w-4 h-4 rounded-full shadow-lg border-2 border-background ${
-                              order.status === 'shipped' ? 'bg-blue-500' : order.status === 'delivered' ? 'bg-primary' : 'bg-border'
+                              getProgressStage(order.status) === 3 ? 'bg-blue-500' : 
+                              getProgressStage(order.status) > 3 ? 'bg-primary' : 'bg-border'
                             }`} />
                             <span className={`text-xs font-medium ${
-                              order.status === 'shipped' ? 'text-blue-500' : order.status === 'delivered' ? 'text-primary' : 'text-muted-foreground'
+                              getProgressStage(order.status) === 3 ? 'text-blue-500' : 
+                              getProgressStage(order.status) > 3 ? 'text-primary' : 'text-muted-foreground'
                             }`}>Shipped</span>
                           </div>
                           
                           <div className={`flex-1 h-0.5 mx-2 ${
-                            order.status === 'delivered' ? 'bg-primary' : 'bg-border'
+                            getProgressStage(order.status) >= 4 ? 'bg-primary' : 'bg-border'
                           }`} />
                           
                           <div className="flex flex-col items-center gap-1">
                             <div className={`w-4 h-4 rounded-full shadow-lg border-2 border-background ${
-                              order.status === 'delivered' ? 'bg-primary' : 'bg-border'
+                              getProgressStage(order.status) >= 4 ? 'bg-primary' : 'bg-border'
                             }`} />
                             <span className={`text-xs font-medium ${
-                              order.status === 'delivered' ? 'text-primary' : 'text-muted-foreground'
+                              getProgressStage(order.status) >= 4 ? 'text-primary' : 'text-muted-foreground'
                             }`}>Delivered</span>
                           </div>
                         </div>
@@ -280,7 +248,7 @@ export const OrdersPage = () => {
         </div>
 
         {/* Enhanced Empty State */}
-        {mockOrders.length === 0 && (
+        {orders.length === 0 && !isLoading && (
           <Card className="border-0 shadow-xl bg-gradient-to-br from-card/50 to-card p-16 text-center">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 rounded-full blur-3xl" />

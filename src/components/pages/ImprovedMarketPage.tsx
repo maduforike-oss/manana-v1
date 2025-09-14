@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, Suspense } from 'react';
-import { Filter, Grid, List, SortAsc, ShoppingCart, Sparkles, TrendingUp, Package, Heart, Search, Plus } from 'lucide-react';
+import { Filter, Grid, List, SortAsc, ShoppingCart, Sparkles, TrendingUp, Package, Heart, Search, Plus, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
@@ -11,6 +11,7 @@ import { FiltersSheet } from '@/components/marketplace/FiltersSheet';
 import { ProductGridView } from '@/components/marketplace/ProductGridView';
 import { ProductListView } from '@/components/marketplace/ProductListView';
 import { EmptyState } from '@/components/marketplace/EmptyState';
+import { CreateListingModal } from '@/components/marketplace/CreateListingModal';
 import { useMarketQueryState } from '@/hooks/useMarketQueryState';
 import { useProducts } from '@/hooks/useProducts';
 import { useCartStore } from '@/store/useCartStore';
@@ -18,6 +19,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { useAppStore } from '@/store/useAppStore';
 
 export function ImprovedMarketPage() {
   // URL-synced state management
@@ -26,6 +28,7 @@ export function ImprovedMarketPage() {
   const [savedProducts, setSavedProducts] = useState<Set<string>>(new Set());
   const [loadingSaved, setLoadingSaved] = useState(false);
   const navigate = useNavigate();
+  const { setActiveTab } = useAppStore();
 
   const handleApplyFilters = (newFilters: any) => {
     setQuery({ filters: newFilters });
@@ -120,7 +123,7 @@ export function ImprovedMarketPage() {
       id: `${product.id}-${Date.now()}`,
       productId: product.id,
       name: product.name,
-      image: "/api/placeholder/300/400", // Placeholder
+      image: product.images?.[0]?.url || '/mockups/tshirt_front_light.png',
       price: product.base_price,
     });
     
@@ -175,7 +178,7 @@ export function ImprovedMarketPage() {
             variant="ghost"
             size="sm"
             className="relative rounded-full"
-            onClick={() => navigate('/cart')}
+            onClick={() => setActiveTab('orders')}
           >
             <ShoppingCart className="h-5 w-5" />
             {cart.count > 0 && (
@@ -191,15 +194,38 @@ export function ImprovedMarketPage() {
       </BrandHeader>
 
       <div className="container mx-auto px-4 py-6 max-w-7xl">
+        {/* Hero Banner - Promotional */}
+        <div className="relative mb-8 overflow-hidden rounded-2xl bg-gradient-to-r from-primary via-primary/90 to-secondary p-8 text-white shadow-xl">
+          <div className="absolute inset-0 bg-black/10" />
+          <div className="relative z-10 text-center space-y-4">
+            <div className="flex items-center justify-center gap-2">
+              <Sparkles className="h-6 w-6" />
+              <h2 className="text-xl sm:text-2xl font-bold">New Season Collection</h2>
+              <Sparkles className="h-6 w-6" />
+            </div>
+            <p className="text-white/90 text-sm sm:text-base max-w-md mx-auto">
+              Premium quality designs at unbeatable prices. Limited time offer!
+            </p>
+            <Button 
+              variant="secondary" 
+              size="sm"
+              className="bg-white text-primary hover:bg-white/90"
+              onClick={() => setQuery({ tab: 'new' })}
+            >
+              Shop New Arrivals
+            </Button>
+          </div>
+        </div>
+
         {/* Hero Section - Mobile Optimized */}
         <div className="text-center space-y-6 mb-8">
           <div className="space-y-3">
             <div className="flex items-center justify-center gap-2">
-              <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+              <Package className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
               <h1 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent">
                 Discover Amazing Designs
               </h1>
-              <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+              <Package className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
             </div>
             <p className="text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto">
               Explore thousands of unique designs from talented creators
@@ -445,13 +471,14 @@ export function ImprovedMarketPage() {
       />
 
       {/* Floating Action Button - Mobile */}
-      <Button
-        className="fixed bottom-20 right-4 w-14 h-14 rounded-full shadow-lg lg:hidden z-40"
-        size="sm"
-        onClick={() => navigate('/sell/new')}
-      >
-        <Plus className="h-6 w-6" />
-      </Button>
+      <CreateListingModal onSuccess={() => refetch()}>
+        <Button
+          className="fixed bottom-20 right-4 w-14 h-14 rounded-full shadow-lg lg:hidden z-40"
+          size="sm"
+        >
+          <Plus className="h-6 w-6" />
+        </Button>
+      </CreateListingModal>
     </div>
   );
 }

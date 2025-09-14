@@ -30,8 +30,8 @@ export function MarketProductCard({
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
 
-  // Get the first image or fallback
-  const imageUrl = product.images?.[0]?.url || '/api/placeholder/300/400';
+  // Get the first image or fallback to real product images
+  const imageUrl = product.images?.[0]?.url || '/mockups/tshirt_front_light.png';
   const imageAlt = product.images?.[0]?.alt_text || product.name;
 
   if (viewMode === 'list') {

@@ -1,7 +1,9 @@
 import React from 'react';
+import { ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Logo } from '@/components/brand/Logo';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { Button } from '@/components/ui/button';
 
 interface BrandHeaderProps {
   title: string;
@@ -9,6 +11,8 @@ interface BrandHeaderProps {
   children?: React.ReactNode;
   className?: string;
   showThemeToggle?: boolean;
+  showBackButton?: boolean;
+  onBack?: () => void;
 }
 
 export const BrandHeader = ({ 
@@ -16,7 +20,9 @@ export const BrandHeader = ({
   subtitle, 
   children, 
   className,
-  showThemeToggle = true 
+  showThemeToggle = true,
+  showBackButton = false,
+  onBack
 }: BrandHeaderProps) => {
   return (
     <header className={cn(
@@ -27,6 +33,17 @@ export const BrandHeader = ({
       <div className="container mx-auto px-6 py-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
+            {showBackButton && onBack && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onBack}
+                className="shrink-0 hover:bg-primary/10"
+                aria-label="Go back"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            )}
             <Logo size={40} showWordmark={false} className="shrink-0" />
             <div className="min-w-0">
               <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
