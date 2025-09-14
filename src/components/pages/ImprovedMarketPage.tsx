@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/useAppStore';
+import { SavedTabContent } from '@/components/marketplace/SavedTabContent';
 
 export function ImprovedMarketPage() {
   // URL-synced state management
@@ -409,24 +410,24 @@ export function ImprovedMarketPage() {
 
           {/* Content */}
           <div className="pt-4">
-            {!productsLoading && products.length === 0 ? (
+            {query.tab === 'saved' ? (
+              <SavedTabContent
+                query={query}
+                onSaveProduct={handleSaveProduct}
+                onAddToCart={handleAddToCart}
+                onShare={handleShare}
+                onQuickView={handleQuickView}
+              />
+            ) : !productsLoading && products.length === 0 ? (
               <EmptyState
                 type="search"
-                title={query.tab === 'saved' ? "No saved products" : "No products found"}
-                description={
-                  query.tab === 'saved' 
-                    ? "Start saving products you love to see them here"
-                    : "Try adjusting your search terms or filters"
-                }
+                title="No products found"
+                description="Try adjusting your search terms or filters"
                 onAction={() => {
-                  if (query.tab === 'saved') {
-                    setQuery({ tab: 'all' });
-                  } else {
-                    setQuery({ q: '' });
-                    resetFilters();
-                  }
+                  setQuery({ q: '' });
+                  resetFilters();
                 }}
-                actionLabel={query.tab === 'saved' ? "Browse products" : "Clear search"}
+                actionLabel="Clear search"
               />
             ) : (
               <>
