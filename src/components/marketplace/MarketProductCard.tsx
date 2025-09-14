@@ -147,7 +147,7 @@ export function MarketProductCard({
         {/* Image Container */}
         <div 
           className="relative aspect-[3/4] sm:aspect-[4/5] overflow-hidden cursor-pointer"
-          onClick={() => onQuickView(product)}
+          onClick={() => window.location.href = `/product/${product.slug || product.id}`}
         >
           {!imageLoaded && !imageError && (
             <Skeleton className="absolute inset-0" />
@@ -230,7 +230,7 @@ export function MarketProductCard({
             <div className="flex items-start justify-between">
               <h3 
                 className="font-semibold text-foreground group-hover:text-primary transition-colors duration-200 line-clamp-2 cursor-pointer text-xs sm:text-sm leading-tight"
-                onClick={() => onQuickView(product)}
+                onClick={() => window.location.href = `/product/${product.slug || product.id}`}
               >
                 {product.name}
               </h3>

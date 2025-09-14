@@ -8,7 +8,7 @@ interface ProductGridViewProps {
   products: ProductWithDetails[];
   isLoading: boolean;
   onSave: (id: string) => void;
-  onQuickView: (id: string) => void;
+  onQuickView: (product: ProductWithDetails) => void;
   onAddToCart: (product: ProductWithDetails) => void;
   onShare: (product: ProductWithDetails) => void;
   isSaved: (id: string) => boolean;
@@ -34,22 +34,18 @@ export function ProductGridView({
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
       {products.map((product) => (
-        <Link 
-          to={`/product/${product.slug || product.id}`} 
-          key={product.id} 
-          className="block group"
-        >
-          <MarketProductCard
-            product={product}
-            isSaved={isSaved(product.id)}
-            onSave={() => onSave(product.id)}
-            onQuickView={(product) => onQuickView(product.id)}
-            onAddToCart={(product) => onAddToCart(product)}
-            onShare={(product) => onShare(product)}
-          />
-        </Link>
+        <MarketProductCard
+          key={product.id}
+          product={product}
+          isSaved={isSaved(product.id)}
+          onSave={onSave}
+          onQuickView={onQuickView}
+          onAddToCart={onAddToCart}
+          onShare={onShare}
+          viewMode="grid"
+        />
       ))}
     </div>
   );

@@ -13,6 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { createProduct, checkSlugAvailability } from '@/lib/api/sell';
+import { listCategories } from '@/lib/api/products';
 import { cn } from '@/lib/utils';
 
 interface Variant {
@@ -31,21 +32,24 @@ interface ImageFile {
 
 const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 const COLORS = ['Black', 'White', 'Navy', 'Gray', 'Red', 'Blue', 'Green'];
-const CATEGORIES = [
-  { id: '1', name: 'T-Shirts' },
-  { id: '2', name: 'Hoodies' },
-  { id: '3', name: 'Accessories' },
-];
+// Categories will be loaded from database
+const [categories, setCategories] = useState<any[]>([]);
 
 export default function SellNew() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [categories, setCategories] = useState<any[]>([]);
   const [variants, setVariants] = useState<Variant[]>([
     { id: '1', size: 'M', color: 'Black', stock_quantity: 10 }
   ]);
   const [images, setImages] = useState<ImageFile[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [generatedSlug, setGeneratedSlug] = useState('');
+
+  // Load categories on mount
+  React.useEffect(() => {
+    listCategories().then(setCategories).catch(console.error);
+  }, []);
 
   const form = useForm({
     defaultValues: {
@@ -161,7 +165,7 @@ export default function SellNew() {
         description: "Your product has been successfully created",
       });
 
-      navigate(`/product/${product.slug}`);
+      navigate(`/product/${product.slug || product.id}`);
     } catch (error) {
       console.error('Error creating product:', error);
       toast({
@@ -293,7 +297,7 @@ export default function SellNew() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {CATEGORIES.map(category => (
+                          {categories.map(category => (
                             <SelectItem key={category.id} value={category.id}>
                               {category.name}
                             </SelectItem>
@@ -461,7 +465,13 @@ export default function SellNew() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate(-1)}
+              onClick={() => {
+                if (window.history.length > 1) {
+                  navigate(-1);
+                } else {
+                  navigate('/');
+                }
+              }}
               disabled={isSubmitting}
             >
               Cancel

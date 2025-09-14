@@ -158,12 +158,9 @@ export function ImprovedMarketPage() {
   const [quickViewProduct, setQuickViewProduct] = useState<any>(null);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
 
-  const handleQuickView = (productId: string) => {
-    const product = products.find(p => p.id === productId);
-    if (product) {
-      setQuickViewProduct(product);
-      setIsQuickViewOpen(true);
-    }
+  const handleQuickView = (product: any) => {
+    setQuickViewProduct(product);
+    setIsQuickViewOpen(true);
   };
 
   const products = productsData?.items || [];

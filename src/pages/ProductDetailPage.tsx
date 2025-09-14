@@ -100,7 +100,16 @@ export function ProductDetailPage() {
         <BrandHeader title="Product Not Found" />
         <div className="container mx-auto px-4 py-8 text-center">
           <p className="text-xl mb-6">Product not found.</p>
-          <Button onClick={() => navigate(-1)} className="min-h-[44px] min-w-[44px]">
+          <Button 
+            onClick={() => {
+              if (window.history.length > 1) {
+                navigate(-1);
+              } else {
+                navigate('/');
+              }
+            }} 
+            className="min-h-[44px] min-w-[44px]"
+          >
             <ChevronLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
@@ -115,7 +124,13 @@ export function ProductDetailPage() {
         <Button 
           variant="ghost" 
           size="sm" 
-          onClick={() => navigate(-1)} 
+          onClick={() => {
+            if (window.history.length > 1) {
+              navigate(-1);
+            } else {
+              navigate('/');
+            }
+          }} 
           className="min-h-[44px] min-w-[44px]"
         >
           <ChevronLeft className="h-4 w-4 mr-2" />

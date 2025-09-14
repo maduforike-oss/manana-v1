@@ -45,12 +45,10 @@ export const GarmentMockupPreview: React.FC<GarmentMockupPreviewProps> = ({ clas
 
   const handleExportMockup = () => {
     // TODO: Implement high-res mockup export
-    console.log('Export mockup:', { garmentType, garmentColor, design: doc });
   };
 
   const handleShareMockup = () => {
-    // TODO: Implement sharing functionality
-    console.log('Share mockup');
+    // TODO: Implement sharing functionality  
   };
 
   return (

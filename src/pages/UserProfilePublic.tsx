@@ -132,9 +132,7 @@ export default function UserProfilePublic() {
     ...(user.social_twitter ? [{ platform: 'Twitter', url: `https://twitter.com/${user.social_twitter}` }] : []),
   ];
 
-  const mockDesigns = [
-    { id: '1', name: 'Getting started...', thumbnail: '', garmentType: 'Create your first design', likes: 0, saves: 0 },
-  ];
+  // Real designs will be loaded from database in future updates
 
   // Check if we should show email and socials based on preferences
   const preferences = user.preferences as any || {};
@@ -264,7 +262,7 @@ export default function UserProfilePublic() {
         <TabsContent value="designs" className="mt-6">
           {(metrics?.total_designs || 0) > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {mockDesigns.map((design) => (
+              {[{ id: '1', name: 'Getting started...', garmentType: 'Create your first design', likes: 0, saves: 0 }].map((design) => (
                 <Card key={design.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
                   <div className="aspect-square bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
                     <div className="w-16 h-16 bg-gradient-to-r from-primary to-secondary rounded-lg opacity-50" />

@@ -13,7 +13,7 @@ interface ProductListViewProps {
   products: ProductWithDetails[];
   isLoading: boolean;
   onSave: (id: string) => void;
-  onQuickView: (id: string) => void;
+  onQuickView: (product: ProductWithDetails) => void;
   onAddToCart: (product: ProductWithDetails) => void;
   onShare: (product: ProductWithDetails) => void;
   isSaved: (id: string) => boolean;
@@ -41,21 +41,16 @@ export function ProductListView({
   return (
     <div className="space-y-4">
       {products.map((product) => (
-        <Link 
-          to={`/product/${product.slug || product.id}`} 
-          key={product.id} 
-          className="block group"
-        >
-          <MarketProductCard
-            product={product}
-            isSaved={isSaved(product.id)}
-            onSave={() => onSave(product.id)}
-            onQuickView={(product) => onQuickView(product.id)}
-            onAddToCart={(product) => onAddToCart(product)}
-            onShare={(product) => onShare(product)}
-            viewMode="list"
-          />
-        </Link>
+        <MarketProductCard
+          key={product.id}
+          product={product}
+          isSaved={isSaved(product.id)}
+          onSave={onSave}
+          onQuickView={onQuickView}
+          onAddToCart={onAddToCart}
+          onShare={onShare}
+          viewMode="list"
+        />
       ))}
     </div>
   );

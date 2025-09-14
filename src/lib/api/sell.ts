@@ -34,7 +34,7 @@ export async function createProduct(payload: CreateProductPayload) {
     .from('products')
     .select('id')
     .eq('slug', slug)
-    .single();
+    .maybeSingle();
 
   const finalSlug = existingProduct ? `${slug}-${Date.now()}` : slug;
 
@@ -239,6 +239,6 @@ export async function checkSlugAvailability(slug: string, excludeId?: string) {
     query = query.neq('id', excludeId);
   }
 
-  const { data } = await query.single();
+  const { data } = await query.maybeSingle();
   return !data; // Return true if available (no existing product found)
 }
