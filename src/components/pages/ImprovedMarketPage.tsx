@@ -328,6 +328,17 @@ export function ImprovedMarketPage() {
                     Filters
                   </Button>
                 </FiltersSheet>
+
+                {/* Desktop Create Listing Button */}
+                <Button
+                  onClick={() => navigate('/sell/new')}
+                  variant="default"
+                  size="sm"
+                  className="rounded-xl"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Listing
+                </Button>
                 
                 {(query.q || hasActiveFilters()) && (
                   <Button

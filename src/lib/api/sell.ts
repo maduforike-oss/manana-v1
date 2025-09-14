@@ -48,6 +48,7 @@ export async function createProduct(payload: CreateProductPayload) {
       status: payload.status,
       category_id: payload.category_id,
       slug: finalSlug,
+      owner_id: user.user.id, // Add owner_id for RLS
     })
     .select()
     .single();
