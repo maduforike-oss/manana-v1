@@ -32,8 +32,6 @@ interface ImageFile {
 
 const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 const COLORS = ['Black', 'White', 'Navy', 'Gray', 'Red', 'Blue', 'Green'];
-// Categories will be loaded from database
-const [categories, setCategories] = useState<any[]>([]);
 
 export default function SellNew() {
   const navigate = useNavigate();
