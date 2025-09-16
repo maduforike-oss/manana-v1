@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      assets: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          public_url: string
+          storage_path: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          public_url: string
+          storage_path: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          public_url?: string
+          storage_path?: string
+          type?: string
+        }
+        Relationships: []
+      }
       cart_items: {
         Row: {
           added_at: string | null
@@ -192,6 +219,44 @@ export type Database = {
         }
         Relationships: []
       }
+      garment_colors: {
+        Row: {
+          code: string
+          created_at: string
+          garment_id: string
+          hex: string
+          id: string
+          is_default: boolean
+          name: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          garment_id: string
+          hex: string
+          id?: string
+          is_default?: boolean
+          name: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          garment_id?: string
+          hex?: string
+          id?: string
+          is_default?: boolean
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "garment_colors_garment_id_fkey"
+            columns: ["garment_id"]
+            isOneToOne: false
+            referencedRelation: "garments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       garment_template_images: {
         Row: {
           category_id: string
@@ -247,6 +312,68 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      garment_views: {
+        Row: {
+          aspect_ratio: number | null
+          code: string
+          created_at: string
+          garment_id: string
+          id: string
+          name: string
+          order_index: number
+        }
+        Insert: {
+          aspect_ratio?: number | null
+          code: string
+          created_at?: string
+          garment_id: string
+          id?: string
+          name: string
+          order_index?: number
+        }
+        Update: {
+          aspect_ratio?: number | null
+          code?: string
+          created_at?: string
+          garment_id?: string
+          id?: string
+          name?: string
+          order_index?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "garment_views_garment_id_fkey"
+            columns: ["garment_id"]
+            isOneToOne: false
+            referencedRelation: "garments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      garments: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
       }
       inventory_movements: {
         Row: {
@@ -991,6 +1118,109 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      template_images: {
+        Row: {
+          active: boolean
+          color_id: string
+          created_at: string
+          dpi: number | null
+          garment_id: string
+          height_px: number | null
+          id: string
+          mask_path: string | null
+          print_bbox: Json | null
+          public_url: string
+          storage_path: string
+          version: number
+          view_id: string
+          width_px: number | null
+        }
+        Insert: {
+          active?: boolean
+          color_id: string
+          created_at?: string
+          dpi?: number | null
+          garment_id: string
+          height_px?: number | null
+          id?: string
+          mask_path?: string | null
+          print_bbox?: Json | null
+          public_url: string
+          storage_path: string
+          version?: number
+          view_id: string
+          width_px?: number | null
+        }
+        Update: {
+          active?: boolean
+          color_id?: string
+          created_at?: string
+          dpi?: number | null
+          garment_id?: string
+          height_px?: number | null
+          id?: string
+          mask_path?: string | null
+          print_bbox?: Json | null
+          public_url?: string
+          storage_path?: string
+          version?: number
+          view_id?: string
+          width_px?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "template_images_color_id_fkey"
+            columns: ["color_id"]
+            isOneToOne: false
+            referencedRelation: "garment_colors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "template_images_garment_id_fkey"
+            columns: ["garment_id"]
+            isOneToOne: false
+            referencedRelation: "garments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "template_images_view_id_fkey"
+            columns: ["view_id"]
+            isOneToOne: false
+            referencedRelation: "garment_views"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      uploader_jobs: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          kind: string
+          payload: Json
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          kind: string
+          payload: Json
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          kind?: string
+          payload?: Json
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       wishlists: {
         Row: {
