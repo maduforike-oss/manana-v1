@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { ProductWithDetails } from '@/lib/api/products';
 import { WishlistButton } from './WishlistButton';
 import { getPrimaryImageUrl } from '@/lib/market/images';
+import { useToggleFavorite } from '@/hooks/useProducts';
 
 interface MarketProductCardProps {
   product: ProductWithDetails;
@@ -31,10 +32,20 @@ export function MarketProductCard({
 }: MarketProductCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const toggleFavorite = useToggleFavorite();
 
   // Get the primary image URL using utility (no mock fallbacks)
   const imageUrl = getPrimaryImageUrl(product);
   const imageAlt = product.images?.[0]?.alt_text || product.name;
+
+  const handleFavoriteToggle = async () => {
+    try {
+      await toggleFavorite.mutateAsync(product.id);
+      onSave(product.id);
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
+    }
+  };
 
   if (viewMode === 'list') {
     return (
@@ -120,7 +131,7 @@ export function MarketProductCard({
               {/* Actions */}
               <div className="flex flex-col gap-1 sm:gap-2 ml-2 sm:ml-4">
                 <Button
-                  onClick={() => onSave(product.id)}
+                  onClick={handleFavoriteToggle}
                   variant="outline"
                   size="sm"
                   aria-label={isSaved ? 'Remove from wishlist' : 'Save to wishlist'}
