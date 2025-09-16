@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useStudioStore } from '@/lib/studio/store';
 import { getGarmentImage, getAllGarmentImages } from '@/lib/studio/imageMapping';
 
@@ -32,9 +32,26 @@ export const CanvasImageLoader: React.FC<CanvasImageLoaderProps> = ({
   fallbackSrc,
   children,
 }) => {
-  const imageSrc = useMemo(() => {
-    const resolvedImage = getGarmentImage(garmentId, orientation, color);
-    return resolvedImage || fallbackSrc;
+  const [imageSrc, setImageSrc] = useState<string | null>(fallbackSrc || null);
+  
+  useEffect(() => {
+    let mounted = true;
+    const loadImage = async () => {
+      try {
+        const resolvedImage = await getGarmentImage(garmentId, orientation, color);
+        if (mounted) {
+          setImageSrc(resolvedImage || fallbackSrc || null);
+        }
+      } catch (error) {
+        console.warn('Failed to load garment image:', error);
+        if (mounted) {
+          setImageSrc(fallbackSrc || null);
+        }
+      }
+    };
+    
+    loadImage();
+    return () => { mounted = false; };
   }, [garmentId, orientation, color, fallbackSrc]);
 
   if (!imageSrc) {

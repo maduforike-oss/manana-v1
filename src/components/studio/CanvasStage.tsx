@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { Stage, Layer, Rect, Circle, Text, Image } from 'react-konva';
 import { useStudioStore } from '../../lib/studio/store';
 import { getGarmentById, getColorByGarmentAndId } from '@/lib/studio/garments';
+import { getTemplate } from '@/lib/studio/supabaseTemplates';
 import { Canvas3D } from './Canvas3D';
 import { Canvas3DControls } from './Canvas3DControls';
 
@@ -12,20 +13,51 @@ export const CanvasStage = () => {
   const [garmentImage, setGarmentImage] = useState<HTMLImageElement | null>(null);
   const { doc, zoom, panOffset, clearSelection, selectNode, activeTool, is3DMode } = useStudioStore();
 
-  // Load garment image
+  // Load garment image with Supabase template priority
   useEffect(() => {
-    const garmentType = doc.canvas.garmentType || 't-shirt';
-    const garmentColor = doc.canvas.garmentColor || 'white';
+    const loadGarmentImage = async () => {
+      const garmentType = doc.canvas.garmentType || 't-shirt';
+      const garmentColor = doc.canvas.garmentColor || 'white';
+      
+      try {
+        // Try Supabase template first
+        const template = await getTemplate(garmentType, 'front', garmentColor);
+        if (template) {
+          const img = new window.Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => {
+            console.log('Loaded Supabase template:', template.url);
+            setGarmentImage(img);
+          };
+          img.onerror = () => {
+            console.warn('Failed to load Supabase template, falling back to static');
+            loadStaticGarment(garmentType);
+          };
+          img.src = template.url;
+          return;
+        }
+      } catch (error) {
+        console.warn('Error loading Supabase template:', error);
+      }
+      
+      // Fallback to static garment
+      loadStaticGarment(garmentType);
+    };
     
-    const garment = getGarmentById(garmentType);
-    if (garment) {
-      const img = new window.Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        setGarmentImage(img);
-      };
-      img.src = garment.images.front;
-    }
+    const loadStaticGarment = (garmentType: string) => {
+      const garment = getGarmentById(garmentType);
+      if (garment) {
+        const img = new window.Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          console.log('Loaded static garment:', garment.images.front);
+          setGarmentImage(img);
+        };
+        img.src = garment.images.front;
+      }
+    };
+    
+    loadGarmentImage();
   }, [doc.canvas.garmentType, doc.canvas.garmentColor]);
 
   useEffect(() => {

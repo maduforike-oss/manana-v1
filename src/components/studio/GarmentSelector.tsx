@@ -7,7 +7,9 @@ import { cn } from '@/lib/utils';
 import { GARMENT_TYPES, getGarmentsByCategory, getColorByGarmentAndId } from '@/lib/studio/garments';
 import { GarmentPreview } from './GarmentPreview';
 import { SmartImageUploadDialog } from './SmartImageUploadDialog';
-import { Sparkles, Filter, Upload, Brain } from 'lucide-react';
+import { TemplateSelector } from './TemplateSelector';
+import { Sparkles, Filter, Upload, Brain, Database } from 'lucide-react';
+import { SupabaseTemplate } from '@/lib/studio/supabaseTemplates';
 
 const CATEGORIES = ['All', 'Basics', 'Outerwear', 'Accessories', 'Professional', 'Athletic', "Women's", 'Baby & Kids', 'Specialty'];
 
@@ -52,6 +54,20 @@ export const GarmentSelector = () => {
   const handleUploadComplete = (results: { original: string; suggested: string; recognition: any }[]) => {
     console.log('Smart upload completed:', results);
     // TODO: Refresh garment list to show new custom images
+  };
+
+  const handleTemplateSelect = (template: SupabaseTemplate) => {
+    console.log('Template selected:', template);
+    // Create design and navigate to studio with template
+    const success = createDesign(template.garmentType);
+    if (!success) {
+      alert('Design limit reached! Upgrade to create more designs.');
+      return;
+    }
+    
+    // Initialize studio with template
+    initializeFromGarment(template.garmentType, template.color);
+    setActiveTab('studio');
   };
 
   return (
@@ -122,6 +138,23 @@ export const GarmentSelector = () => {
               </Button>
             ))}
           </div>
+        </div>
+
+        {/* Template Selector */}
+        <div className="mb-8">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-semibold mb-2 flex items-center justify-center gap-2">
+              <Database className="w-6 h-6 text-primary" />
+              Supabase Templates
+            </h2>
+            <p className="text-muted-foreground">
+              High-quality white garment templates from your Supabase storage
+            </p>
+          </div>
+          <TemplateSelector 
+            onSelect={handleTemplateSelect}
+            className="max-w-4xl mx-auto"
+          />
         </div>
 
         {/* Professional Garment Grid */}

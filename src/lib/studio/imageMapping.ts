@@ -1,6 +1,10 @@
+import { getTemplate } from './supabaseTemplates';
+
 export type Orientation = "front" | "back" | "left" | "right";
 
 const runtimeOverride = new Map<string,string>();
+const supabaseTemplateCache = new Map<string,string>();
+
 export function setRuntimeGarmentImage(garmentId: string, o: Orientation, url: string) {
   runtimeOverride.set(`${garmentId}:${o}`, url);
 }
@@ -14,11 +18,38 @@ const normalize = (s: string) => aliases[s] ?? s;
 const path = (folder: string, id: string, o: Orientation, ext: string = "png") =>
   `/assets/${folder}/${id}-${o}.${ext}`;
 
-export function getCandidateUrls(garmentId: string, o: Orientation = "front", color: string = "white") {
+// Map orientations to template views
+const orientationToView = (o: Orientation) => {
+  switch (o) {
+    case 'front': return 'front';
+    case 'back': return 'back';
+    case 'left':
+    case 'right': return 'side';
+    default: return 'front';
+  }
+};
+
+export async function getCandidateUrls(garmentId: string, o: Orientation = "front", color: string = "white") {
   const id = normalize(garmentId);
   const rt = runtimeOverride.get(`${id}:${o}`);
+  
+  // Try to get Supabase template
+  let supabaseUrl = supabaseTemplateCache.get(`${id}:${o}:${color}`);
+  if (!supabaseUrl) {
+    try {
+      const template = await getTemplate(id, orientationToView(o) as any, color);
+      if (template) {
+        supabaseUrl = template.url;
+        supabaseTemplateCache.set(`${id}:${o}:${color}`, supabaseUrl);
+      }
+    } catch (error) {
+      console.warn('Failed to fetch Supabase template:', error);
+    }
+  }
+  
   const list = [
     rt,                                // runtime override beats everything
+    supabaseUrl,                       // Supabase templates (highest priority)
     `/catalog/${id}/${color}/${o}.png`, // new catalog structure
     path("custom", id, o),
     path("garments", id, o),
@@ -46,8 +77,8 @@ export function clearAllRuntimeGarmentImages() {
 }
 
 // Legacy compatibility exports
-export function getGarmentImage(garmentId: string, orientation: Orientation = "front", color: string = "white"): string | null {
-  const urls = getCandidateUrls(garmentId, orientation, color);
+export async function getGarmentImage(garmentId: string, orientation: Orientation = "front", color: string = "white"): Promise<string | null> {
+  const urls = await getCandidateUrls(garmentId, orientation, color);
   return urls[0] || null;
 }
 
