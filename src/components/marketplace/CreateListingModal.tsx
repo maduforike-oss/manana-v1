@@ -87,15 +87,7 @@ export function CreateListingModal({ children, onSuccess }: CreateListingModalPr
           stock_quantity: 100,
         });
 
-      // Create a default image
-      await supabase
-        .from('product_images')
-        .insert({
-          product_id: data.id,
-          url: '/mockups/tshirt_front_light.png',
-          alt_text: formData.name,
-          display_order: 0,
-        });
+      // Note: No default image created - let the UI handle missing images gracefully
 
       toast({
         title: "Listing created successfully!",

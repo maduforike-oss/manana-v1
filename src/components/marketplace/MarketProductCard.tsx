@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { ProductWithDetails } from '@/lib/api/products';
 import { WishlistButton } from './WishlistButton';
+import { getPrimaryImageUrl } from '@/lib/market/images';
 
 interface MarketProductCardProps {
   product: ProductWithDetails;
@@ -31,8 +32,8 @@ export function MarketProductCard({
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
 
-  // Get the first image URL from product data
-  const imageUrl = product.images?.[0]?.url;
+  // Get the primary image URL using utility (no mock fallbacks)
+  const imageUrl = getPrimaryImageUrl(product);
   const imageAlt = product.images?.[0]?.alt_text || product.name;
 
   if (viewMode === 'list') {
@@ -42,38 +43,29 @@ export function MarketProductCard({
           <div className="flex h-28 sm:h-32 md:h-36">
             {/* Image */}
             <div className="relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 flex-shrink-0">
-              {imageUrl ? (
+              {imageUrl && !imageError ? (
                 <>
-                  {!imageLoaded && !imageError && (
+                  {!imageLoaded && (
                     <Skeleton className="absolute inset-0 rounded-l-lg" />
                   )}
-                  {!imageError ? (
-                    <img
-                      src={imageUrl}
-                      alt={imageAlt}
-                      className={cn(
-                        "w-full h-full object-cover rounded-l-lg transition-opacity duration-300",
-                        imageLoaded ? "opacity-100" : "opacity-0"
-                      )}
-                      onLoad={() => setImageLoaded(true)}
-                      onError={() => setImageError(true)}
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div 
-                      className="w-full h-full bg-muted rounded-l-lg flex items-center justify-center"
-                      aria-label={product.name}
-                    >
-                      <span className="text-xs text-muted-foreground text-center p-2">{product.name}</span>
-                    </div>
-                  )}
+                  <img
+                    src={imageUrl}
+                    alt={imageAlt}
+                    className={cn(
+                      "w-full h-full object-cover rounded-l-lg transition-opacity duration-300",
+                      imageLoaded ? "opacity-100" : "opacity-0"
+                    )}
+                    onLoad={() => setImageLoaded(true)}
+                    onError={() => setImageError(true)}
+                    loading="lazy"
+                  />
                 </>
               ) : (
                 <div 
                   className="w-full h-full bg-muted rounded-l-lg flex items-center justify-center"
-                  aria-label={product.name}
+                  aria-label={`${product.name} image unavailable`}
                 >
-                  <span className="text-xs text-muted-foreground text-center p-2">{product.name}</span>
+                  <span className="text-xs text-muted-foreground text-center p-2">Image unavailable</span>
                 </div>
               )}
               
@@ -170,38 +162,29 @@ export function MarketProductCard({
           className="relative aspect-[3/4] sm:aspect-[4/5] overflow-hidden cursor-pointer"
           onClick={() => window.location.href = `/product/${product.slug || product.id}`}
         >
-          {imageUrl ? (
+          {imageUrl && !imageError ? (
             <>
-              {!imageLoaded && !imageError && (
+              {!imageLoaded && (
                 <Skeleton className="absolute inset-0" />
               )}
-              {!imageError ? (
-                <img
-                  src={imageUrl}
-                  alt={imageAlt}
-                  loading="lazy"
-                  className={cn(
-                    "w-full h-full object-cover transition-all duration-300 group-hover:scale-105",
-                    imageLoaded ? "opacity-100" : "opacity-0"
-                  )}
-                  onLoad={() => setImageLoaded(true)}
-                  onError={() => setImageError(true)}
-                />
-              ) : (
-                <div 
-                  className="w-full h-full bg-muted flex items-center justify-center"
-                  aria-label={product.name}
-                >
-                  <span className="text-sm text-muted-foreground text-center p-4">{product.name}</span>
-                </div>
-              )}
+              <img
+                src={imageUrl}
+                alt={imageAlt}
+                loading="lazy"
+                className={cn(
+                  "w-full h-full object-cover transition-all duration-300 group-hover:scale-105",
+                  imageLoaded ? "opacity-100" : "opacity-0"
+                )}
+                onLoad={() => setImageLoaded(true)}
+                onError={() => setImageError(true)}
+              />
             </>
           ) : (
             <div 
               className="w-full h-full bg-muted flex items-center justify-center"
-              aria-label={product.name}
+              aria-label={`${product.name} image unavailable`}
             >
-              <span className="text-sm text-muted-foreground text-center p-4">{product.name}</span>
+              <span className="text-sm text-muted-foreground text-center p-4">Image unavailable</span>
             </div>
           )}
           
