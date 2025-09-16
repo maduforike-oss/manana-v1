@@ -177,6 +177,32 @@ export type Database = {
           },
         ]
       }
+      favorites: {
+        Row: {
+          created_at: string
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          product_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       follows: {
         Row: {
           created_at: string
@@ -1466,9 +1492,17 @@ export type Database = {
           followee_id: string
         }[]
       }
+      mark_product_view: {
+        Args: { pid: string }
+        Returns: undefined
+      }
       set_my_profile: {
         Args: { patch: Json }
         Returns: undefined
+      }
+      toggle_favorite: {
+        Args: { pid: string }
+        Returns: boolean
       }
       toggle_post_like: {
         Args: { post_id_param: string }
