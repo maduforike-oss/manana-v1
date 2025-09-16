@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { listProducts, getProduct, searchProducts, listCategories } from '@/lib/api/products';
+import { getTrendingProducts } from '@/lib/products';
 import { supabase } from '@/integrations/supabase/client';
 import { MarketQueryState } from './useMarketQueryState';
 
@@ -50,6 +51,25 @@ export function useProducts(queryState?: MarketQueryState) {
       };
 
       // Handle special tabs
+      if (tab === 'trending') {
+        const trendingProducts = await getTrendingProducts(24);
+        return { items: trendingProducts, total: trendingProducts.length };
+      }
+
+      if (tab === 'new') {
+        const items = await listProducts({
+          limit: 24,
+          offset: (queryState.page - 1) * 24,
+        });
+        
+        // Sort by created_at desc to show newest first
+        const sortedItems = items.sort((a, b) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+        
+        return { items: sortedItems, total: sortedItems.length };
+      }
+
       if (tab === 'saved') {
         // For saved items, we need to join with wishlists
         const { data: user } = await supabase.auth.getUser();
