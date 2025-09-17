@@ -189,9 +189,6 @@ export function EnhancedCreateListingModal({ isOpen, onClose, onSuccess }: Enhan
         sku: `${product.id}-${variant.size.toLowerCase()}-${variant.color.toLowerCase()}`,
         price: parseFloat(variant.price || formData.base_price),
         stock_quantity: parseInt(variant.stock),
-        measurements: variant.measurements && Object.keys(variant.measurements).length > 0 
-          ? variant.measurements 
-          : null,
       }));
 
       const { error: variantsError } = await supabase
@@ -265,14 +262,14 @@ export function EnhancedCreateListingModal({ isOpen, onClose, onSuccess }: Enhan
       {/* Modal Content */}
       <div className="relative bg-card/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-border/50 w-full max-w-5xl max-h-[95vh] mx-4 overflow-hidden">
         {/* Header */}
-        <div className="px-8 py-6 border-b border-border/30 bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5">
+        <div className="px-8 py-6 border-b border-border/20 bg-card">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-gradient-to-br from-primary/20 to-accent/20 rounded-2xl">
+              <div className="p-3 bg-primary/10 rounded-xl">
                 <Plus className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <h2 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                <h2 className="text-xl font-bold text-foreground">
                   Create New Listing
                 </h2>
                 <p className="text-sm text-muted-foreground mt-1">
@@ -304,13 +301,13 @@ export function EnhancedCreateListingModal({ isOpen, onClose, onSuccess }: Enhan
             {STEPS.map((step, index) => {
               const Icon = step.icon;
               return (
-                <div 
+                 <div 
                   key={step.key} 
                   className={cn(
-                    "flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300",
+                    "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
                     index <= currentStepIndex 
-                      ? "bg-primary/10 text-primary border border-primary/20" 
-                      : "bg-muted/50 text-muted-foreground border border-transparent"
+                      ? "bg-primary/10 text-primary" 
+                      : "bg-muted/30 text-muted-foreground"
                   )}
                 >
                   <Icon className="h-4 w-4" />
