@@ -1,19 +1,21 @@
 import React, { useState } from 'react';
-import { Plus, Upload, X, ArrowLeft, ArrowRight, ChevronRight, Check } from 'lucide-react';
+import { Plus, X, Check, ChevronRight, ArrowLeft, Package, Palette, Eye, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { useCategories } from '@/hooks/useProducts';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 import { GarmentTemplateGallery } from './GarmentTemplateGallery';
 import type { SupabaseTemplate } from '@/lib/studio/supabaseTemplates';
+
+interface SelectedTemplate extends SupabaseTemplate {
+  selected: boolean;
+}
 
 interface EnhancedCreateListingModalProps {
   isOpen: boolean;
@@ -21,39 +23,45 @@ interface EnhancedCreateListingModalProps {
   onSuccess?: () => void;
 }
 
-interface SelectedTemplate extends SupabaseTemplate {
-  selected: boolean;
-}
-
 type WizardStep = 'basic' | 'templates' | 'variants' | 'review';
 
-const STEPS: { key: WizardStep; label: string; description: string }[] = [
-  { key: 'basic', label: 'Basic Info', description: 'Product details' },
-  { key: 'templates', label: 'Templates', description: 'Select garment images' },
-  { key: 'variants', label: 'Variants', description: 'Sizes and colors' },
-  { key: 'review', label: 'Review', description: 'Finalize listing' },
+const STEPS = [
+  { key: 'basic' as const, label: 'Basic Info', description: 'Product name, description, and base price', icon: Package },
+  { key: 'templates' as const, label: 'Templates', description: 'Select garment templates from our gallery', icon: Palette },
+  { key: 'variants' as const, label: 'Variants', description: 'Configure sizes, colors, and inventory', icon: Sparkles },
+  { key: 'review' as const, label: 'Review', description: 'Review and publish your listing', icon: Eye },
 ];
+
+interface EnhancedVariant {
+  size: string;
+  color: string;
+  price: string;
+  stock: string;
+  measurements?: {
+    chest?: string;
+    length?: string;
+    sleeve?: string;
+  };
+}
 
 export function EnhancedCreateListingModal({ isOpen, onClose, onSuccess }: EnhancedCreateListingModalProps) {
   const [currentStep, setCurrentStep] = useState<WizardStep>('basic');
   const [loading, setLoading] = useState(false);
   const [selectedTemplates, setSelectedTemplates] = useState<SelectedTemplate[]>([]);
-  
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     base_price: '',
     category_id: '',
-    status: 'active' as const,
+    status: 'active' as 'active' | 'draft',
     variants: [
-      { size: 'S', color: 'White', price: '', stock: '10' },
-      { size: 'M', color: 'White', price: '', stock: '10' },
-      { size: 'L', color: 'White', price: '', stock: '10' },
-    ]
+      { size: 'S', color: 'White', price: '', stock: '10', measurements: {} },
+      { size: 'M', color: 'White', price: '', stock: '10', measurements: {} },
+      { size: 'L', color: 'White', price: '', stock: '10', measurements: {} },
+    ] as EnhancedVariant[]
   });
 
   const { toast } = useToast();
-  const { data: categories = [] } = useCategories();
 
   const currentStepIndex = STEPS.findIndex(step => step.key === currentStep);
   const progress = ((currentStepIndex + 1) / STEPS.length) * 100;
@@ -75,7 +83,8 @@ export function EnhancedCreateListingModal({ isOpen, onClose, onSuccess }: Enhan
       case 'templates':
         return selectedTemplates.length > 0;
       case 'variants':
-        return formData.variants.every(v => v.price && v.stock);
+        // Allow variants without individual prices (will default to base_price)
+        return formData.variants.every(v => v.stock && parseInt(v.stock) >= 0);
       case 'review':
         return true;
       default:
@@ -97,6 +106,41 @@ export function EnhancedCreateListingModal({ isOpen, onClose, onSuccess }: Enhan
     if (prevIndex >= 0) {
       setCurrentStep(STEPS[prevIndex].key);
     }
+  };
+
+  const addVariant = () => {
+    setFormData(prev => ({
+      ...prev,
+      variants: [...prev.variants, { size: '', color: '', price: '', stock: '10', measurements: {} }]
+    }));
+  };
+
+  const removeVariant = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      variants: prev.variants.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateVariant = (index: number, field: keyof EnhancedVariant, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      variants: prev.variants.map((variant, i) => 
+        i === index ? { ...variant, [field]: value } : variant
+      )
+    }));
+  };
+
+  const updateVariantMeasurement = (index: number, measurement: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      variants: prev.variants.map((variant, i) => 
+        i === index ? { 
+          ...variant, 
+          measurements: { ...variant.measurements, [measurement]: value }
+        } : variant
+      )
+    }));
   };
 
   const handleSubmit = async () => {
@@ -137,7 +181,7 @@ export function EnhancedCreateListingModal({ isOpen, onClose, onSuccess }: Enhan
 
       if (productError) throw productError;
 
-      // Create variants
+      // Create variants with proper defaults
       const variantInserts = formData.variants.map(variant => ({
         product_id: product.id,
         size: variant.size,
@@ -145,6 +189,9 @@ export function EnhancedCreateListingModal({ isOpen, onClose, onSuccess }: Enhan
         sku: `${product.id}-${variant.size.toLowerCase()}-${variant.color.toLowerCase()}`,
         price: parseFloat(variant.price || formData.base_price),
         stock_quantity: parseInt(variant.stock),
+        measurements: variant.measurements && Object.keys(variant.measurements).length > 0 
+          ? variant.measurements 
+          : null,
       }));
 
       const { error: variantsError } = await supabase
@@ -182,11 +229,11 @@ export function EnhancedCreateListingModal({ isOpen, onClose, onSuccess }: Enhan
         description: '',
         base_price: '',
         category_id: '',
-        status: 'active',
+        status: 'active' as 'active' | 'draft',
         variants: [
-          { size: 'S', color: 'White', price: '', stock: '10' },
-          { size: 'M', color: 'White', price: '', stock: '10' },
-          { size: 'L', color: 'White', price: '', stock: '10' },
+          { size: 'S', color: 'White', price: '', stock: '10', measurements: {} },
+          { size: 'M', color: 'White', price: '', stock: '10', measurements: {} },
+          { size: 'L', color: 'White', price: '', stock: '10', measurements: {} },
         ]
       });
       setSelectedTemplates([]);
@@ -211,22 +258,24 @@ export function EnhancedCreateListingModal({ isOpen, onClose, onSuccess }: Enhan
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-background/80 backdrop-blur-xl"
         onClick={onClose}
       />
       
       {/* Modal Content */}
-      <div className="relative bg-background rounded-2xl shadow-2xl border border-border/50 w-full max-w-4xl max-h-[90vh] mx-4 overflow-hidden">
+      <div className="relative bg-card/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-border/50 w-full max-w-5xl max-h-[95vh] mx-4 overflow-hidden">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-border/30 bg-gradient-to-r from-background to-muted/20">
+        <div className="px-8 py-6 border-b border-border/30 bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Plus className="h-5 w-5 text-primary" />
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-primary/20 to-accent/20 rounded-2xl">
+                <Plus className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">Create New Listing</h2>
-                <p className="text-sm text-muted-foreground">
+                <h2 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  Create New Listing
+                </h2>
+                <p className="text-sm text-muted-foreground mt-1">
                   {STEPS[currentStepIndex].description}
                 </p>
               </div>
@@ -235,104 +284,99 @@ export function EnhancedCreateListingModal({ isOpen, onClose, onSuccess }: Enhan
               variant="ghost"
               size="sm"
               onClick={onClose}
-              className="rounded-full"
+              className="rounded-full h-10 w-10 p-0"
             >
-              <X className="h-4 w-4" />
+              <X className="h-5 w-5" />
             </Button>
           </div>
 
           {/* Progress */}
-          <div className="mt-4 space-y-2">
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>Step {currentStepIndex + 1} of {STEPS.length}</span>
-              <span>{Math.round(progress)}% complete</span>
+          <div className="mt-6 space-y-3">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Step {currentStepIndex + 1} of {STEPS.length}</span>
+              <span className="font-medium text-primary">{Math.round(progress)}% complete</span>
             </div>
-            <Progress value={progress} className="h-2" />
+            <Progress value={progress} className="h-2 bg-muted/50" />
           </div>
 
           {/* Step Indicators */}
-          <div className="flex items-center gap-2 mt-3">
-            {STEPS.map((step, index) => (
-              <div key={step.key} className="flex items-center">
-                <div className={cn(
-                  "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-colors",
-                  index <= currentStepIndex 
-                    ? "bg-primary text-primary-foreground" 
-                    : "bg-muted text-muted-foreground"
-                )}>
-                  {index < currentStepIndex && <Check className="h-3 w-3" />}
-                  {step.label}
+          <div className="flex items-center justify-between mt-6 gap-2">
+            {STEPS.map((step, index) => {
+              const Icon = step.icon;
+              return (
+                <div 
+                  key={step.key} 
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300",
+                    index <= currentStepIndex 
+                      ? "bg-primary/10 text-primary border border-primary/20" 
+                      : "bg-muted/50 text-muted-foreground border border-transparent"
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span className="hidden sm:inline">{step.label}</span>
+                  {index < currentStepIndex && <Check className="h-3 w-3 ml-1" />}
                 </div>
-                {index < STEPS.length - 1 && (
-                  <ChevronRight className="h-3 w-3 text-muted-foreground mx-1" />
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto max-h-[60vh]">
-          <div className="p-6">
+        <div className="flex-1 overflow-y-auto max-h-[55vh]">
+          <div className="p-8">
             {/* Basic Info Step */}
             {currentStep === 'basic' && (
-              <div className="space-y-6">
-                <div className="grid gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="name">Product Name *</Label>
+              <div className="space-y-8">
+                <div className="grid gap-6">
+                  <div className="grid gap-3">
+                    <Label htmlFor="name" className="text-base font-medium">Product Name *</Label>
                     <Input
                       id="name"
                       value={formData.name}
                       onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder="e.g., Vintage Band T-Shirt"
-                      className="text-base"
+                      placeholder="e.g., Premium Cotton T-Shirt"
+                      className="text-base h-12"
                     />
                   </div>
 
-                  <div className="grid gap-2">
-                    <Label htmlFor="description">Description *</Label>
+                  <div className="grid gap-3">
+                    <Label htmlFor="description" className="text-base font-medium">Description *</Label>
                     <Textarea
                       id="description"
                       value={formData.description}
                       onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                      placeholder="Describe your product in detail..."
+                      placeholder="Describe your product's features, materials, and unique qualities..."
                       rows={4}
-                      className="text-base"
+                      className="text-base resize-none"
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="price">Base Price ($) *</Label>
+                  <div className="grid sm:grid-cols-2 gap-6">
+                    <div className="grid gap-3">
+                      <Label htmlFor="base_price" className="text-base font-medium">Base Price * ($)</Label>
                       <Input
-                        id="price"
+                        id="base_price"
                         type="number"
                         step="0.01"
-                        min="0"
                         value={formData.base_price}
                         onChange={(e) => setFormData(prev => ({ ...prev, base_price: e.target.value }))}
-                        placeholder="0.00"
-                        className="text-base"
+                        placeholder="29.99"
+                        className="text-base h-12"
                       />
                     </div>
 
-                    <div className="grid gap-2">
-                      <Label htmlFor="category">Category</Label>
-                      <Select 
-                        value={formData.category_id} 
-                        onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
+                    <div className="grid gap-3">
+                      <Label htmlFor="status" className="text-base font-medium">Status</Label>
+                      <select
+                        id="status"
+                        value={formData.status}
+                        onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'active' | 'draft' }))}
+                        className="flex h-12 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories.map((category) => (
-                            <SelectItem key={category.id} value={category.id}>
-                              {category.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        <option value="active">Active</option>
+                        <option value="draft">Draft</option>
+                      </select>
                     </div>
                   </div>
                 </div>
@@ -341,11 +385,11 @@ export function EnhancedCreateListingModal({ isOpen, onClose, onSuccess }: Enhan
 
             {/* Templates Step */}
             {currentStep === 'templates' && (
-              <div>
-                <div className="mb-4">
-                  <h3 className="text-base font-medium mb-2">Select Garment Templates</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Choose from our collection of professional garment mockups to showcase your design
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Select Garment Templates</h3>
+                  <p className="text-muted-foreground">
+                    Choose from our collection of professionally photographed garment templates
                   </p>
                 </div>
                 <GarmentTemplateGallery
@@ -356,73 +400,124 @@ export function EnhancedCreateListingModal({ isOpen, onClose, onSuccess }: Enhan
               </div>
             )}
 
-            {/* Variants Step */}
+            {/* Enhanced Variants Step */}
             {currentStep === 'variants' && (
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-base font-medium mb-2">Product Variants</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Define sizes, colors, and pricing for your product variants
-                  </p>
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Product Variants</h3>
+                    <p className="text-muted-foreground">
+                      Configure sizes, colors, pricing, and inventory for each variant
+                    </p>
+                  </div>
+                  <Button onClick={addVariant} variant="outline" size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Variant
+                  </Button>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {formData.variants.map((variant, index) => (
-                    <Card key={index}>
-                      <CardContent className="p-4">
-                        <div className="grid grid-cols-4 gap-4">
-                          <div>
-                            <Label className="text-xs">Size</Label>
+                    <Card key={index} className="relative">
+                      <CardContent className="p-6">
+                        {formData.variants.length > 1 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeVariant(index)}
+                            className="absolute top-4 right-4 h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                        
+                        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium">Size *</Label>
                             <Input
                               value={variant.size}
-                              onChange={(e) => {
-                                const newVariants = [...formData.variants];
-                                newVariants[index].size = e.target.value;
-                                setFormData(prev => ({ ...prev, variants: newVariants }));
-                              }}
-                              placeholder="S"
+                              onChange={(e) => updateVariant(index, 'size', e.target.value)}
+                              placeholder="S, M, L, XL..."
+                              className="h-10"
                             />
                           </div>
-                          <div>
-                            <Label className="text-xs">Color</Label>
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium">Color *</Label>
                             <Input
                               value={variant.color}
-                              onChange={(e) => {
-                                const newVariants = [...formData.variants];
-                                newVariants[index].color = e.target.value;
-                                setFormData(prev => ({ ...prev, variants: newVariants }));
-                              }}
-                              placeholder="White"
+                              onChange={(e) => updateVariant(index, 'color', e.target.value)}
+                              placeholder="White, Black, Navy..."
+                              className="h-10"
                             />
                           </div>
-                          <div>
-                            <Label className="text-xs">Price ($)</Label>
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium">Price ($)</Label>
                             <Input
                               type="number"
                               step="0.01"
                               value={variant.price}
-                              onChange={(e) => {
-                                const newVariants = [...formData.variants];
-                                newVariants[index].price = e.target.value;
-                                setFormData(prev => ({ ...prev, variants: newVariants }));
-                              }}
-                              placeholder={formData.base_price || "0.00"}
+                              onChange={(e) => updateVariant(index, 'price', e.target.value)}
+                              placeholder={`${formData.base_price || 'Base price'}`}
+                              className="h-10"
                             />
+                            <p className="text-xs text-muted-foreground">
+                              Leave empty to use base price (${formData.base_price})
+                            </p>
                           </div>
-                          <div>
-                            <Label className="text-xs">Stock</Label>
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium">Stock *</Label>
                             <Input
                               type="number"
+                              min="0"
                               value={variant.stock}
-                              onChange={(e) => {
-                                const newVariants = [...formData.variants];
-                                newVariants[index].stock = e.target.value;
-                                setFormData(prev => ({ ...prev, variants: newVariants }));
-                              }}
+                              onChange={(e) => updateVariant(index, 'stock', e.target.value)}
                               placeholder="10"
+                              className="h-10"
                             />
                           </div>
                         </div>
+
+                        {/* Optional Measurements */}
+                        <details className="mt-4">
+                          <summary className="text-sm font-medium cursor-pointer text-primary hover:text-primary/80">
+                            Add Measurements (Optional)
+                          </summary>
+                          <div className="grid sm:grid-cols-3 gap-4 mt-3 p-4 bg-muted/30 rounded-lg">
+                            <div className="space-y-2">
+                              <Label className="text-xs">Chest (inches)</Label>
+                              <Input
+                                type="number"
+                                step="0.5"
+                                value={variant.measurements?.chest || ''}
+                                onChange={(e) => updateVariantMeasurement(index, 'chest', e.target.value)}
+                                placeholder="20"
+                                className="h-9 text-sm"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="text-xs">Length (inches)</Label>
+                              <Input
+                                type="number"
+                                step="0.5"
+                                value={variant.measurements?.length || ''}
+                                onChange={(e) => updateVariantMeasurement(index, 'length', e.target.value)}
+                                placeholder="28"
+                                className="h-9 text-sm"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="text-xs">Sleeve (inches)</Label>
+                              <Input
+                                type="number"
+                                step="0.5"
+                                value={variant.measurements?.sleeve || ''}
+                                onChange={(e) => updateVariantMeasurement(index, 'sleeve', e.target.value)}
+                                placeholder="8"
+                                className="h-9 text-sm"
+                              />
+                            </div>
+                          </div>
+                        </details>
                       </CardContent>
                     </Card>
                   ))}
@@ -434,31 +529,46 @@ export function EnhancedCreateListingModal({ isOpen, onClose, onSuccess }: Enhan
             {currentStep === 'review' && (
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-base font-medium mb-2">Review Your Listing</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <h3 className="text-lg font-semibold mb-2">Review Your Listing</h3>
+                  <p className="text-muted-foreground">
                     Please review all details before publishing your listing
                   </p>
                 </div>
 
-                <div className="grid gap-4">
+                <div className="grid gap-6">
                   <Card>
-                    <CardContent className="p-4">
-                      <h4 className="font-medium mb-2">Product Details</h4>
-                      <div className="space-y-1 text-sm">
-                        <p><span className="text-muted-foreground">Name:</span> {formData.name}</p>
-                        <p><span className="text-muted-foreground">Description:</span> {formData.description}</p>
-                        <p><span className="text-muted-foreground">Base Price:</span> ${formData.base_price}</p>
+                    <CardContent className="p-6">
+                      <h4 className="font-semibold mb-4 flex items-center gap-2">
+                        <Package className="h-4 w-4" />
+                        Product Details
+                      </h4>
+                      <div className="space-y-3 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Name:</span>
+                          <span className="font-medium">{formData.name}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Base Price:</span>
+                          <span className="font-medium text-primary">${formData.base_price}</span>
+                        </div>
+                        <div className="pt-2 border-t">
+                          <span className="text-muted-foreground text-xs">Description:</span>
+                          <p className="mt-1 text-sm">{formData.description}</p>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
 
                   <Card>
-                    <CardContent className="p-4">
-                      <h4 className="font-medium mb-2">Selected Templates</h4>
+                    <CardContent className="p-6">
+                      <h4 className="font-semibold mb-4 flex items-center gap-2">
+                        <Palette className="h-4 w-4" />
+                        Selected Templates ({selectedTemplates.length})
+                      </h4>
                       <div className="flex flex-wrap gap-2">
                         {selectedTemplates.map(template => (
-                          <Badge key={`${template.garmentType}-${template.name}`} variant="outline">
-                            {template.garmentType} ({template.view})
+                          <Badge key={`${template.garmentType}-${template.name}`} variant="outline" className="px-3 py-1">
+                            {template.garmentType} • {template.view} • {template.color}
                           </Badge>
                         ))}
                       </div>
@@ -466,14 +576,27 @@ export function EnhancedCreateListingModal({ isOpen, onClose, onSuccess }: Enhan
                   </Card>
 
                   <Card>
-                    <CardContent className="p-4">
-                      <h4 className="font-medium mb-2">Variants ({formData.variants.length})</h4>
-                      <div className="space-y-1 text-sm">
+                    <CardContent className="p-6">
+                      <h4 className="font-semibold mb-4 flex items-center gap-2">
+                        <Sparkles className="h-4 w-4" />
+                        Variants ({formData.variants.length})
+                      </h4>
+                      <div className="space-y-3">
                         {formData.variants.map((variant, index) => (
-                          <p key={index}>
-                            <span className="text-muted-foreground">{variant.size} {variant.color}:</span> 
-                            ${variant.price || formData.base_price} (Stock: {variant.stock})
-                          </p>
+                          <div key={index} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                            <div className="flex items-center gap-4">
+                              <Badge variant="secondary">{variant.size}</Badge>
+                              <span className="text-sm">{variant.color}</span>
+                            </div>
+                            <div className="flex items-center gap-4 text-sm">
+                              <span className="font-medium text-primary">
+                                ${variant.price || formData.base_price}
+                              </span>
+                              <span className="text-muted-foreground">
+                                Stock: {variant.stock}
+                              </span>
+                            </div>
+                          </div>
                         ))}
                       </div>
                     </CardContent>
@@ -485,30 +608,33 @@ export function EnhancedCreateListingModal({ isOpen, onClose, onSuccess }: Enhan
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-border/30 bg-muted/20">
+        <div className="px-8 py-6 border-t border-border/30 bg-gradient-to-r from-muted/30 to-muted/10">
           <div className="flex items-center justify-between">
             <Button
               variant="outline"
               onClick={currentStepIndex === 0 ? onClose : handlePrevious}
               disabled={loading}
+              className="px-6"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               {currentStepIndex === 0 ? 'Cancel' : 'Previous'}
             </Button>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               {currentStep !== 'review' ? (
                 <Button
                   onClick={handleNext}
                   disabled={!canProceedFromStep(currentStep) || loading}
+                  className="px-6 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
                 >
-                  Next
-                  <ArrowRight className="h-4 w-4 ml-2" />
+                  Next Step
+                  <ChevronRight className="h-4 w-4 ml-2" />
                 </Button>
               ) : (
                 <Button
                   onClick={handleSubmit}
-                  disabled={loading || !canProceedFromStep('review')}
+                  disabled={!canProceedFromStep(currentStep) || loading}
+                  className="px-8 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
                 >
                   {loading ? 'Creating...' : 'Create Listing'}
                 </Button>
