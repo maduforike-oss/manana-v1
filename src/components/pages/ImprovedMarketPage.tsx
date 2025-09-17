@@ -11,7 +11,7 @@ import { FiltersSheet } from '@/components/marketplace/FiltersSheet';
 import { ProductGridView } from '@/components/marketplace/ProductGridView';
 import { ProductListView } from '@/components/marketplace/ProductListView';
 import { EmptyState } from '@/components/marketplace/EmptyState';
-import { CreateListingModal } from '@/components/marketplace/CreateListingModal';
+import { EnhancedCreateListingModal } from '@/components/marketplace/EnhancedCreateListingModal';
 import { useMarketQueryState } from '@/hooks/useMarketQueryState';
 import { useProducts } from '@/hooks/useProducts';
 import { useCartStore } from '@/store/useCartStore';
@@ -28,6 +28,7 @@ export function ImprovedMarketPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [savedProducts, setSavedProducts] = useState<Set<string>>(new Set());
   const [loadingSaved, setLoadingSaved] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const navigate = useNavigate();
   const { setActiveTab } = useAppStore();
 
@@ -332,7 +333,7 @@ export function ImprovedMarketPage() {
 
                 {/* Desktop Create Listing Button */}
                 <Button
-                  onClick={() => navigate('/sell/new')}
+                  onClick={() => setShowCreateModal(true)}
                   variant="default"
                   size="sm"
                   className="rounded-xl"
@@ -479,16 +480,6 @@ export function ImprovedMarketPage() {
         isSaved={savedProducts.has(quickViewProduct?.id || '')}
       />
 
-      {/* Floating Action Button - Mobile */}
-      <CreateListingModal onSuccess={() => refetch()}>
-        <Button
-          className="fixed bottom-20 right-4 w-14 h-14 rounded-full shadow-lg lg:hidden z-40"
-          size="sm"
-        >
-          <Plus className="h-6 w-6" />
-        </Button>
-      </CreateListingModal>
-
       {/* Quick View Modal */}
       <ProductQuickViewModal
         product={quickViewProduct}
@@ -498,6 +489,16 @@ export function ImprovedMarketPage() {
         onSave={handleSaveProduct}
         onShare={handleShare}
         isSaved={quickViewProduct ? savedProducts.has(quickViewProduct.id) : false}
+      />
+
+      {/* Enhanced Create Listing Modal */}
+      <EnhancedCreateListingModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={() => {
+          setShowCreateModal(false);
+          refetch();
+        }}
       />
     </div>
   );
