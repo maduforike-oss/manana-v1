@@ -182,7 +182,7 @@ export function GarmentTemplateGallery({
 
       {/* Selection Summary */}
       {selectedTemplates.length > 0 && (
-        <Card className="bg-primary/5 border-primary/20">
+        <Card className="bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 border-primary/20">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -241,11 +241,11 @@ export function GarmentTemplateGallery({
                     </h3>
                   </div>
                   
-                   <div className={cn(
-                     viewMode === 'grid' 
-                       ? "grid grid-cols-4 sm:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2"
-                       : "space-y-2"
-                   )}>
+                  <div className={cn(
+                    viewMode === 'grid' 
+                      ? "grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3"
+                      : "space-y-2"
+                  )}>
                     {typeTemplates.map(template => {
                       const selected = isTemplateSelected(template);
                       
@@ -264,16 +264,17 @@ export function GarmentTemplateGallery({
                             viewMode === 'list' && "flex items-center gap-4 p-4"
                           )}>
                             <div className={cn(
-                              "relative overflow-hidden rounded-lg bg-muted/20",
-                              viewMode === 'grid' ? "aspect-square mb-2" : "w-16 h-16 flex-shrink-0"
+                              "relative overflow-hidden rounded-lg bg-gradient-to-br from-muted/30 to-muted/10",
+                              viewMode === 'grid' ? "aspect-[3/4] mb-2" : "w-16 h-16 flex-shrink-0"
                             )}>
-                               <img
+                              <img
                                 src={template.url}
                                 alt={template.name}
-                                className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+                                className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110"
                                 loading="lazy"
                                 style={{ 
-                                  imageRendering: 'crisp-edges'
+                                  imageRendering: 'crisp-edges',
+                                  maxHeight: viewMode === 'grid' ? '120px' : '64px'
                                 }}
                               />
                               {selected && (
