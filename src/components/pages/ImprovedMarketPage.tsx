@@ -269,29 +269,9 @@ export function ImprovedMarketPage() {
               })}
             </div>
 
-            {/* Mobile Filter Controls - Scrollable horizontal layout */}
+            {/* Mobile Simplified Controls */}
             <div className="block sm:hidden mb-4">
-              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                  <FiltersSheet
-                    filters={query.filters}
-                    onFiltersChange={(newFilters) => setQuery({ filters: newFilters })}
-                    onClear={resetFilters}
-                    resultCount={totalResults}
-                    onApply={handleApplyFilters}
-                    onClose={() => setShowFilters(false)}
-                    open={showFilters}
-                  >
-                    <Button
-                      onClick={() => setShowFilters(true)}
-                      variant="outline"
-                      size="sm"
-                      className="flex-shrink-0 h-11 px-4 rounded-xl border-border/40 touch-manipulation"
-                    >
-                      <Filter className="h-5 w-5 mr-2" />
-                      Filters
-                    </Button>
-                  </FiltersSheet>
-                
+              <div className="flex justify-center">
                 {(query.q || hasActiveFilters()) && (
                   <Button
                     onClick={() => {
@@ -300,9 +280,9 @@ export function ImprovedMarketPage() {
                     }}
                     variant="outline"
                     size="sm"
-                    className="flex-shrink-0 h-11 px-4 rounded-xl border-border/40 touch-manipulation"
+                    className="h-11 px-6 rounded-xl border-border/40 touch-manipulation"
                   >
-                    Clear ({totalResults})
+                    Clear Search ({totalResults})
                   </Button>
                 )}
               </div>
