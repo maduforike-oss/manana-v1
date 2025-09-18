@@ -1313,6 +1313,18 @@ export type Database = {
         Args: { content_text: string }
         Returns: string
       }
+      create_product_with_variants: {
+        Args: {
+          base_price_val?: number
+          category_id_val?: string
+          images_data?: Json
+          product_description?: string
+          product_name: string
+          product_slug: string
+          variants_data?: Json
+        }
+        Returns: string
+      }
       ensure_my_profile: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -1436,6 +1448,47 @@ export type Database = {
           username: string
         }[]
       }
+      get_product_detail: {
+        Args: { pid: string }
+        Returns: {
+          avg_rating: number
+          base_price: number
+          category_id: string
+          category_name: string
+          category_slug: string
+          created_at: string
+          creator_avatar_url: string
+          creator_bio: string
+          creator_display_name: string
+          creator_id: string
+          creator_username: string
+          description: string
+          images: Json
+          name: string
+          product_id: string
+          recent_reviews: Json
+          slug: string
+          status: string
+          total_favorites: number
+          total_reviews: number
+          total_views: number
+          updated_at: string
+          variants: Json
+        }[]
+      }
+      get_product_images_with_views: {
+        Args: { pid: string }
+        Returns: {
+          alt_text: string
+          color_variant: string
+          created_at: string
+          display_order: number
+          image_id: string
+          url: string
+          variant_id: string
+          view_type: string
+        }[]
+      }
       get_public_profile: {
         Args: { u: string }
         Returns: {
@@ -1503,6 +1556,10 @@ export type Database = {
         Returns: {
           avg_rating: number
           created_at: string
+          creator_avatar_url: string
+          creator_display_name: string
+          creator_id: string
+          creator_username: string
           currency: string
           description: string
           favorites: number

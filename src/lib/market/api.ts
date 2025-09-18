@@ -22,6 +22,11 @@ export interface MarketCard {
   has_badge_new?: boolean;
   has_badge_trending?: boolean;
   has_badge_low_stock?: boolean;
+  // Creator information
+  creator_id?: string;
+  creator_username?: string;
+  creator_display_name?: string;
+  creator_avatar_url?: string;
 }
 
 export interface MarketFilters {
