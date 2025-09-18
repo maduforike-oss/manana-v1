@@ -56,7 +56,8 @@ export function SearchBar({
         onChange={(e) => setLocalValue(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
-        className="pl-12 pr-10 h-12 text-base bg-background/50 border-border/30 rounded-2xl"
+        inputMode="search"
+        className="pl-12 pr-10 h-14 text-base bg-background/50 border-border/30 rounded-2xl scroll-margin-bottom-[20rem]"
       />
       {localValue && (
         <Button

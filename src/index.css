@@ -679,3 +679,61 @@
   display: block;
   width: 100%;
 }
+
+/* Touch and mobile optimizations */
+.touch-manipulation {
+  touch-action: manipulation;
+}
+
+/* Keyboard accommodation */
+.keyboard-friendly {
+  scroll-margin-bottom: 20rem;
+}
+
+/* Mobile safe area insets */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Prevent zoom on input focus (iOS) */
+input[type="search"],
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea {
+  font-size: 16px !important;
+}
+
+@media (max-width: 768px) {
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+}
+
+/* Dark mode product cards */
+@media (prefers-color-scheme: dark) {
+  .dark .product-card {
+    @apply bg-card/50 border-border/30;
+  }
+  
+  .dark .product-card:hover {
+    @apply bg-card/70 shadow-xl;
+  }
+}
+
+/* Mobile scroll behavior */
+.mobile-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* Bottom navigation clearance */
+.bottom-nav-safe {
+  padding-bottom: calc(60px + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 640px) {
+  .bottom-nav-safe {
+    padding-bottom: 1.5rem;
+  }
+}

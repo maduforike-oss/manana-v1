@@ -136,26 +136,26 @@ export function MarketProductCard({
                   size="sm"
                   aria-label={isSaved ? 'Remove from wishlist' : 'Save to wishlist'}
                   aria-pressed={isSaved}
-                  className={cn("h-8 w-8 p-0", isSaved && "bg-primary/10 border-primary text-primary")}
+                  className={cn("h-11 w-11 p-0 touch-manipulation", isSaved && "bg-primary/10 border-primary text-primary")}
                 >
-                  <Heart className={cn("h-3 w-3", isSaved && "fill-current")} />
+                  <Heart className={cn("h-5 w-5", isSaved && "fill-current")} />
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => onQuickView(product)}
-                  className="h-8 w-8 p-0"
+                  className="h-11 w-11 p-0 touch-manipulation"
                   aria-label="Quick view product"
                 >
-                  <Eye className="h-3 w-3" />
+                  <Eye className="h-5 w-5" />
                 </Button>
                 <Button
                   size="sm"
                   onClick={() => onAddToCart(product)}
-                  className="h-8 px-3 bg-primary hover:bg-primary/90"
+                  className="h-11 px-3 bg-primary hover:bg-primary/90 touch-manipulation"
                   aria-label="Add to cart"
                 >
-                  <ShoppingCart className="h-3 w-3" />
+                  <ShoppingCart className="h-5 w-5" />
                 </Button>
               </div>
             </div>
@@ -170,7 +170,7 @@ export function MarketProductCard({
       <CardContent className="p-0">
         {/* Image Container */}
         <div 
-          className="relative aspect-[3/4] sm:aspect-[4/5] overflow-hidden cursor-pointer"
+          className="relative aspect-square overflow-hidden cursor-pointer"
           onClick={() => window.location.href = `/product/${product.slug || product.id}`}
         >
           {imageUrl && !imageError ? (
@@ -216,7 +216,7 @@ export function MarketProductCard({
                 productId={product.id}
                 variant="secondary"
                 size="sm"
-                className="h-9 w-9 p-0 bg-background/90 hover:bg-background shadow-lg border border-border/30 backdrop-blur-sm"
+                className="h-11 w-11 p-0 bg-background/90 hover:bg-background shadow-lg border border-border/30 backdrop-blur-sm touch-manipulation"
               />
               
               <Button
@@ -226,10 +226,10 @@ export function MarketProductCard({
                   e.stopPropagation();
                   onAddToCart(product);
                 }}
-                className="h-9 w-9 p-0 bg-background/90 hover:bg-background shadow-lg border border-border/30 backdrop-blur-sm"
+                className="h-11 w-11 p-0 bg-background/90 hover:bg-background shadow-lg border border-border/30 backdrop-blur-sm touch-manipulation"
                 aria-label="Add to cart"
               >
-                <ShoppingCart className="h-4 w-4" />
+                <ShoppingCart className="h-5 w-5" />
               </Button>
 
               <Button
@@ -239,10 +239,10 @@ export function MarketProductCard({
                   e.stopPropagation();
                   onShare(product);
                 }}
-                className="h-9 w-9 p-0 bg-background/90 hover:bg-background shadow-lg border border-border/30 backdrop-blur-sm"
+                className="h-11 w-11 p-0 bg-background/90 hover:bg-background shadow-lg border border-border/30 backdrop-blur-sm touch-manipulation"
                 aria-label="Share product"
               >
-                <Share2 className="h-4 w-4" />
+                <Share2 className="h-5 w-5" />
               </Button>
             </div>
           </div>
@@ -303,7 +303,7 @@ export function MarketProductCard({
           {/* Action Button */}
           <Button
             onClick={() => onAddToCart(product)}
-            className="w-full bg-primary hover:bg-primary/90 text-xs sm:text-sm h-8 sm:h-9 rounded-lg"
+            className="w-full bg-primary hover:bg-primary/90 text-xs sm:text-sm h-11 rounded-lg touch-manipulation"
           >
             <ShoppingCart className="h-4 w-4 mr-2" />
             Add to Cart

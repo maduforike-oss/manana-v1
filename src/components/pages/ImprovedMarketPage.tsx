@@ -244,7 +244,7 @@ export function ImprovedMarketPage() {
 
         {/* Navigation Tabs - Mobile First */}
         <div className="mb-6">
-          <div className="sticky top-20 z-40 bg-background/80 backdrop-blur-md pb-4 border-b border-border/20">
+          <div className="sticky top-16 z-40 bg-background/90 backdrop-blur-md pb-4 border-b border-border/20 scroll-padding-top-8">
             <div className="grid w-full grid-cols-2 sm:grid-cols-4 h-11 bg-muted/30 backdrop-blur-sm rounded-2xl gap-1 mb-4 p-1">
               {[
                 { value: 'all', label: 'All' },
@@ -285,9 +285,9 @@ export function ImprovedMarketPage() {
                       onClick={() => setShowFilters(true)}
                       variant="outline"
                       size="sm"
-                      className="flex-shrink-0 h-10 px-4 rounded-xl border-border/40"
+                      className="flex-shrink-0 h-11 px-4 rounded-xl border-border/40 touch-manipulation"
                     >
-                      <Filter className="h-4 w-4 mr-2" />
+                      <Filter className="h-5 w-5 mr-2" />
                       Filters
                     </Button>
                   </FiltersSheet>
@@ -300,7 +300,7 @@ export function ImprovedMarketPage() {
                     }}
                     variant="outline"
                     size="sm"
-                    className="flex-shrink-0 h-10 px-4 rounded-xl border-border/40"
+                    className="flex-shrink-0 h-11 px-4 rounded-xl border-border/40 touch-manipulation"
                   >
                     Clear ({totalResults})
                   </Button>
