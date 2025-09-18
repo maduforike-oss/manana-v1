@@ -1492,6 +1492,34 @@ export type Database = {
           followee_id: string
         }[]
       }
+      list_market_cards: {
+        Args: {
+          filters?: Json
+          lim?: number
+          off?: number
+          q?: string
+          tab?: string
+        }
+        Returns: {
+          avg_rating: number
+          created_at: string
+          currency: string
+          description: string
+          favorites: number
+          has_badge_low_stock: boolean
+          has_badge_new: boolean
+          has_badge_trending: boolean
+          price_cents: number
+          primary_image: string
+          product_id: string
+          reviews_count: number
+          slug: string
+          status: string
+          title: string
+          trend_score: number
+          views: number
+        }[]
+      }
       mark_product_view: {
         Args: { pid: string }
         Returns: undefined
