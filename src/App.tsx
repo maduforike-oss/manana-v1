@@ -29,7 +29,8 @@ import CheckoutSuccess from "./pages/CheckoutSuccess";
 import AdminTemplates from "./pages/AdminTemplates";
 import TemplatesUploader from "./pages/admin/TemplatesUploader";
 import RequireAuth from "./components/auth/RequireAuth";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { MobileFallback } from "./components/MobileFallback";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,14 +43,56 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
+  const [isMobile, setIsMobile] = useState(false);
+  const [showFallback, setShowFallback] = useState(false);
+
   useEffect(() => {
+    // Check if mobile and if there are rendering issues
+    const checkMobile = () => {
+      const mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      setIsMobile(mobile);
+      
+      // Show fallback if mobile and localStorage is not available
+      if (mobile && !('localStorage' in window)) {
+        setShowFallback(true);
+      }
+    };
+
+    checkMobile();
+
     // Register service worker for offline support
     if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
       navigator.serviceWorker.register('/sw.js')
         .then(() => console.log('SW registered'))
         .catch(() => console.log('SW registration failed'));
     }
-  }, []);
+
+    // Handle errors and show fallback on mobile if needed
+    const handleError = (event: ErrorEvent) => {
+      console.error('[App] Unhandled error:', event.error);
+      if (isMobile) {
+        setShowFallback(true);
+      }
+    };
+
+    window.addEventListener('error', handleError);
+    return () => window.removeEventListener('error', handleError);
+  }, [isMobile]);
+
+  // Show mobile fallback if needed
+  if (showFallback) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <BrowserRouter>
+            <AuthProvider>
+              <MobileFallback />
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    );
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
