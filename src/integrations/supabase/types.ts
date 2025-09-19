@@ -1274,27 +1274,7 @@ export type Database = {
       }
     }
     Views: {
-      me_profile_full: {
-        Row: {
-          avatar_url: string | null
-          bio: string | null
-          cover_url: string | null
-          created_at: string | null
-          display_name: string | null
-          followers: number | null
-          following: number | null
-          location: string | null
-          metrics_updated_at: string | null
-          preferences: Json | null
-          social_instagram: string | null
-          social_twitter: string | null
-          total_designs: number | null
-          user_id: string | null
-          username: string | null
-          website: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       create_comment: {
@@ -1327,27 +1307,6 @@ export type Database = {
           variants_data?: Json
         }
         Returns: string
-      }
-      ensure_my_profile: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          avatar_url: string | null
-          bio: string | null
-          cover_url: string | null
-          created_at: string | null
-          display_name: string | null
-          followers: number | null
-          following: number | null
-          location: string | null
-          metrics_updated_at: string | null
-          preferences: Json | null
-          social_instagram: string | null
-          social_twitter: string | null
-          total_designs: number | null
-          user_id: string | null
-          username: string | null
-          website: string | null
-        }
       }
       generate_order_number: {
         Args: Record<PropertyKey, never>
@@ -1415,27 +1374,6 @@ export type Database = {
           username: string
           website: string
         }[]
-      }
-      get_my_profile: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          avatar_url: string | null
-          bio: string | null
-          cover_url: string | null
-          created_at: string | null
-          display_name: string | null
-          followers: number | null
-          following: number | null
-          location: string | null
-          metrics_updated_at: string | null
-          preferences: Json | null
-          social_instagram: string | null
-          social_twitter: string | null
-          total_designs: number | null
-          user_id: string | null
-          username: string | null
-          website: string | null
-        }
       }
       get_post_comments: {
         Args: { limit_count?: number; post_id_param: string }
@@ -1633,7 +1571,25 @@ export type Database = {
       [_ in never]: never
     }
     CompositeTypes: {
-      [_ in never]: never
+      me_profile_full: {
+        user_id: string | null
+        username: string | null
+        display_name: string | null
+        bio: string | null
+        location: string | null
+        website: string | null
+        social_instagram: string | null
+        social_twitter: string | null
+        avatar_url: string | null
+        cover_url: string | null
+        preferences: Json | null
+        privacy_settings: Json | null
+        created_at: string | null
+        followers: number | null
+        following: number | null
+        total_designs: number | null
+        metrics_updated_at: string | null
+      }
     }
   }
 }
