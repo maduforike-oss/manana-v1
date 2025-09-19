@@ -33,7 +33,7 @@ export async function getCandidateUrls(garmentId: string, o: Orientation = "fron
   const id = normalize(garmentId);
   const rt = runtimeOverride.get(`${id}:${o}`);
   
-  // Try to get Supabase template
+  // Try to get Supabase template with priority
   let supabaseUrl = supabaseTemplateCache.get(`${id}:${o}:${color}`);
   if (!supabaseUrl) {
     try {
@@ -49,11 +49,13 @@ export async function getCandidateUrls(garmentId: string, o: Orientation = "fron
   
   const list = [
     rt,                                // runtime override beats everything
-    supabaseUrl,                       // Supabase templates (highest priority)
+    supabaseUrl,                       // Supabase templates (HIGHEST PRIORITY)
     `/catalog/${id}/${color}/${o}.png`, // new catalog structure
     path("custom", id, o),
     path("garments", id, o),
     path("mockups", id, o),
+    `/src/assets/garments/${id}-${color}-${o}.png`, // Try src assets
+    `/src/assets/custom/${id}-${o}.png`,            // Try custom assets
   ].filter(Boolean);
   return list;
 }
