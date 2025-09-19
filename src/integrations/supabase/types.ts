@@ -1308,6 +1308,10 @@ export type Database = {
         }
         Returns: string
       }
+      ensure_my_profile: {
+        Args: Record<PropertyKey, never>
+        Returns: Database["public"]["CompositeTypes"]["me_profile_full"]
+      }
       generate_order_number: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1374,6 +1378,14 @@ export type Database = {
           username: string
           website: string
         }[]
+      }
+      get_me_profile_full_safe: {
+        Args: Record<PropertyKey, never>
+        Returns: Database["public"]["CompositeTypes"]["me_profile_full"]
+      }
+      get_my_profile: {
+        Args: Record<PropertyKey, never>
+        Returns: Database["public"]["CompositeTypes"]["me_profile_full"]
       }
       get_post_comments: {
         Args: { limit_count?: number; post_id_param: string }
