@@ -22,6 +22,7 @@ import { sanitizeUsername, validateUsername } from '@/lib/usernames';
 import { getErrorMessage } from '@/lib/errors';
 import BackButton from '@/components/BackButton';
 import { useProfileStore } from '@/store/useProfileStore';
+import { PrivacySettingsSection } from '@/components/profile/PrivacySettingsSection';
 
 export default function ProfileSettingsPage() {
   const { toast } = useToast();
@@ -499,6 +500,9 @@ export default function ProfileSettingsPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Privacy Settings */}
+        <PrivacySettingsSection />
       </div>
     </div>
   );

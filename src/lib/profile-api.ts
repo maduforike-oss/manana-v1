@@ -12,6 +12,13 @@ export type MyProfile = {
   social_instagram: string | null;
   social_twitter: string | null;
   preferences: Record<string, any>;
+  privacy_settings?: {
+    profile_visibility: 'public' | 'followers' | 'private';
+    show_location: boolean;
+    show_social_links: boolean;
+    show_email: boolean;
+    discoverable: boolean;
+  };
   total_designs: number;
   followers: number;
   following: number;
@@ -24,7 +31,7 @@ export type PublicProfile = {
   username: string | null;
   display_name: string | null;
   avatar_url: string | null;
-  cover_url: string | null;
+  cover_url?: string | null;
   bio: string | null;
   location: string | null;
   website: string | null;
@@ -32,6 +39,7 @@ export type PublicProfile = {
   social_twitter: string | null;
   followers: number;
   following: number;
+  total_designs?: number;
 };
 
 const BUCKET = 'design-assets';
@@ -54,13 +62,13 @@ export async function getMyProfile(): Promise<MyProfile | null> {
   return data as MyProfile;
 }
 
-/** Get a public profile by username via RPC */
+/** Get a public profile by username via RPC (now privacy-aware) */
 export async function getPublicProfile(username: string): Promise<PublicProfile | null> {
-  const { data, error } = await supabase.rpc('get_public_profile', { u: username });
+  const { data, error } = await supabase.rpc('get_public_profile_safe', { username_param: username });
   if (error) throw error;
   if (!data || (Array.isArray(data) && data.length === 0)) return null;
   // Supabase returns array for set-returning functions; normalize
-  return (Array.isArray(data) ? data[0] : data) as PublicProfile;
+  return (Array.isArray(data) ? data[0] : data) as any;
 }
 
 /** Check username availability via RPC */
@@ -73,7 +81,7 @@ export async function isUsernameAvailable(username: string): Promise<boolean> {
 /** Update profile via RPC with whitelisted fields */
 export async function setMyProfile(patch: Partial<Omit<MyProfile, 'user_id' | 'total_designs' | 'followers' | 'following' | 'metrics_updated_at'>>): Promise<void> {
   const safePatch: any = {};
-  const keys = ['display_name','username','bio','location','website','social_instagram','social_twitter','cover_url','avatar_url','preferences'] as const;
+  const keys = ['display_name','username','bio','location','website','social_instagram','social_twitter','cover_url','avatar_url','preferences','privacy_settings'] as const;
   for (const k of keys) if (k in patch) (safePatch as any)[k] = (patch as any)[k];
   
   const { error } = await supabase.rpc('set_my_profile', { patch: safePatch });

@@ -1,7 +1,8 @@
 import { supabase } from '@/integrations/supabase/client';
 
 export type Profile = {
-  id: string;
+  id?: string;
+  user_id?: string;
   username: string | null;
   display_name: string | null;
   bio: string | null;
@@ -10,9 +11,12 @@ export type Profile = {
   social_instagram: string | null;
   social_twitter: string | null;
   avatar_url: string | null;
-  cover_url: string | null;
-  preferences: Record<string, any>;
-  created_at: string;
+  cover_url?: string | null;
+  preferences?: Record<string, any>;
+  created_at?: string;
+  followers?: number;
+  following?: number;
+  total_designs?: number;
 };
 
 // Legacy type alias for compatibility
@@ -106,16 +110,19 @@ export async function uploadCover(file: File): Promise<string> {
   return publicUrl;
 }
 
-/** Get a profile by username */
+/** Get a profile by username (now uses privacy-aware function) */
 export async function getProfileByUsername(username: string): Promise<ExtendedProfile | null> {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('username', username)
-    .maybeSingle();
+  const { data, error } = await supabase.rpc('get_public_profile_safe', { 
+    username_param: username 
+  });
 
-  if (error) throw error;
-  return data as ExtendedProfile | null;
+  if (error) {
+    console.error('Error fetching profile:', error);
+    return null;
+  }
+
+  if (!data || (Array.isArray(data) && data.length === 0)) return null;
+  return (Array.isArray(data) ? data[0] : data) as any;
 }
 
 /** Get profile metrics for a user */

@@ -967,6 +967,7 @@ export type Database = {
           id: string
           location: string | null
           preferences: Json | null
+          privacy_settings: Json | null
           social_instagram: string | null
           social_twitter: string | null
           username: string | null
@@ -981,6 +982,7 @@ export type Database = {
           id: string
           location?: string | null
           preferences?: Json | null
+          privacy_settings?: Json | null
           social_instagram?: string | null
           social_twitter?: string | null
           username?: string | null
@@ -995,6 +997,7 @@ export type Database = {
           id?: string
           location?: string | null
           preferences?: Json | null
+          privacy_settings?: Json | null
           social_instagram?: string | null
           social_twitter?: string | null
           username?: string | null
@@ -1506,6 +1509,23 @@ export type Database = {
           website: string
         }[]
       }
+      get_public_profile_safe: {
+        Args: { username_param: string }
+        Returns: {
+          avatar_url: string
+          bio: string
+          display_name: string
+          followers: number
+          following: number
+          location: string
+          social_instagram: string
+          social_twitter: string
+          total_designs: number
+          user_id: string
+          username: string
+          website: string
+        }[]
+      }
       get_saved_posts: {
         Args: { limit_count?: number }
         Returns: {
@@ -1580,6 +1600,17 @@ export type Database = {
       mark_product_view: {
         Args: { pid: string }
         Returns: undefined
+      }
+      search_discoverable_profiles: {
+        Args: { limit_count?: number; search_term: string }
+        Returns: {
+          avatar_url: string
+          bio: string
+          display_name: string
+          followers: number
+          user_id: string
+          username: string
+        }[]
       }
       set_my_profile: {
         Args: { patch: Json }
