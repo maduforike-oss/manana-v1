@@ -31,7 +31,6 @@ export default defineConfig(({ mode }) => ({
             '@radix-ui/react-dialog', 
             '@radix-ui/react-dropdown-menu', 
             '@radix-ui/react-tabs',
-            '@radix-ui/react-button',
             '@radix-ui/react-sheet'
           ],
           
