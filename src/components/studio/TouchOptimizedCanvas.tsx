@@ -77,25 +77,43 @@ export const TouchOptimizedCanvas: React.FC<TouchOptimizedCanvasProps> = ({
   });
 
   // Prevent default touch behaviors that interfere with drawing
+  // Smart Touch Event Management - context-aware touch handling
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    const preventDefault = (e: TouchEvent) => {
-      if (e.touches.length > 1) return; // Allow multi-touch gestures
-      e.preventDefault();
+    const handleTouch = (e: TouchEvent) => {
+      const rect = container.getBoundingClientRect();
+      const touch = e.touches[0];
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+      
+      // Check if touch is within canvas drawing area (not on UI elements)
+      const isInDrawingArea = x > 60 && y > 60 && x < rect.width - 60 && y < rect.height - 60;
+      
+      // Only prevent default for drawing interactions in the canvas area
+      if (activeTool === 'brush' && isInDrawingArea && e.touches.length === 1) {
+        e.preventDefault();
+        container.classList.add('touch-context-draw');
+      } else {
+        container.classList.remove('touch-context-draw');
+        container.classList.add('touch-context-scroll');
+      }
     };
 
-    container.addEventListener('touchstart', preventDefault, { passive: false });
-    container.addEventListener('touchmove', preventDefault, { passive: false });
-    container.addEventListener('touchend', preventDefault, { passive: false });
+    container.addEventListener('touchstart', handleTouch, { passive: false });
+    container.addEventListener('touchmove', handleTouch, { passive: false });
+    container.addEventListener('touchend', () => {
+      container.classList.remove('touch-context-draw');
+      container.classList.add('touch-context-scroll');
+    });
 
     return () => {
-      container.removeEventListener('touchstart', preventDefault);
-      container.removeEventListener('touchmove', preventDefault);
-      container.removeEventListener('touchend', preventDefault);
+      container.removeEventListener('touchstart', handleTouch);
+      container.removeEventListener('touchmove', handleTouch);
+      container.removeEventListener('touchend', handleTouch);
     };
-  }, []);
+  }, [activeTool]);
 
   const handleZoomIn = useCallback(() => {
     setZoom(Math.min(5, zoom * 1.2));

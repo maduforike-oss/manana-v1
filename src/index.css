@@ -775,6 +775,105 @@ textarea {
   @apply shadow-lg;
 }
 
+/* Enhanced Mobile/Tablet Scrolling */
+.mobile-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: auto;
+  scroll-behavior: smooth;
+  overflow: auto;
+}
+
+.momentum-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.scroll-snap-y {
+  scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scroll-snap-item {
+  scroll-snap-align: start;
+}
+
+.pull-to-refresh {
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+}
+
+/* Scroll indicators */
+.scroll-indicator {
+  position: fixed;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 60px;
+  background: hsl(var(--muted) / 0.3);
+  border-radius: 2px;
+  z-index: 40;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.scroll-indicator.visible {
+  opacity: 1;
+}
+
+.scroll-thumb {
+  width: 100%;
+  background: hsl(var(--primary) / 0.6);
+  border-radius: 2px;
+  transition: background-color 0.3s ease;
+}
+
+/* Touch context management */
+.touch-context-scroll {
+  touch-action: pan-y pinch-zoom;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.touch-context-draw {
+  touch-action: none;
+  -webkit-overflow-scrolling: auto;
+  overscroll-behavior: none;
+}
+
+.touch-context-mixed {
+  touch-action: pan-x pan-y pinch-zoom;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: auto;
+}
+
+/* Scroll-aware UI */
+.scroll-hide {
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.scroll-show {
+  transform: translateY(0);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Better bottom navigation clearance */
+.scroll-content-safe {
+  padding-bottom: calc(var(--safe-area-inset-bottom, 0px) + 84px);
+}
+
+.scroll-content-viewport {
+  height: calc(100dvh - var(--safe-area-inset-bottom, 0px) - 84px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
 /* Touch optimizations */
 .touch-manipulation {
   touch-action: manipulation;
