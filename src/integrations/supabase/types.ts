@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "13.0.4"
+    PostgrestVersion: "13.0.5"
   }
   public: {
     Tables: {
@@ -176,6 +176,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      design_documents: {
+        Row: {
+          canvas_config: Json
+          created_at: string
+          design_data: Json
+          garment_slug: string | null
+          garment_type: string
+          id: string
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          canvas_config?: Json
+          created_at?: string
+          design_data?: Json
+          garment_slug?: string | null
+          garment_type: string
+          id?: string
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          canvas_config?: Json
+          created_at?: string
+          design_data?: Json
+          garment_slug?: string | null
+          garment_type?: string
+          id?: string
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       favorites: {
         Row: {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Save, Undo, Redo, Download, Settings, ArrowLeft, Box } from 'lucide-react';
 
@@ -7,11 +7,13 @@ import { useAppStore } from '../../store/useAppStore';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { exportPNG, exportSVG, exportPrintReady } from '@/lib/studio/export';
 import { useToast } from '@/hooks/use-toast';
+import { DesignSaveDialog } from './DesignSaveDialog';
 
 export const TopBar = () => {
   const { doc, undo, redo, canUndo, canRedo, is3DMode, toggle3DMode, getCanvasElement } = useStudioStore();
   const { setCurrentDesign } = useAppStore();
   const { toast } = useToast();
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
 
   const handleExitStudio = () => {
     setCurrentDesign(null);
@@ -107,6 +109,7 @@ export const TopBar = () => {
           <Button
             variant="ghost"
             size="sm"
+            onClick={() => setSaveDialogOpen(true)}
             className="h-8 px-3 text-xs font-medium transition-all duration-200 hover:bg-accent/80 hover:scale-[1.02] hover:shadow-sm"
           >
             <Save className="w-3.5 h-3.5 mr-1.5" />
@@ -149,6 +152,11 @@ export const TopBar = () => {
           </Button>
         </div>
       </div>
+
+      <DesignSaveDialog 
+        open={saveDialogOpen} 
+        onOpenChange={setSaveDialogOpen} 
+      />
     </div>
   );
 };

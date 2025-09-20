@@ -56,3 +56,9 @@ verify_jwt = false
 
 [functions.upload-garment-template]
 verify_jwt = false
+
+[functions.canvas-config]
+verify_jwt = false
+
+[functions.design-persistence]
+verify_jwt = false
