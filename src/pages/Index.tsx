@@ -1,21 +1,30 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/useAppStore';
-import { UnifiedBottomNavigation } from '@/components/navigation/UnifiedBottomNavigation';
-import { TabRenderer } from '@/components/navigation/TabRenderer';
+import { BottomNavigation } from '@/components/BottomNavigation';
+import { UnifiedStudioShell } from '@/components/studio/UnifiedStudioShell';
+import { ImprovedMarketPage } from '@/components/pages/ImprovedMarketPage';
+import { ImprovedCommunityPage } from '@/components/pages/ImprovedCommunityPage';
+import { OrdersPage } from '@/components/pages/OrdersPage';
+import Profile from '@/pages/Profile';
 import { DesktopSidebar } from '@/components/DesktopSidebar';
 import { SkipToContent } from '@/components/SkipToContent';
 import { OnboardingWalkthrough } from '@/components/OnboardingWalkthrough';
-import { useNavigationStore } from '@/lib/navigation/store';
+import { useRouteSync } from '@/hooks/useNavigation';
 import { useAccessibilityAnnouncer } from '@/components/AccessibilityAnnouncer';
 import { useAuth } from '@/lib/auth-context';
 
 
 const Index = () => {
+  const { activeTab } = useAppStore();
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
-  const { activeTab } = useNavigationStore();
+  const scrollPositions = useRef<Record<string, number>>({});
+  const mainContentRef = useRef<HTMLDivElement>(null);
   const { announcer, announce } = useAccessibilityAnnouncer();
+  
+  // Sync navigation with routes
+  useRouteSync();
 
   // Redirect to landing page if not authenticated
   useEffect(() => {
@@ -24,22 +33,36 @@ const Index = () => {
     }
   }, [user, isLoading, navigate]);
 
-  // Announce tab changes for accessibility
+  // Save scroll position when switching tabs
   useEffect(() => {
-    const handleTabChange = (event: CustomEvent) => {
-      const tabLabels = {
-        market: 'Marketplace',
-        community: 'Community',
-        studio: 'Design Studio', 
-        orders: 'Orders',
-        profile: 'Profile'
-      };
-      announce(`Navigated to ${tabLabels[event.detail.to]}`);
+    return () => {
+      if (mainContentRef.current) {
+        scrollPositions.current[activeTab] = mainContentRef.current.scrollTop;
+      }
     };
+  }, [activeTab]);
 
-    window.addEventListener('tabChange', handleTabChange as EventListener);
-    return () => window.removeEventListener('tabChange', handleTabChange as EventListener);
-  }, [announce]);
+  // Restore scroll position when tab changes
+  useEffect(() => {
+    if (mainContentRef.current) {
+      const savedPosition = scrollPositions.current[activeTab] || 0;
+      setTimeout(() => {
+        if (mainContentRef.current) {
+          mainContentRef.current.scrollTop = savedPosition;
+        }
+      }, 100);
+    }
+    
+    // Announce page change for screen readers
+    const tabLabels = {
+      market: 'Marketplace',
+      community: 'Community',
+      studio: 'Design Studio', 
+      orders: 'Orders',
+      profile: 'Profile'
+    };
+    announce(`Navigated to ${tabLabels[activeTab]}`);
+  }, [activeTab, announce]);
 
   // Show loading state while checking authentication
   if (isLoading) {
@@ -55,6 +78,22 @@ const Index = () => {
     return null;
   }
 
+  const renderPage = () => {
+    switch (activeTab) {
+      case 'market':
+        return <ImprovedMarketPage />;
+      case 'community':
+        return <ImprovedCommunityPage />;
+      case 'studio':
+        return <UnifiedStudioShell />;
+      case 'orders':
+        return <OrdersPage />;
+      case 'profile':
+        return <Profile />;
+      default:
+        return <ImprovedMarketPage />;
+    }
+  };
 
   return (
     <div className="flex flex-col lg:block h-screen bg-background text-foreground">
@@ -69,29 +108,31 @@ const Index = () => {
         </div>
         
         <div 
-          className="flex-1 overflow-hidden"
+          className="flex-1 overflow-auto modern-scroll will-change-scroll prevent-layout-shift"
+          ref={mainContentRef}
           id="main-content"
           tabIndex={-1}
           role="main"
           aria-label="Main content"
         >
-          <TabRenderer />
+          {renderPage()}
         </div>
       </div>
       
       {/* Mobile/Tablet Layout */}
       <div className="lg:hidden flex flex-col h-full">
         <div 
-          className="flex-1 overflow-hidden"
+          className="flex-1 overflow-hidden modern-scroll will-change-scroll prevent-layout-shift"
+          ref={mainContentRef}
           id="main-content"
           tabIndex={-1}
           role="main"
           aria-label="Main content"
         >
-          <TabRenderer />
+          {renderPage()}
         </div>
         
-        <UnifiedBottomNavigation />
+        <BottomNavigation />
       </div>
     </div>
   );

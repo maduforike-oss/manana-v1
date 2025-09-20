@@ -77,7 +77,7 @@ export const VirtualizedGrid: React.FC<VirtualizedGridProps> = ({
   return (
     <div
       ref={containerRef}
-      className="overflow-auto momentum-scroll touch-context-scroll will-change-scroll"
+      className="overflow-auto modern-scroll will-change-scroll"
       style={{ height: containerHeight }}
       onScroll={handleScroll}
     >

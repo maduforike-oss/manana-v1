@@ -1,9 +1,8 @@
 import React, { useRef, useCallback, useState, useEffect } from 'react';
-import { Line, Group } from 'react-konva';
+import { Line } from 'react-konva';
 import { useStudioStore } from '@/lib/studio/store';
 import { BrushEngine, BRUSH_PRESETS, BrushStroke } from '@/lib/studio/brushEngine';
 import { generateId } from '@/lib/utils';
-import { useTouchGestures } from '@/hooks/useTouchGestures';
 
 interface EnhancedBrushToolProps {
   isActive: boolean;
@@ -23,9 +22,7 @@ export const EnhancedBrushTool: React.FC<EnhancedBrushToolProps> = ({
   onStrokeComplete
 }) => {
   const brushEngineRef = useRef<BrushEngine | null>(null);
-  const stageRef = useRef<any>(null);
   const [currentStroke, setCurrentStroke] = useState<BrushStroke | null>(null);
-  const [completedStrokes, setCompletedStrokes] = useState<BrushStroke[]>([]);
   const [isDrawing, setIsDrawing] = useState(false);
   const { addNode, zoom } = useStudioStore();
 
@@ -41,68 +38,45 @@ export const EnhancedBrushTool: React.FC<EnhancedBrushToolProps> = ({
     });
   }, [brushSettings]);
 
-  // Unified pointer event handlers for mouse, touch, and stylus
-  const handlePointerDown = useCallback((e: any) => {
+  const handleMouseDown = useCallback((e: any) => {
     if (!isActive || !brushEngineRef.current) return;
     
-    e.evt.preventDefault();
     setIsDrawing(true);
-    
-    const stage = e.target.getStage();
-    const pos = stage.getPointerPosition();
-    
-    // Enhanced pressure detection for Apple Pencil/stylus
-    const pressure = e.evt.pressure || 
-                    (e.evt.pointerType === 'pen' ? (e.evt.force || 0.5) : 1) ||
-                    (e.evt.touches?.[0]?.force || 1);
+    const pos = e.target.getStage().getPointerPosition();
+    const pressure = e.evt.pressure || 1;
     
     const stroke = brushEngineRef.current.startStroke({ x: pos.x, y: pos.y }, pressure);
     setCurrentStroke(stroke);
   }, [isActive]);
 
-  const handlePointerMove = useCallback((e: any) => {
+  const handleMouseMove = useCallback((e: any) => {
     if (!isDrawing || !brushEngineRef.current || !currentStroke) return;
     
-    e.evt.preventDefault();
-    const stage = e.target.getStage();
-    const pos = stage.getPointerPosition();
-    
-    // Enhanced pressure detection
-    const pressure = e.evt.pressure || 
-                    (e.evt.pointerType === 'pen' ? (e.evt.force || 0.5) : 1) ||
-                    (e.evt.touches?.[0]?.force || 1);
+    const pos = e.target.getStage().getPointerPosition();
+    const pressure = e.evt.pressure || 1;
     
     brushEngineRef.current.addPoint({ x: pos.x, y: pos.y }, pressure);
     setCurrentStroke({ ...currentStroke });
   }, [isDrawing, currentStroke]);
 
-  const handlePointerUp = useCallback(() => {
+  const handleMouseUp = useCallback(() => {
     if (!isDrawing || !brushEngineRef.current || !currentStroke) return;
     
     setIsDrawing(false);
     const completedStroke = brushEngineRef.current.endStroke();
     
-    if (completedStroke && completedStroke.points.length > 1) {
-      // Add to completed strokes for persistent rendering
-      setCompletedStrokes(prev => [...prev, completedStroke]);
-      
-      // Convert stroke to persistent path node
+    if (completedStroke) {
+      // Convert stroke to path node
       const points = completedStroke.points.flatMap(p => [p.x, p.y]);
-      const bounds = {
-        minX: Math.min(...completedStroke.points.map(p => p.x)),
-        minY: Math.min(...completedStroke.points.map(p => p.y)),
-        maxX: Math.max(...completedStroke.points.map(p => p.x)),
-        maxY: Math.max(...completedStroke.points.map(p => p.y))
-      };
       
       addNode({
         id: generateId(),
         type: 'path',
         name: `Brush Stroke`,
-        x: bounds.minX,
-        y: bounds.minY,
-        width: bounds.maxX - bounds.minX || 1,
-        height: bounds.maxY - bounds.minY || 1,
+        x: Math.min(...completedStroke.points.map(p => p.x)),
+        y: Math.min(...completedStroke.points.map(p => p.y)),
+        width: Math.max(...completedStroke.points.map(p => p.x)) - Math.min(...completedStroke.points.map(p => p.x)),
+        height: Math.max(...completedStroke.points.map(p => p.y)) - Math.min(...completedStroke.points.map(p => p.y)),
         rotation: 0,
         opacity: completedStroke.brush.opacity,
         points,
@@ -119,48 +93,25 @@ export const EnhancedBrushTool: React.FC<EnhancedBrushToolProps> = ({
     setCurrentStroke(null);
   }, [isDrawing, currentStroke, addNode, onStrokeComplete]);
 
-  // Render all completed and current strokes
-  return (
-    <Group
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerUp}
-      listening={isActive}
-    >
-      {/* Render completed strokes */}
-      {completedStrokes.map((stroke, index) => {
-        const points = stroke.points.flatMap(p => [p.x, p.y]);
-        return (
-          <Line
-            key={`completed-${index}`}
-            points={points}
-            stroke={stroke.brush.color}
-            strokeWidth={stroke.brush.size / zoom}
-            opacity={stroke.brush.opacity}
-            lineCap="round"
-            lineJoin="round"
-            globalCompositeOperation="source-over"
-            perfectDrawEnabled={false}
-            listening={false}
-          />
-        );
-      })}
-      
-      {/* Render current stroke while drawing */}
-      {currentStroke && isDrawing && (
-        <Line
-          points={currentStroke.points.flatMap(p => [p.x, p.y])}
-          stroke={currentStroke.brush.color}
-          strokeWidth={currentStroke.brush.size / zoom}
-          opacity={currentStroke.brush.opacity}
-          lineCap="round"
-          lineJoin="round"
-          globalCompositeOperation="source-over"
-          perfectDrawEnabled={false}
-          listening={false}
-        />
-      )}
-    </Group>
-  );
+  // Render current stroke while drawing
+  if (currentStroke && isDrawing) {
+    const points = currentStroke.points.flatMap(p => [p.x, p.y]);
+    
+    return (
+      <Line
+        points={points}
+        stroke={currentStroke.brush.color}
+        strokeWidth={currentStroke.brush.size / zoom}
+        opacity={currentStroke.brush.opacity}
+        lineCap="round"
+        lineJoin="round"
+        globalCompositeOperation="source-over"
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+      />
+    );
+  }
+
+  return null;
 };

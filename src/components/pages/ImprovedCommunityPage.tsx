@@ -56,8 +56,6 @@ import { ReactionPicker } from '@/components/community/ReactionPicker';
 import { PostSkeletonGrid } from '@/components/community/PostLoadingSkeleton';
 import { CommunityErrorBoundary } from '@/components/community/CommunityErrorBoundary';
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
-import { MobileScrollArea } from '@/components/ui/MobileScrollArea';
-import { ScrollAwareBottomNav } from '@/components/ui/ScrollAwareBottomNav';
 
 // Extended interfaces for additional UI features
 interface ExtendedPost extends Post {
@@ -793,11 +791,11 @@ export const ImprovedCommunityPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 scroll-content-viewport">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       <BrandHeader
         title="Community"
         subtitle="Connect with creators and share your designs"
-        className="mb-8 sticky top-0 z-50 bg-background/80 backdrop-blur-md"
+        className="mb-8"
       >
         <Button
           onClick={() => setShowCreateModal(true)}
@@ -808,13 +806,7 @@ export const ImprovedCommunityPage = () => {
         </Button>
       </BrandHeader>
 
-      <MobileScrollArea 
-        className="container mx-auto px-6 pb-12 momentum-scroll touch-context-scroll"
-        enablePullToRefresh={true}
-        onPullToRefresh={async () => {
-          await loadPosts();
-        }}
-      >
+      <div className="container mx-auto px-6 pb-12">
         <div className="max-w-2xl mx-auto space-y-6">
           {/* Search */}
           <div className="relative">
@@ -908,10 +900,7 @@ export const ImprovedCommunityPage = () => {
             </TabsContent>
           </Tabs>
         </div>
-      </MobileScrollArea>
-
-      {/* Scroll-Aware Bottom Navigation */}
-      <ScrollAwareBottomNav />
+      </div>
 
       {/* Create Post Modal */}
       {showCreateModal && (

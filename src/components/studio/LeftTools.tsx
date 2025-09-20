@@ -74,9 +74,9 @@ export const LeftTools = ({ collapsed = false }: LeftToolsProps) => {
   }
 
   return (
-    <div className="w-full flex flex-col items-center py-4 gap-3 relative">
+    <div className="w-16 flex flex-col items-center py-4 gap-3 relative">
       {/* Tool Categories */}
-      <div className="w-8 h-0.5 bg-gradient-to-r from-primary to-secondary rounded-full mb-2" />
+      <div className="w-8 h-0.5 bg-gradient-to-r from-primary to-studio-accent-cyan rounded-full mb-2" />
       
       <TooltipProvider delayDuration={300}>
         {tools.map((tool, index) => {
@@ -92,23 +92,23 @@ export const LeftTools = ({ collapsed = false }: LeftToolsProps) => {
                     size="icon"
                     onClick={() => setActiveTool(tool.id as Tool)}
                     className={`
-                      w-12 h-12 md:w-14 md:h-14 relative z-10 transition-all duration-200 touch-manipulation
+                      w-12 h-12 relative z-10 transition-all duration-200
                       ${activeTool === tool.id 
-                        ? 'bg-primary text-primary-foreground shadow-glow animate-pulse-glow' 
-                        : 'hover:bg-primary/10 hover:shadow-md'
+                        ? 'studio-tool active animate-[pulse-neon_2s_ease-in-out_infinite]' 
+                        : 'studio-tool hover:bg-primary/10'
                       }
                     `}
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
-                    <IconComponent className={`w-5 h-5 md:w-6 md:h-6 ${activeTool === tool.id ? 'text-primary-foreground' : ''}`} />
+                    <IconComponent className={`w-5 h-5 ${activeTool === tool.id ? 'text-primary-foreground' : ''}`} />
                     
                     {/* Tool category indicator */}
                     {['select', 'text', 'rect', 'brush'].includes(tool.id) && (
-                      <div className="absolute -right-1 -top-1 w-2 h-2 bg-gradient-to-r from-primary to-secondary rounded-full opacity-60" />
+                      <div className="absolute -right-1 -top-1 w-2 h-2 bg-gradient-to-r from-primary to-studio-accent-cyan rounded-full opacity-60" />
                     )}
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="right" className="bg-surface-elevated border-glass-border shadow-xl animate-in slide-in-from-left-2 z-50">
+                <TooltipContent side="right" className="glass-panel neon-border animate-in slide-in-from-left-2 z-50">
                   <div className="text-center">
                     <div className="font-medium text-foreground">{tool.name}</div>
                     {tool.shortcut && (
@@ -123,7 +123,7 @@ export const LeftTools = ({ collapsed = false }: LeftToolsProps) => {
               
               {/* Active tool glow effect */}
               {activeTool === tool.id && (
-                <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-lg blur-sm opacity-30 animate-pulse" />
+                <div className="absolute inset-0 bg-gradient-to-r from-primary to-studio-accent-cyan rounded-lg blur-sm opacity-30 animate-pulse" />
               )}
             </div>
           );
@@ -131,7 +131,7 @@ export const LeftTools = ({ collapsed = false }: LeftToolsProps) => {
       </TooltipProvider>
       
       {/* Bottom accent */}
-      <div className="w-8 h-0.5 bg-gradient-to-r from-secondary to-primary rounded-full mt-2" />
+      <div className="w-8 h-0.5 bg-gradient-to-r from-studio-accent-cyan to-primary rounded-full mt-2" />
     </div>
   );
 };
