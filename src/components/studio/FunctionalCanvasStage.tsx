@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ZoomIn, ZoomOut, RotateCcw, Download, Move, Hand } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { getGarmentView } from '@/lib/api/garments';
 
 export const FunctionalCanvasStage = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -15,6 +16,8 @@ export const FunctionalCanvasStage = () => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentPath, setCurrentPath] = useState<number[]>([]);
   const [garmentImage, setGarmentImage] = useState<HTMLImageElement | null>(null);
+  const [garmentImageUrl, setGarmentImageUrl] = useState<string | null>(null);
+  const [safeArea, setSafeArea] = useState({ wPx: 400, hPx: 400 });
   
   const { 
     doc, 
@@ -54,26 +57,71 @@ export const FunctionalCanvasStage = () => {
 
   // Load garment background image
   useEffect(() => {
-    const loadGarmentImage = async () => {
-      if (doc.canvas.garmentType) {
-        try {
-          // Import image mapping utilities
-          const { getGarmentImage } = await import('../../lib/studio/imageMapping');
-          const imageUrl = await getGarmentImage(doc.canvas.garmentType, 'front', 'white');
+    const loadGarmentBackground = async () => {
+      if (!doc.canvas.garmentType) return;
+      
+      try {
+        console.log("Loading garment background for:", doc.canvas.garmentType);
+        
+        // Get garment view from new API
+        const garmentView = await getGarmentView(doc.canvas.garmentType, 'front', 'white');
+        
+        if (garmentView?.url) {
+          console.log("Found garment template:", garmentView.url);
+          setGarmentImageUrl(garmentView.url);
           
-          if (imageUrl) {
+          // Load image for canvas
+          const img = new window.Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => setGarmentImage(img);
+          img.src = garmentView.url;
+          
+          // Update safe area if available
+          if (garmentView.safe_area) {
+            setSafeArea({
+              wPx: garmentView.safe_area.w,
+              hPx: garmentView.safe_area.h,
+            });
+          }
+          return;
+        }
+        
+        // Fallback to local assets
+        const { getGarmentImage } = await import('../../lib/studio/imageMapping');
+        const imageUrl = await getGarmentImage(doc.canvas.garmentType, 'front', 'white');
+        
+        if (imageUrl) {
+          console.log("Using fallback image path:", imageUrl);
+          setGarmentImageUrl(imageUrl);
+          
+          const img = new window.Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => setGarmentImage(img);
+          img.src = imageUrl;
+        }
+        
+      } catch (error) {
+        console.error("Error loading garment background:", error);
+        // Final fallback - try to load image mapping utilities
+        try {
+          const { getGarmentImage } = await import('../../lib/studio/imageMapping');
+          const fallbackUrl = await getGarmentImage(doc.canvas.garmentType, 'front', 'white');
+          
+          if (fallbackUrl) {
+            setGarmentImageUrl(fallbackUrl);
+            
             const img = new window.Image();
             img.crossOrigin = 'anonymous';
             img.onload = () => setGarmentImage(img);
-            img.src = imageUrl;
+            img.src = fallbackUrl;
           }
-        } catch (error) {
-          console.warn('Failed to load garment image:', error);
+        } catch (fallbackError) {
+          console.warn("Fallback image loading also failed:", fallbackError);
         }
       }
     };
 
-    loadGarmentImage();
+    loadGarmentBackground();
   }, [doc.canvas.garmentType]);
 
   // Auto-save functionality

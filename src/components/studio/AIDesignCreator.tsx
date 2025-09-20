@@ -16,8 +16,8 @@ import { GenMode } from '@/lib/ai/garmentGen';
 import { generateGarmentAPI } from '@/lib/api/garmentGeneration';
 import { setRuntimeGarmentImage } from '@/lib/studio/imageMapping';
 import { OpenAIKeyDialog } from './OpenAIKeyDialog';
-import { GarmentTemplateSelector } from './GarmentTemplateSelector';
-import { fetchSupabaseTemplates, type SupabaseTemplate } from '@/lib/studio/supabaseTemplates';
+import GarmentTemplateSelector from './GarmentTemplateSelector';
+import { type GarmentDetail } from '@/lib/api/garments';
 import { toast } from 'sonner';
 
 interface AIDesignCreatorProps {
@@ -34,7 +34,7 @@ export const AIDesignCreator: React.FC<AIDesignCreatorProps> = ({ onBack }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationStep, setGenerationStep] = useState<string>('');
   const [showKeyDialog, setShowKeyDialog] = useState(false);
-  const [availableTemplates, setAvailableTemplates] = useState<SupabaseTemplate[]>([]);
+  const [availableTemplates, setAvailableTemplates] = useState<GarmentDetail[]>([]);
   
   const { createDesign, setActiveTab } = useAppStore();
   const { addNode, newDesign, updateCanvas } = useStudioStore();
@@ -44,8 +44,8 @@ export const AIDesignCreator: React.FC<AIDesignCreatorProps> = ({ onBack }) => {
   useEffect(() => {
     const loadTemplates = async () => {
       try {
-        const templates = await fetchSupabaseTemplates();
-        setAvailableTemplates(templates);
+        // Remove the template loading since we now use GarmentTemplateSelector
+        console.log('Template loading handled by GarmentTemplateSelector');
       } catch (error) {
         console.error('Failed to load templates:', error);
       }
@@ -164,35 +164,42 @@ export const AIDesignCreator: React.FC<AIDesignCreatorProps> = ({ onBack }) => {
     }
   };
 
-  const handleTemplateSelect = async (template: SupabaseTemplate) => {
+  const handleTemplateSelect = async (garment: GarmentDetail, view: string = 'front') => {
     setIsGenerating(true);
     setGenerationStep('Loading template...');
 
     try {
+      // Get the specific view data
+      const viewData = garment.views[view];
+      if (!viewData) {
+        toast.error(`No ${view} view found for ${garment.name}`);
+        return;
+      }
+
       // Create a new design
-      const success = createDesign(template.garmentType);
+      const success = createDesign(garment.slug);
       if (!success) {
         toast.error('Design limit reached. Please upgrade your plan.');
         return;
       }
 
       // Set runtime image to the template URL
-      setRuntimeGarmentImage(template.garmentType, template.view as any, template.url);
+      setRuntimeGarmentImage(garment.slug, view as any, viewData.url);
 
       // Initialize studio with template
-      newDesign(template.garmentType);
+      newDesign(garment.slug);
       
-      // Update canvas configuration
+      // Update canvas configuration with template dimensions
       updateCanvas({
-        width: 800,
-        height: 600,
-        garmentType: template.garmentType,
+        width: viewData.width_px,
+        height: viewData.height_px,
+        garmentType: garment.slug,
         showGrid: true,
         gridSize: 20
       });
 
       setGenerationStep('');
-      toast.success(`${template.garmentType} template loaded!`);
+      toast.success(`${garment.name} template loaded!`);
 
       // Navigate to studio
       setActiveTab('studio');

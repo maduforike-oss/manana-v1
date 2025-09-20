@@ -1,140 +1,173 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Shirt, Loader2 } from 'lucide-react';
-import { fetchSupabaseTemplates, type SupabaseTemplate } from '@/lib/studio/supabaseTemplates';
-import { toast } from 'sonner';
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
+import { getGarments, getGarmentDetail, type GarmentSummary, type GarmentDetail } from "@/lib/api/garments";
 
 interface GarmentTemplateSelectorProps {
-  onSelect: (template: SupabaseTemplate) => void;
+  onSelect: (garment: GarmentDetail, view?: string) => void;
   selectedGarmentType?: string;
 }
 
-export const GarmentTemplateSelector: React.FC<GarmentTemplateSelectorProps> = ({ 
-  onSelect, 
-  selectedGarmentType = 'hoodie' 
-}) => {
-  const [templates, setTemplates] = useState<SupabaseTemplate[]>([]);
+export default function GarmentTemplateSelector({ onSelect, selectedGarmentType }: GarmentTemplateSelectorProps) {
+  const [garments, setGarments] = useState<GarmentSummary[]>([]);
+  const [selectedGarment, setSelectedGarment] = useState<GarmentDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedTemplate, setSelectedTemplate] = useState<SupabaseTemplate | null>(null);
+  const [selectedView, setSelectedView] = useState<string>('front');
 
   useEffect(() => {
-    const loadTemplates = async () => {
+    const loadGarments = async () => {
       try {
         setLoading(true);
-        const allTemplates = await fetchSupabaseTemplates();
+        const allGarments = await getGarments();
+        setGarments(allGarments);
         
-        // Filter templates for the selected garment type
-        const filteredTemplates = allTemplates.filter(t => 
-          t.garmentType === selectedGarmentType || 
-          t.garmentType === 'hoodie' // Default to hoodie if no match
-        );
+        // Auto-select first garment or specified type
+        let targetGarment = allGarments[0];
+        if (selectedGarmentType) {
+          const specified = allGarments.find(g => 
+            g.slug.toLowerCase() === selectedGarmentType.toLowerCase()
+          );
+          if (specified) targetGarment = specified;
+        }
         
-        setTemplates(filteredTemplates);
-        
-        // Auto-select the first front-view template
-        const frontTemplate = filteredTemplates.find(t => t.view === 'front');
-        if (frontTemplate) {
-          setSelectedTemplate(frontTemplate);
+        if (targetGarment) {
+          const detail = await getGarmentDetail(targetGarment.slug);
+          if (detail) {
+            setSelectedGarment(detail);
+          }
         }
       } catch (error) {
-        console.error('Failed to load templates:', error);
-        toast.error('Failed to load garment templates');
+        console.error("Failed to load garments:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    loadTemplates();
+    loadGarments();
   }, [selectedGarmentType]);
 
-  const handleSelectTemplate = () => {
-    if (selectedTemplate) {
-      onSelect(selectedTemplate);
-      toast.success(`Selected ${selectedTemplate.garmentType} template`);
+  const handleSelectGarment = async (garmentSlug: string) => {
+    try {
+      const detail = await getGarmentDetail(garmentSlug);
+      if (detail) {
+        setSelectedGarment(detail);
+        // Reset to front view when changing garments
+        setSelectedView('front');
+      }
+    } catch (error) {
+      console.error("Failed to load garment detail:", error);
+    }
+  };
+
+  const handleUseTemplate = () => {
+    if (selectedGarment) {
+      onSelect(selectedGarment, selectedView);
     }
   };
 
   if (loading) {
     return (
-      <Card>
-        <CardContent className="flex items-center justify-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin mr-2" />
-          <span>Loading templates...</span>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="w-6 h-6 animate-spin" />
+        <span className="ml-2">Loading garments...</span>
+      </div>
     );
   }
 
+  const availableViews = selectedGarment ? Object.keys(selectedGarment.views) : [];
+  const currentViewData = selectedGarment?.views[selectedView];
+
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Shirt className="w-5 h-5" />
-          Select Template
-        </CardTitle>
+        <CardTitle>Select Garment Template</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Template Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {templates.map((template) => (
-            <div
-              key={template.name}
-              className={`border-2 rounded-lg p-3 cursor-pointer transition-all ${
-                selectedTemplate?.name === template.name
-                  ? 'border-primary bg-primary/5'
-                  : 'border-muted hover:border-border'
-              }`}
-              onClick={() => setSelectedTemplate(template)}
-            >
-              <div className="aspect-square bg-muted rounded-md mb-2 flex items-center justify-center overflow-hidden">
-                <img
-                  src={template.url}
-                  alt={template.name}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                    target.parentElement!.innerHTML = `<div class="w-12 h-12 text-muted-foreground"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg></div>`;
-                  }}
-                />
-              </div>
-              <div className="space-y-1">
-                <div className="text-sm font-medium capitalize">
-                  {template.view}
+        {/* Garment Type Selection */}
+        <div className="space-y-2">
+          <h4 className="font-medium">Garment Type</h4>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {garments.map((garment) => (
+              <div
+                key={garment.slug}
+                className={`cursor-pointer rounded-lg border-2 p-3 transition-all ${
+                  selectedGarment?.slug === garment.slug
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:border-primary/50"
+                }`}
+                onClick={() => handleSelectGarment(garment.slug)}
+              >
+                {garment.preview_url && (
+                  <div className="aspect-square relative mb-2 overflow-hidden rounded">
+                    <img
+                      src={garment.preview_url}
+                      alt={garment.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                <div className="text-center">
+                  <p className="text-sm font-medium">{garment.name}</p>
+                  <p className="text-xs text-muted-foreground">{garment.template_count} templates</p>
                 </div>
-                <Badge variant="secondary" className="text-xs">
-                  {template.color}
-                </Badge>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
-        {/* Selected Template Info */}
-        {selectedTemplate && (
-          <div className="p-4 bg-muted rounded-lg space-y-2">
-            <h4 className="font-medium">Selected Template</h4>
-            <div className="text-sm text-muted-foreground space-y-1">
-              <div>Type: {selectedTemplate.garmentType}</div>
-              <div>View: {selectedTemplate.view}</div>
-              <div>Color: {selectedTemplate.color}</div>
+        {/* View Selection */}
+        {selectedGarment && availableViews.length > 0 && (
+          <div className="space-y-2">
+            <h4 className="font-medium">View</h4>
+            <div className="flex gap-2">
+              {availableViews.map((view) => (
+                <Button
+                  key={view}
+                  variant={selectedView === view ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedView(view)}
+                  className="capitalize"
+                >
+                  {view}
+                </Button>
+              ))}
             </div>
           </div>
         )}
 
-        {/* Action Button */}
-        <Button 
-          onClick={handleSelectTemplate}
-          disabled={!selectedTemplate}
-          className="w-full"
-          size="lg"
-        >
-          <Shirt className="w-4 h-4 mr-2" />
-          Use This Template
-        </Button>
+        {/* Preview */}
+        {currentViewData && (
+          <div className="space-y-2">
+            <h4 className="font-medium">Preview</h4>
+            <div className="aspect-square max-w-xs mx-auto border rounded-lg overflow-hidden">
+              <img
+                src={currentViewData.url}
+                alt={`${selectedGarment?.name} ${selectedView} view`}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="text-center space-y-1">
+              <p className="text-sm font-medium">{selectedGarment?.name} - {selectedView} view</p>
+              <p className="text-xs text-muted-foreground">
+                {currentViewData.width_px} × {currentViewData.height_px}px • {currentViewData.dpi} DPI
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Use Template Button */}
+        {selectedGarment && currentViewData && (
+          <div className="border-t pt-4">
+            <Button 
+              onClick={handleUseTemplate}
+              className="w-full"
+            >
+              Use {selectedGarment.name} Template
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
-};
+}
