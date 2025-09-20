@@ -30,6 +30,7 @@ import {
   MoreHorizontal,
   FolderOpen
 } from 'lucide-react';
+import { QuickGarmentSetup } from './QuickGarmentSetup';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -277,44 +278,8 @@ export const EnhancedStudioHub = () => {
             </CardContent>
           </Card>
 
-          {/* Templates Gallery */}
-          <Card className="glass-effect border-border/20 rounded-3xl overflow-hidden">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 bg-gradient-to-br from-blue-500/20 to-blue-500/10 rounded-xl">
-                  <FolderOpen className="w-6 h-6 text-blue-500" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-foreground">Templates</h3>
-                  <p className="text-sm text-muted-foreground">Professional starters</p>
-                </div>
-              </div>
-              
-              <div className="space-y-4">
-                {[
-                  { name: 'Business Logo', category: 'Corporate' },
-                  { name: 'Street Art', category: 'Urban' },
-                  { name: 'Minimalist', category: 'Clean' }
-                ].map((template, index) => (
-                  <div key={index} className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
-                      <Shirt className="w-6 h-6 text-blue-500" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground truncate">{template.name}</p>
-                      <p className="text-xs text-muted-foreground">{template.category}</p>
-                    </div>
-                    <PlayCircle className="w-4 h-4 text-primary shrink-0" />
-                  </div>
-                ))}
-              </div>
-              
-              <Button variant="outline" className="w-full mt-4 rounded-xl">
-                <Eye className="w-4 h-4 mr-2" />
-                Browse All
-              </Button>
-            </CardContent>
-          </Card>
+          {/* Quick Garment Setup */}
+          <QuickGarmentSetup />
         </div>
 
         {/* Recent Designs */}
