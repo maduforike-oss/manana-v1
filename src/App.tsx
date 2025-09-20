@@ -18,6 +18,7 @@ import ProfileHub from "./pages/ProfileHub";
 import ProfileEdit from "./pages/ProfileEdit";
 import UserProfilePublic from "./pages/UserProfilePublic";
 import { UnifiedStudioShell } from "./components/studio/UnifiedStudioShell";
+import { StudioDesigns } from "./pages/StudioDesigns";
 import ItemDetail from "./pages/ItemDetail";
 import { ProductDetailPage } from "./pages/ProductDetailPage";
 import Cart from "./pages/Cart";
@@ -110,6 +111,11 @@ const App = () => {
               <Route path="/studio" element={
                 <AppLayout>
                   <RequireAuth><UnifiedStudioShell /></RequireAuth>
+                </AppLayout>
+              } />
+              <Route path="/studio/designs" element={
+                <AppLayout>
+                  <RequireAuth><StudioDesigns /></RequireAuth>
                 </AppLayout>
               } />
               <Route path="/item/:id" element={
