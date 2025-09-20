@@ -1,33 +1,26 @@
-import React from 'react';
+"use client";
+
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
-  MousePointer2, 
-  Hand, 
-  Type, 
-  Image, 
-  Square, 
-  Circle, 
-  Minus, 
-  Triangle,
-  Star,
-  Brush
+  MousePointer2, Hand, Type, Image, Square, 
+  Circle, Minus, Triangle, Star, PenTool, Eraser 
 } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useStudioStore } from '../../lib/studio/store';
 import { Tool } from '../../lib/studio/types';
+import { getTools, ToolDefinition } from '../../lib/api/tools';
 
-const tools = [
-  { id: 'select' as Tool, icon: MousePointer2, label: 'Select', shortcut: 'V' },
-  { id: 'hand' as Tool, icon: Hand, label: 'Hand', shortcut: 'H' },
-  { id: 'text' as Tool, icon: Type, label: 'Text', shortcut: 'T' },
-  { id: 'image' as Tool, icon: Image, label: 'Image', shortcut: 'I' },
-  { id: 'rect' as Tool, icon: Square, label: 'Rectangle', shortcut: 'R' },
-  { id: 'circle' as Tool, icon: Circle, label: 'Circle', shortcut: 'C' },
-  { id: 'line' as Tool, icon: Minus, label: 'Line', shortcut: 'L' },
-  { id: 'triangle' as Tool, icon: Triangle, label: 'Triangle', shortcut: '' },
-  { id: 'star' as Tool, icon: Star, label: 'Star', shortcut: 'S' },
-  { id: 'brush' as Tool, icon: Brush, label: 'Brush', shortcut: 'P' },
-];
+// Icon mapping for dynamic tools
+const iconMap = {
+  MousePointer2, Hand, Type, Image, Square, 
+  Circle, Minus, Triangle, Star, PenTool, Eraser
+} as const;
 
 interface LeftToolsProps {
   collapsed?: boolean;
@@ -35,70 +28,110 @@ interface LeftToolsProps {
 
 export const LeftTools = ({ collapsed = false }: LeftToolsProps) => {
   const { activeTool, setActiveTool } = useStudioStore();
+  const [tools, setTools] = useState<ToolDefinition[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadTools = async () => {
+      try {
+        const toolsData = await getTools();
+        setTools(toolsData.tools);
+      } catch (error) {
+        console.error('Failed to load tools:', error);
+        // Fallback to hardcoded tools if API fails
+        setTools([
+          { id: 'select', name: 'Select', icon: 'MousePointer2', shortcut: 'V', description: 'Select and move objects', capabilities: [] },
+          { id: 'hand', name: 'Hand', icon: 'Hand', shortcut: 'H', description: 'Pan the canvas', capabilities: [] },
+          { id: 'text', name: 'Text', icon: 'Type', shortcut: 'T', description: 'Add text', capabilities: [] },
+          { id: 'image', name: 'Image', icon: 'Image', shortcut: 'I', description: 'Add images', capabilities: [] },
+          { id: 'rect', name: 'Rectangle', icon: 'Square', shortcut: 'R', description: 'Draw rectangles', capabilities: [] },
+          { id: 'circle', name: 'Circle', icon: 'Circle', shortcut: 'C', description: 'Draw circles', capabilities: [] },
+          { id: 'line', name: 'Line', icon: 'Minus', shortcut: 'L', description: 'Draw lines', capabilities: [] },
+          { id: 'triangle', name: 'Triangle', icon: 'Triangle', shortcut: '', description: 'Draw triangles', capabilities: [] },
+          { id: 'star', name: 'Star', icon: 'Star', shortcut: 'S', description: 'Draw stars', capabilities: [] },
+          { id: 'brush', name: 'Brush', icon: 'PenTool', shortcut: 'P', description: 'Freehand drawing', capabilities: [] },
+          { id: 'eraser', name: 'Eraser', icon: 'Eraser', shortcut: 'E', description: 'Erase elements', capabilities: [] },
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadTools();
+  }, []);
 
   if (collapsed) return null;
 
-  // Group tools for better visual organization
-  const primaryTools = tools.slice(0, 2); // Select, Hand
-  const drawingTools = tools.slice(2, 4); // Text, Image
-  const shapeTools = tools.slice(4, 7); // Rect, Circle, Line
-  const advancedTools = tools.slice(7); // Triangle, Star, Brush
-
-  const renderToolGroup = (groupTools: typeof tools, withSeparator = false) => (
-    <>
-      {withSeparator && <div className="w-8 h-px bg-border/30 my-2" />}
-      {groupTools.map((tool) => {
-        const Icon = tool.icon;
-        const isActive = activeTool === tool.id;
-        
-        return (
-          <Tooltip key={tool.id}>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setActiveTool(tool.id)}
-                className={`w-10 h-10 p-0 transition-all duration-300 rounded-lg group relative ${
-                  isActive 
-                    ? 'bg-primary/10 text-primary shadow-lg ring-2 ring-primary/30 scale-105' 
-                    : 'hover:bg-accent/60 hover:text-accent-foreground hover:shadow-md hover:scale-[1.02] text-foreground/80'
-                }`}
-              >
-                <Icon className={`w-4 h-4 transition-all duration-200 ${
-                  isActive ? 'drop-shadow-sm' : 'group-hover:scale-110'
-                }`} />
-                {isActive && (
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg" />
-                )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent 
-              side="right" 
-              className="flex items-center gap-2 bg-popover/95 backdrop-blur-sm border border-border/50 shadow-lg"
-            >
-              <span className="font-semibold text-foreground">{tool.label}</span>
-              {tool.shortcut && (
-                <kbd className="px-2 py-1 text-xs bg-primary/10 text-foreground/90 rounded border border-border/40 font-mono font-semibold">
-                  {tool.shortcut}
-                </kbd>
-              )}
-            </TooltipContent>
-          </Tooltip>
-        );
-      })}
-    </>
-  );
+  if (loading) {
+    return (
+      <div className="w-16 flex flex-col items-center py-4 gap-3">
+        <div className="w-8 h-0.5 bg-gradient-to-r from-primary to-studio-accent-cyan rounded-full mb-2" />
+        {Array.from({ length: 11 }).map((_, i) => (
+          <div key={i} className="w-12 h-12 bg-muted rounded-lg animate-pulse" />
+        ))}
+      </div>
+    );
+  }
 
   return (
-    <TooltipProvider delayDuration={300}>
-      <div className="w-16 h-full flex flex-col items-center py-6 bg-card border-r border-border shadow-sm">
-        <div className="flex flex-col items-center gap-1.5">
-          {renderToolGroup(primaryTools)}
-          {renderToolGroup(drawingTools, true)}
-          {renderToolGroup(shapeTools, true)}
-          {renderToolGroup(advancedTools, true)}
-        </div>
-      </div>
-    </TooltipProvider>
+    <div className="w-16 flex flex-col items-center py-4 gap-3 relative">
+      {/* Tool Categories */}
+      <div className="w-8 h-0.5 bg-gradient-to-r from-primary to-studio-accent-cyan rounded-full mb-2" />
+      
+      <TooltipProvider delayDuration={300}>
+        {tools.map((tool, index) => {
+          const IconComponent = iconMap[tool.icon as keyof typeof iconMap];
+          if (!IconComponent) return null;
+          
+          return (
+            <div key={tool.id} className="relative group">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setActiveTool(tool.id as Tool)}
+                    className={`
+                      w-12 h-12 relative z-10 transition-all duration-200
+                      ${activeTool === tool.id 
+                        ? 'studio-tool active animate-[pulse-neon_2s_ease-in-out_infinite]' 
+                        : 'studio-tool hover:bg-primary/10'
+                      }
+                    `}
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    <IconComponent className={`w-5 h-5 ${activeTool === tool.id ? 'text-primary-foreground' : ''}`} />
+                    
+                    {/* Tool category indicator */}
+                    {['select', 'text', 'rect', 'brush'].includes(tool.id) && (
+                      <div className="absolute -right-1 -top-1 w-2 h-2 bg-gradient-to-r from-primary to-studio-accent-cyan rounded-full opacity-60" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="glass-panel neon-border animate-in slide-in-from-left-2 z-50">
+                  <div className="text-center">
+                    <div className="font-medium text-foreground">{tool.name}</div>
+                    {tool.shortcut && (
+                      <div className="text-xs text-primary mt-1 font-mono">({tool.shortcut})</div>
+                    )}
+                    {tool.description && (
+                      <div className="text-xs text-muted-foreground mt-1">{tool.description}</div>
+                    )}
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+              
+              {/* Active tool glow effect */}
+              {activeTool === tool.id && (
+                <div className="absolute inset-0 bg-gradient-to-r from-primary to-studio-accent-cyan rounded-lg blur-sm opacity-30 animate-pulse" />
+              )}
+            </div>
+          );
+        })}
+      </TooltipProvider>
+      
+      {/* Bottom accent */}
+      <div className="w-8 h-0.5 bg-gradient-to-r from-studio-accent-cyan to-primary rounded-full mt-2" />
+    </div>
   );
 };

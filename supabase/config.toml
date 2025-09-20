@@ -62,3 +62,6 @@ verify_jwt = false
 
 [functions.design-persistence]
 verify_jwt = false
+
+[functions.tools-config]
+verify_jwt = false
