@@ -23,62 +23,17 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks: {
-          // Core React bundle
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          
-          // UI components (shared across app)
-          ui: [
-            '@radix-ui/react-dialog', 
-            '@radix-ui/react-dropdown-menu', 
-            '@radix-ui/react-tabs'
-          ],
-          
-          // Heavy studio dependencies
-          studio: ['konva', 'react-konva'],
-          fabric: ['fabric'],
+          vendor: ['react', 'react-dom'],
+          ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-tabs'],
+          studio: ['konva', 'react-konva', 'fabric'],
           three: ['three', '@react-three/fiber', '@react-three/drei'],
-          
-          // AI/ML dependencies
-          ai: ['@huggingface/transformers', 'openai'],
-          
-          // Data management
-          data: ['@tanstack/react-query', 'zustand'],
-          
-          // Utilities
-          utils: ['clsx', 'tailwind-merge', 'date-fns', 'sonner']
+          utils: ['clsx', 'tailwind-merge', 'date-fns']
         }
       }
     },
-    chunkSizeWarningLimit: 1000,
-    target: 'esnext',
-    minify: mode === 'production' ? 'terser' : 'esbuild',
-    ...(mode === 'production' && {
-      terserOptions: {
-        compress: {
-          drop_console: true,
-          drop_debugger: true
-        }
-      }
-    })
+    chunkSizeWarningLimit: 1000
   },
   optimizeDeps: {
-    include: [
-      'react', 
-      'react-dom', 
-      'react-router-dom',
-      'konva', 
-      'react-konva',
-      '@radix-ui/react-dialog',
-      'zustand',
-      'clsx',
-      'tailwind-merge'
-    ],
-    exclude: [
-      'fabric',
-      'three',
-      '@react-three/fiber',
-      '@react-three/drei',
-      '@huggingface/transformers'
-    ]
+    include: ['react', 'react-dom', 'konva', 'react-konva']
   }
 }));

@@ -10,43 +10,25 @@ import LandingPage from "./pages/LandingPage";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import OrderDetails from "./pages/OrderDetails";
+import { ProfileSettings } from "./pages/ProfileSettings";
 import { UpgradePlan } from "./pages/UpgradePlan";
 import Followers from "./pages/Followers";
 import UserProfile from "./pages/UserProfile";
+import ProfileHub from "./pages/ProfileHub";
+import ProfileEdit from "./pages/ProfileEdit";
 import UserProfilePublic from "./pages/UserProfilePublic";
+import { UnifiedStudioShell } from "./components/studio/UnifiedStudioShell";
 import ItemDetail from "./pages/ItemDetail";
 import { ProductDetailPage } from "./pages/ProductDetailPage";
 import Cart from "./pages/Cart";
 import SellNew from "./pages/SellNew";
 import Checkout from "./pages/Checkout";
 import CheckoutSuccess from "./pages/CheckoutSuccess";
+import AdminTemplates from "./pages/AdminTemplates";
+import TemplatesUploader from "./pages/admin/TemplatesUploader";
 import RequireAuth from "./components/auth/RequireAuth";
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState } from "react";
 import { MobileFallback } from "./components/MobileFallback";
-import { useIsMobile } from "./hooks/use-mobile";
-import { MobileStudioShell } from "./components/MobileStudioShell";
-// Lazy imports for performance
-import {
-  UnifiedStudioShell,
-  ProfileHub,
-  ProfileEdit,
-  ProfileSettings,
-  AdminTemplates,
-  TemplatesUploader
-} from "./components/LazyComponents";
-import {
-  StudioLoadingFallback,
-  PageLoadingFallback,
-  ProfileLoadingFallback,
-  AdminLoadingFallback
-} from "./components/LoadingFallbacks";
-import { 
-  preloadCriticalAssets, 
-  setupIntelligentPreloading, 
-  addResourceHints 
-} from "./utils/preloadUtils";
-import { PerformanceMonitor } from "./components/PerformanceMonitor";
-import { useMemoryOptimizer } from "./components/optimized/MemoryOptimizer";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -59,29 +41,22 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
+  const [isMobile, setIsMobile] = useState(false);
   const [showFallback, setShowFallback] = useState(false);
-  const isMobile = useIsMobile();
-  
-  // Memory optimization
-  useMemoryOptimizer();
 
   useEffect(() => {
-    // Performance optimizations
-    addResourceHints();
-    preloadCriticalAssets();
-    
-    // Setup intelligent preloading after initial render
-    const setupPreloading = () => setupIntelligentPreloading();
-    if (window.requestIdleCallback) {
-      requestIdleCallback(setupPreloading);
-    } else {
-      setTimeout(setupPreloading, 100);
-    }
+    // Check if mobile and if there are rendering issues
+    const checkMobile = () => {
+      const mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      setIsMobile(mobile);
+      
+      // Show fallback if mobile and localStorage is not available
+      if (mobile && !('localStorage' in window)) {
+        setShowFallback(true);
+      }
+    };
 
-    // Only show fallback for localStorage issues, not for all mobile devices
-    if (isMobile && !('localStorage' in window)) {
-      setShowFallback(true);
-    }
+    checkMobile();
 
     // Register service worker for offline support
     if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
@@ -134,11 +109,7 @@ const App = () => {
               } />
               <Route path="/studio" element={
                 <AppLayout>
-                  <RequireAuth>
-                    <Suspense fallback={<StudioLoadingFallback />}>
-                      {isMobile ? <MobileStudioShell /> : <UnifiedStudioShell />}
-                    </Suspense>
-                  </RequireAuth>
+                  <RequireAuth><UnifiedStudioShell /></RequireAuth>
                 </AppLayout>
               } />
               <Route path="/item/:id" element={
@@ -178,29 +149,17 @@ const App = () => {
               } />
               <Route path="/profile" element={
                 <AppLayout>
-                  <RequireAuth>
-                    <Suspense fallback={<ProfileLoadingFallback />}>
-                      <ProfileHub />
-                    </Suspense>
-                  </RequireAuth>
+                  <RequireAuth><ProfileHub /></RequireAuth>
                 </AppLayout>
               } />
               <Route path="/profile/edit" element={
                 <AppLayout>
-                  <RequireAuth>
-                    <Suspense fallback={<ProfileLoadingFallback />}>
-                      <ProfileEdit />
-                    </Suspense>
-                  </RequireAuth>
+                  <RequireAuth><ProfileEdit /></RequireAuth>
                 </AppLayout>
               } />
               <Route path="/profile/settings" element={
                 <AppLayout>
-                  <RequireAuth>
-                    <Suspense fallback={<ProfileLoadingFallback />}>
-                      <ProfileSettings />
-                    </Suspense>
-                  </RequireAuth>
+                  <RequireAuth><ProfileSettings /></RequireAuth>
                 </AppLayout>
               } />
               <Route path="/profile/upgrade" element={
@@ -225,20 +184,12 @@ const App = () => {
               } />
               <Route path="/admin/templates" element={
                 <AppLayout>
-                  <RequireAuth>
-                    <Suspense fallback={<AdminLoadingFallback />}>
-                      <AdminTemplates />
-                    </Suspense>
-                  </RequireAuth>
+                  <RequireAuth><AdminTemplates /></RequireAuth>
                 </AppLayout>
               } />
               <Route path="/admin/templates-uploader" element={
                 <AppLayout>
-                  <RequireAuth>
-                    <Suspense fallback={<AdminLoadingFallback />}>
-                      <TemplatesUploader />
-                    </Suspense>
-                  </RequireAuth>
+                  <RequireAuth><TemplatesUploader /></RequireAuth>
                 </AppLayout>
               } />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
