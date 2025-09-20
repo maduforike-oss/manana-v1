@@ -5,6 +5,7 @@ import { RightProps } from './RightProps';
 import { FunctionalCanvasStage } from './FunctionalCanvasStage';
 import { ColorSelector } from './ColorSelector';
 import { EnhancedBottomControls } from './EnhancedBottomControls';
+import { StudioHub } from './StudioHub';
 import { useSetActiveTool, useUndo, useRedo, useSetZoom, useSetPanOffset } from '../../lib/studio/storeSelectors';
 import { useAppStore } from '../../store/useAppStore';
 import { useStudioStore } from '../../lib/studio/store';
@@ -23,12 +24,18 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 export const UnifiedStudioShell = () => {
+  const { currentDesign, saveDesign } = useAppStore();
+  
+  // If no design is selected, show the studio hub
+  if (!currentDesign) {
+    return <StudioHub />;
+  }
+
   const setActiveTool = useSetActiveTool();
   const undo = useUndo();
   const redo = useRedo();
   const setZoom = useSetZoom();
   const setPanOffset = useSetPanOffset();
-  const { currentDesign, saveDesign } = useAppStore();
   const { 
     doc, 
     zoom, 

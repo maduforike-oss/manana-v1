@@ -17,9 +17,7 @@ import UserProfile from "./pages/UserProfile";
 import ProfileHub from "./pages/ProfileHub";
 import ProfileEdit from "./pages/ProfileEdit";
 import UserProfilePublic from "./pages/UserProfilePublic";
-import { StudioPage } from "./components/pages/StudioPage";
-import StudioEditor from "./pages/StudioEditor";
-import StudioPro from "./pages/StudioPro";
+import { UnifiedStudioShell } from "./components/studio/UnifiedStudioShell";
 import ItemDetail from "./pages/ItemDetail";
 import { ProductDetailPage } from "./pages/ProductDetailPage";
 import Cart from "./pages/Cart";
@@ -110,19 +108,7 @@ const App = () => {
                 </AppLayout>
               } />
               <Route path="/studio" element={
-                <AppLayout>
-                  <RequireAuth><StudioPro /></RequireAuth>
-                </AppLayout>
-              } />
-              <Route path="/studio/editor" element={
-                <AppLayout>
-                  <RequireAuth><StudioEditor /></RequireAuth>
-                </AppLayout>
-              } />
-              <Route path="/studio/legacy" element={
-                <AppLayout>
-                  <RequireAuth><StudioPage /></RequireAuth>
-                </AppLayout>
+                <RequireAuth><UnifiedStudioShell /></RequireAuth>
               } />
               <Route path="/item/:id" element={
                 <AppLayout>

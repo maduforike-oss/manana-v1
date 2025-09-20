@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/useAppStore';
 import { BottomNavigation } from '@/components/BottomNavigation';
-import { StudioPage } from '@/components/pages/StudioPage';
+import { UnifiedStudioShell } from '@/components/studio/UnifiedStudioShell';
 import { ImprovedMarketPage } from '@/components/pages/ImprovedMarketPage';
 import { ImprovedCommunityPage } from '@/components/pages/ImprovedCommunityPage';
 import { OrdersPage } from '@/components/pages/OrdersPage';
@@ -85,7 +85,7 @@ const Index = () => {
       case 'community':
         return <ImprovedCommunityPage />;
       case 'studio':
-        return <StudioPage />;
+        return <UnifiedStudioShell />;
       case 'orders':
         return <OrdersPage />;
       case 'profile':

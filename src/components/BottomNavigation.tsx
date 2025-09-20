@@ -54,7 +54,13 @@ export const BottomNavigation = () => {
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => {
+                  if (tab.id === 'studio') {
+                    window.location.href = '/studio';
+                  } else {
+                    setActiveTab(tab.id);
+                  }
+                }}
                 className={cn(
                   "flex flex-col items-center gap-0.5 sm:gap-1 px-2 sm:px-3 py-2 rounded-xl transition-all duration-200 min-w-[56px] sm:min-w-[60px] min-h-[48px] sm:min-h-[50px] relative group touch:min-w-[60px] touch:min-h-[52px]",
                   "hover:bg-muted/20 active:scale-95 focus:outline-none focus-visible:outline-none focus-visible:ring-0",

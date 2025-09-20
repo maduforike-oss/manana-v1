@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 
 export const StudioShell = () => {
   console.log('StudioShell component rendered');
-  const { saveSnapshot, doc } = useStudioStore();
+  const { saveSnapshot, doc, zoom } = useStudioStore();
   console.log('StudioShell doc:', doc);
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);

@@ -46,7 +46,7 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ className }) => 
           <Button
             variant={activeTab === 'studio' ? 'default' : 'ghost'}
             className="w-full justify-start"
-            onClick={() => setActiveTab('studio')}
+            onClick={() => window.location.href = '/studio'}
           >
             <Palette className="h-4 w-4 mr-3" />
             Design Studio
