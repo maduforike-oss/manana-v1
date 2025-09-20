@@ -30,8 +30,7 @@ export default defineConfig(({ mode }) => ({
           ui: [
             '@radix-ui/react-dialog', 
             '@radix-ui/react-dropdown-menu', 
-            '@radix-ui/react-tabs',
-            '@radix-ui/react-sheet'
+            '@radix-ui/react-tabs'
           ],
           
           // Heavy studio dependencies
@@ -68,7 +67,6 @@ export default defineConfig(({ mode }) => ({
       'konva', 
       'react-konva',
       '@radix-ui/react-dialog',
-      '@radix-ui/react-sheet',
       'zustand',
       'clsx',
       'tailwind-merge'
