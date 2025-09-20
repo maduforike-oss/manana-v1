@@ -8,6 +8,7 @@ import { Logo } from '@/components/brand/Logo';
 import { useAppStore } from '@/store/useAppStore';
 import { useStudioStore } from '../../lib/studio/store';
 import { AIDesignCreator } from './AIDesignCreator';
+import { TemplatePopulator } from './TemplatePopulator';
 import { 
   Plus, 
   Sparkles, 
@@ -87,6 +88,9 @@ export const StudioHub = () => {
             <div className="absolute bottom-1/4 right-1/3 w-24 h-24 rounded-full bg-secondary animate-pulse delay-75" />
           </div>
         </div>
+
+        {/* Template Populator - Development Tool */}
+        <TemplatePopulator />
 
         {/* Analytics Dashboard */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

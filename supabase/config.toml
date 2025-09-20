@@ -65,3 +65,6 @@ verify_jwt = false
 
 [functions.tools-config]
 verify_jwt = false
+
+[functions.populate-templates]
+verify_jwt = false

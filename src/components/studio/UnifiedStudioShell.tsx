@@ -51,20 +51,15 @@ export const UnifiedStudioShell = () => {
   // Sync studio state with app store
   useStudioSync();
 
-  // If no design is selected, show the studio hub
-  if (!currentDesign) {
-    return <StudioHub />;
-  }
-
   // Load purchased design when currentDesign changes
   useEffect(() => {
     if (currentDesign?.isPurchased && !isLoading) {
       setIsLoading(true);
       loadPurchasedDesign();
     }
-  }, [currentDesign?.id]);
+  }, [currentDesign?.id, currentDesign?.isPurchased, isLoading]);
 
-  const loadPurchasedDesign = async () => {
+  const loadPurchasedDesign = useCallback(async () => {
     if (!currentDesign) return;
     
     try {
@@ -85,7 +80,12 @@ export const UnifiedStudioShell = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentDesign, loadStudioFromAppDesign, updateCanvas]);
+
+  // If no design is selected, show the studio hub
+  if (!currentDesign) {
+    return <StudioHub />;
+  }
 
   // Enhanced auto-save with status indication
   const handleAutoSave = useCallback(async () => {
