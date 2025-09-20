@@ -27,6 +27,7 @@ import Checkout from "./pages/Checkout";
 import CheckoutSuccess from "./pages/CheckoutSuccess";
 import AdminTemplates from "./pages/AdminTemplates";
 import TemplatesUploader from "./pages/admin/TemplatesUploader";
+import TemplateAdminPage from "./pages/TemplateAdmin";
 import RequireAuth from "./components/auth/RequireAuth";
 import { useEffect, useState } from "react";
 import { MobileFallback } from "./components/MobileFallback";
@@ -196,6 +197,11 @@ const App = () => {
               <Route path="/admin/templates-uploader" element={
                 <AppLayout>
                   <RequireAuth><TemplatesUploader /></RequireAuth>
+                </AppLayout>
+              } />
+              <Route path="/admin/template-manager" element={
+                <AppLayout>
+                  <RequireAuth><TemplateAdminPage /></RequireAuth>
                 </AppLayout>
               } />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
