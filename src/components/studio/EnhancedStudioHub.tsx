@@ -28,9 +28,10 @@ import {
   PlayCircle,
   Trash2,
   MoreHorizontal,
-  FolderOpen
+  FolderOpen,
+  ArrowRight
 } from 'lucide-react';
-import { QuickGarmentSetup } from './QuickGarmentSetup';
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -278,8 +279,30 @@ export const EnhancedStudioHub = () => {
             </CardContent>
           </Card>
 
-          {/* Quick Garment Setup */}
-          <QuickGarmentSetup />
+          {/* Quick Start Option */}
+          <Card className="group hover:shadow-lg transition-all duration-300">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Palette className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">Quick Start</h3>
+                    <p className="text-sm text-muted-foreground">Browse templates & start designing</p>
+                  </div>
+                </div>
+                <Button 
+                  onClick={handleNewDesign}
+                  variant="ghost"
+                  size="sm"
+                  className="group-hover:bg-primary group-hover:text-primary-foreground"
+                >
+                  Start <ArrowRight className="w-4 h-4 ml-1" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Recent Designs */}
