@@ -8,10 +8,23 @@
   }
 }
 
+/* Dynamic Viewport Height Support */
+@supports (height: 100dvh) {
+  .h-dvh { height: 100dvh; }
+  .min-h-dvh { min-height: 100dvh; }
+}
+@supports not (height: 100dvh) {
+  .h-dvh { height: calc(var(--vh) * 100); }
+  .min-h-dvh { min-height: calc(var(--vh) * 100); }
+}
+
 /* Manana Design System - Unified Fashion Platform */
 
 @layer base {
   :root {
+    /* Dynamic Viewport Height */
+    --vh: 1vh;
+    
     /* Core Brand Colors - Magenta & Cyan Theme */
     --background: 0 0% 98%;
     --foreground: 230 20% 15%;
