@@ -750,3 +750,73 @@ textarea {
     padding-bottom: 1.5rem;
   }
 }
+
+/* Studio Interface Styles - Touch Optimized */
+.studio-tool {
+  @apply rounded-lg border border-transparent bg-transparent text-muted-foreground;
+  @apply hover:bg-accent hover:text-accent-foreground;
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+  @apply disabled:pointer-events-none disabled:opacity-50;
+  @apply touch-manipulation;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.studio-tool.active {
+  @apply bg-primary text-primary-foreground;
+  @apply border-primary/20;
+  box-shadow: var(--shadow-glow);
+}
+
+/* Touch-friendly glass panels */
+.glass-panel {
+  @apply backdrop-blur-md bg-surface-elevated/90 border border-glass-border;
+  @apply shadow-lg;
+}
+
+/* Touch optimizations */
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Pressure-sensitive brush cursor */
+.brush-cursor {
+  border-radius: 50%;
+  border: 2px solid hsl(var(--primary));
+  background: transparent;
+  pointer-events: none;
+  position: fixed;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: width 0.1s, height 0.1s;
+}
+
+/* Touch Animation Utilities */
+@keyframes pulse-neon {
+  0%, 100% { 
+    box-shadow: var(--shadow-primary); 
+  }
+  50% { 
+    box-shadow: var(--shadow-glow); 
+  }
+}
+
+@keyframes touch-ripple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* Haptic feedback animation */
+@keyframes haptic-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}

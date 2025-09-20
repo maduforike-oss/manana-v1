@@ -92,14 +92,14 @@ export const StudioShell = () => {
   }, [setActiveTool, toggleGrid, toggleRulers, toggleSnap, toggleBoundingBox, undo, redo, setZoom, setPanOffset]);
   return (
     <AsyncStudioInitializer onInitialized={() => setActiveRightTab('design')}>
-      <div className="h-screen flex flex-col bg-background text-foreground">
+      <div className="min-h-dvh h-dvh md:min-h-screen md:h-screen flex flex-col bg-background text-foreground touch-none select-none">
         <TopBar />
         
         <div className="flex-1 flex overflow-hidden">
           {/* Left Tools Panel */}
           <div className={cn(
-            "transition-all duration-300 ease-in-out bg-card border-r border-workspace-border",
-            leftPanelCollapsed ? "w-0 overflow-hidden" : "w-16"
+            "transition-all duration-300 ease-in-out bg-surface-elevated border-r border-glass-border shadow-lg",
+            leftPanelCollapsed ? "w-0 overflow-hidden" : "w-16 md:w-20"
           )}>
             <EnhancedLeftTools collapsed={leftPanelCollapsed} />
           </div>
@@ -143,8 +143,8 @@ export const StudioShell = () => {
           
           {/* Right Properties Panel */}
           <div className={cn(
-            "transition-all duration-300 ease-in-out bg-card border-l border-workspace-border",
-            rightPanelCollapsed ? "w-0 overflow-hidden" : "w-80"
+            "transition-all duration-300 ease-in-out bg-surface-elevated border-l border-glass-border shadow-lg",
+            rightPanelCollapsed ? "w-0 overflow-hidden" : "w-80 md:w-96"
           )}>
             <RightProps 
               collapsed={rightPanelCollapsed}
