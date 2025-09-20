@@ -80,6 +80,48 @@ export function clearAllRuntimeGarmentImages() {
 
 // Legacy compatibility exports
 export async function getGarmentImage(garmentId: string, orientation: Orientation = "front", color: string = "white"): Promise<string | null> {
+  // Check for runtime override first
+  const runtimeImage = getActiveGarmentImage(garmentId, orientation);
+  if (runtimeImage) {
+    return runtimeImage;
+  }
+
+  // Try to get from Supabase templates
+  try {
+    const { fetchSupabaseTemplates } = await import('./supabaseTemplates');
+    const templates = await fetchSupabaseTemplates();
+    
+    // Find matching template (prefer exact match, fallback to similar)
+    const exactMatch = templates.find(t => 
+      t.garmentType === garmentId && 
+      t.view === orientation && 
+      t.color === color
+    );
+    
+    if (exactMatch) {
+      return exactMatch.url;
+    }
+    
+    // Fallback: find any template for this garment type and orientation
+    const fallbackMatch = templates.find(t => 
+      t.garmentType === garmentId && 
+      t.view === orientation
+    );
+    
+    if (fallbackMatch) {
+      return fallbackMatch.url;
+    }
+    
+    // Last resort: any template for this garment type
+    const lastResort = templates.find(t => t.garmentType === garmentId);
+    if (lastResort) {
+      return lastResort.url;
+    }
+  } catch (error) {
+    console.warn('Failed to load from Supabase templates:', error);
+  }
+
+  // Fallback to static URLs
   const urls = await getCandidateUrls(garmentId, orientation, color);
   return urls[0] || null;
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -16,6 +16,8 @@ import { GenMode } from '@/lib/ai/garmentGen';
 import { generateGarmentAPI } from '@/lib/api/garmentGeneration';
 import { setRuntimeGarmentImage } from '@/lib/studio/imageMapping';
 import { OpenAIKeyDialog } from './OpenAIKeyDialog';
+import { GarmentTemplateSelector } from './GarmentTemplateSelector';
+import { fetchSupabaseTemplates, type SupabaseTemplate } from '@/lib/studio/supabaseTemplates';
 import { toast } from 'sonner';
 
 interface AIDesignCreatorProps {
@@ -32,10 +34,24 @@ export const AIDesignCreator: React.FC<AIDesignCreatorProps> = ({ onBack }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationStep, setGenerationStep] = useState<string>('');
   const [showKeyDialog, setShowKeyDialog] = useState(false);
+  const [availableTemplates, setAvailableTemplates] = useState<SupabaseTemplate[]>([]);
   
   const { createDesign, setActiveTab } = useAppStore();
   const { addNode, newDesign, updateCanvas } = useStudioStore();
   const { navigateToTab } = useAppNavigation();
+
+  // Load available templates on component mount
+  useEffect(() => {
+    const loadTemplates = async () => {
+      try {
+        const templates = await fetchSupabaseTemplates();
+        setAvailableTemplates(templates);
+      } catch (error) {
+        console.error('Failed to load templates:', error);
+      }
+    };
+    loadTemplates();
+  }, []);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -91,7 +107,9 @@ export const AIDesignCreator: React.FC<AIDesignCreatorProps> = ({ onBack }) => {
       updateCanvas({
         width: spec.size.w,
         height: spec.size.h,
-        garmentType: selectedGarment
+        garmentType: selectedGarment,
+        showGrid: true,
+        gridSize: 20
       });
 
       setGenerationStep('');
@@ -143,6 +161,48 @@ export const AIDesignCreator: React.FC<AIDesignCreatorProps> = ({ onBack }) => {
       toast.error('Failed to generate design. Please try again.');
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleTemplateSelect = async (template: SupabaseTemplate) => {
+    setIsGenerating(true);
+    setGenerationStep('Loading template...');
+
+    try {
+      // Create a new design
+      const success = createDesign(template.garmentType);
+      if (!success) {
+        toast.error('Design limit reached. Please upgrade your plan.');
+        return;
+      }
+
+      // Set runtime image to the template URL
+      setRuntimeGarmentImage(template.garmentType, template.view as any, template.url);
+
+      // Initialize studio with template
+      newDesign(template.garmentType);
+      
+      // Update canvas configuration
+      updateCanvas({
+        width: 800,
+        height: 600,
+        garmentType: template.garmentType,
+        showGrid: true,
+        gridSize: 20
+      });
+
+      setGenerationStep('');
+      toast.success(`${template.garmentType} template loaded!`);
+
+      // Navigate to studio
+      setActiveTab('studio');
+      navigateToTab('studio');
+    } catch (error) {
+      console.error('Template loading failed:', error);
+      toast.error('Failed to load template. Please try again.');
+    } finally {
+      setIsGenerating(false);
+      setGenerationStep('');
     }
   };
 
@@ -330,109 +390,19 @@ export const AIDesignCreator: React.FC<AIDesignCreatorProps> = ({ onBack }) => {
             </div>
           </div>
 
-          {/* Garment Selection */}
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>Select Garment Type & Orientation</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Garment Type Selection */}
-              <div className="space-y-3">
-                <label className="text-sm font-medium">Garment Type</label>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                  {GARMENT_TYPES.slice(0, 10).map((garment) => (
-                    <Button
-                      key={garment.id}
-                      variant={selectedGarment === garment.id ? "default" : "outline"}
-                      onClick={() => setSelectedGarment(garment.id)}
-                      className="p-4 h-auto flex flex-col gap-2"
-                    >
-                      <Shirt className="w-6 h-6" />
-                      <span className="text-sm">{garment.name}</span>
-                    </Button>
-                  ))}
-                </div>
-              </div>
+          {/* Template Selection */}
+          <GarmentTemplateSelector 
+            onSelect={handleTemplateSelect}
+            selectedGarmentType={selectedGarment}
+          />
 
-              {/* Orientation Selection */}
-              <div className="space-y-3">
-                <label className="text-sm font-medium">Orientation</label>
-                <div className="flex gap-3">
-                  <Button
-                    variant={selectedOrientation === 'front' ? "default" : "outline"}
-                    onClick={() => setSelectedOrientation('front')}
-                  >
-                    Front
-                  </Button>
-                  <Button
-                    variant={selectedOrientation === 'back' ? "default" : "outline"}
-                    onClick={() => setSelectedOrientation('back')}
-                  >
-                    Back
-                  </Button>
-                </div>
-              </div>
-
-              {/* Garment Spec Preview */}
-              {selectedGarment && (
-                <div className="p-4 bg-muted rounded-lg">
-                  <h4 className="font-medium mb-2">Template Specifications</h4>
-                  {(() => {
-                    const spec = buildSpec({ garmentId: selectedGarment, orientation: selectedOrientation });
-                    return (
-                      <div className="text-sm text-muted-foreground space-y-1">
-                        <div>Canvas: {spec.size.w} × {spec.size.h}px</div>
-                        <div>DPI: {spec.dpi}</div>
-                        <div>Safe Area: {spec.safeArea.w} × {spec.safeArea.h}px</div>
-                      </div>
-                    );
-                  })()}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Generate Buttons */}
-          <div className="flex justify-center gap-3">
-            <Button
-              onClick={() => generateGarmentBase('mock')}
-              disabled={isGenerating || !selectedGarment}
-              variant="outline"
-              size="lg"
-              className="px-6"
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  {generationStep || 'Generating...'}
-                </>
-              ) : (
-                <>
-                  <Shirt className="w-4 h-4 mr-2" />
-                  Mock Template
-                </>
-              )}
-            </Button>
-            
-            <Button
-              onClick={() => generateGarmentBase('openai')}
-              disabled={isGenerating || !selectedGarment}
-              size="lg"
-              className="px-6"
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  {generationStep || 'Generating...'}
-                </>
-              ) : (
-                <>
-                  <Wand2 className="w-4 h-4 mr-2" />
-                  AI Generate
-                </>
-              )}
-            </Button>
-          </div>
+          {/* Loading State */}
+          {isGenerating && (
+            <div className="flex items-center justify-center gap-3 p-6 bg-muted rounded-lg">
+              <Loader2 className="w-6 h-6 animate-spin" />
+              <span className="text-lg font-medium">{generationStep || 'Loading...'}</span>
+            </div>
+          )}
         </div>
       </div>
     );

@@ -108,7 +108,9 @@ const App = () => {
                 </AppLayout>
               } />
               <Route path="/studio" element={
-                <RequireAuth><UnifiedStudioShell /></RequireAuth>
+                <AppLayout>
+                  <RequireAuth><UnifiedStudioShell /></RequireAuth>
+                </AppLayout>
               } />
               <Route path="/item/:id" element={
                 <AppLayout>

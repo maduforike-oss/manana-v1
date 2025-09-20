@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { Stage, Layer, Rect, Circle, Text, Line, RegularPolygon, Transformer } from 'react-konva';
+import { Stage, Layer, Rect, Circle, Text, Line, RegularPolygon, Transformer, Image } from 'react-konva';
 import { useStudioStore } from '../../lib/studio/store';
 import { Node, TextNode, ShapeNode, ImageNode } from '../../lib/studio/types';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ export const FunctionalCanvasStage = () => {
   const [stageSize, setStageSize] = useState({ width: 800, height: 600 });
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentPath, setCurrentPath] = useState<number[]>([]);
+  const [garmentImage, setGarmentImage] = useState<HTMLImageElement | null>(null);
   
   const { 
     doc, 
@@ -50,6 +51,30 @@ export const FunctionalCanvasStage = () => {
 
     return () => observer.disconnect();
   }, []);
+
+  // Load garment background image
+  useEffect(() => {
+    const loadGarmentImage = async () => {
+      if (doc.canvas.garmentType) {
+        try {
+          // Import image mapping utilities
+          const { getGarmentImage } = await import('../../lib/studio/imageMapping');
+          const imageUrl = await getGarmentImage(doc.canvas.garmentType, 'front', 'white');
+          
+          if (imageUrl) {
+            const img = new window.Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => setGarmentImage(img);
+            img.src = imageUrl;
+          }
+        } catch (error) {
+          console.warn('Failed to load garment image:', error);
+        }
+      }
+    };
+
+    loadGarmentImage();
+  }, [doc.canvas.garmentType]);
 
   // Auto-save functionality
   useEffect(() => {
@@ -517,6 +542,19 @@ export const FunctionalCanvasStage = () => {
         <Layer>
           {/* Grid */}
           {renderGrid()}
+          
+          {/* Garment Background Image */}
+          {garmentImage && (
+            <Image
+              image={garmentImage}
+              x={50}
+              y={50}
+              width={Math.min(stageSize.width - 100, garmentImage.width * 0.8)}
+              height={Math.min(stageSize.height - 100, garmentImage.height * 0.8)}
+              listening={false}
+              opacity={0.9}
+            />
+          )}
           
           {/* Current brush stroke */}
           {isDrawing && currentPath.length > 2 && (
