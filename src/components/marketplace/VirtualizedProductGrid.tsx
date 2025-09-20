@@ -102,7 +102,7 @@ export function VirtualizedProductGrid({
   return (
     <div
       ref={parentRef}
-      className={cn("h-[80vh] overflow-auto", className)}
+      className={cn("h-[80vh] overflow-auto momentum-scroll touch-context-scroll", className)}
       style={{
         scrollBehavior: 'smooth'
       }}

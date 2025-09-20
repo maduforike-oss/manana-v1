@@ -39,7 +39,7 @@ export function ProductListView({
   }
 
   return (
-    <div className="space-y-4 pb-20 sm:pb-6">
+    <div className="space-y-4 pb-20 sm:pb-6 scroll-content-safe">
       {products.map((product) => (
         <MarketProductCard
           key={product.id}

@@ -21,6 +21,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/useAppStore';
 import { SavedTabContent } from '@/components/marketplace/SavedTabContent';
+import { MobileScrollArea } from '@/components/ui/MobileScrollArea';
+import { ScrollAwareBottomNav } from '@/components/ui/ScrollAwareBottomNav';
 
 export function ImprovedMarketPage() {
   // URL-synced state management
@@ -169,7 +171,7 @@ export function ImprovedMarketPage() {
   const totalResults = productsData?.total || 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/10">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/10 scroll-content-viewport">
       {/* Header */}
       <BrandHeader title="Marketplace" className="border-b border-border/30 bg-background/80 backdrop-blur-md sticky top-0 z-50">
         <div className="flex items-center gap-3">
@@ -192,7 +194,13 @@ export function ImprovedMarketPage() {
         </div>
       </BrandHeader>
 
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
+      <MobileScrollArea 
+        className="container mx-auto px-4 py-6 max-w-7xl momentum-scroll touch-context-scroll"
+        enablePullToRefresh={true}
+        onPullToRefresh={async () => {
+          await refetch();
+        }}
+      >
         {/* Hero Banner - Promotional */}
         <div className="relative mb-8 overflow-hidden rounded-2xl bg-gradient-to-r from-primary via-primary/90 to-secondary p-8 text-white shadow-xl">
           <div className="absolute inset-0 bg-black/10" />
@@ -437,8 +445,10 @@ export function ImprovedMarketPage() {
             )}
           </div>
         </div>
-      </div>
+      </MobileScrollArea>
 
+      {/* Scroll-Aware Bottom Navigation */}
+      <ScrollAwareBottomNav />
 
       {/* Quick View Modal */}
       <ProductQuickViewModal
