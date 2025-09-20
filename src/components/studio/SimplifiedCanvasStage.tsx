@@ -4,7 +4,7 @@ import { useStudioSelectors, useSelectNode, useClearSelection, useUpdateNode, us
 import { getGarmentById } from '@/lib/studio/garments';
 import { Canvas3D } from './Canvas3D';
 import { Canvas3DControls } from './Canvas3DControls';
-import { VirtualCanvas } from './optimized/VirtualCanvas';
+import { DesignCanvas } from './DesignCanvas';
 
 export const SimplifiedCanvasStage = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -95,46 +95,20 @@ export const SimplifiedCanvasStage = () => {
 
   return (
     <div ref={containerRef} className="relative w-full h-full bg-background">
-      <Stage
-        ref={stageRef}
-        width={stageSize.width}
-        height={stageSize.height}
-        scaleX={zoom}
-        scaleY={zoom}
-        x={panOffset.x}
-        y={panOffset.y}
-        onClick={handleStageClick}
-        className="cursor-crosshair"
-      >
-        <Layer>
-          {/* Simplified garment background */}
-          {garmentImage && (
-            <Image
-              image={garmentImage}
-              x={stageSize.width / 2 - 200}
-              y={stageSize.height / 2 - 250}
-              width={400}
-              height={500}
-              opacity={0.4}
-              listening={false}
-            />
-          )}
-          
-          {/* Virtual Canvas for nodes */}
-          <VirtualCanvas
-            nodes={doc.nodes}
-            selectedIds={doc.selectedIds}
-            layoutMetrics={layoutMetrics}
-            viewport={viewport}
-            activeTool="select"
-            snapEnabled={false}
-            snapToGrid={false}
-            gridSize={20}
-            onSelectNode={selectNode}
-            onUpdateNode={updateNode}
-          />
-        </Layer>
-      </Stage>
+      <DesignCanvas
+        garmentImage={garmentImage}
+        stageSize={stageSize}
+        garmentDimensions={{
+          width: 400,
+          height: 500,
+          printArea: {
+            x: 100, // 25% from left
+            y: 150, // 30% from top  
+            width: 200, // 50% of garment width
+            height: 200 // 40% of garment height
+          }
+        }}
+      />
     </div>
   );
 };
