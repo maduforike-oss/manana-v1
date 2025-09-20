@@ -51,14 +51,6 @@ export const UnifiedStudioShell = () => {
   // Sync studio state with app store
   useStudioSync();
 
-  // Load purchased design when currentDesign changes
-  useEffect(() => {
-    if (currentDesign?.isPurchased && !isLoading) {
-      setIsLoading(true);
-      loadPurchasedDesign();
-    }
-  }, [currentDesign?.id, currentDesign?.isPurchased, isLoading]);
-
   const loadPurchasedDesign = useCallback(async () => {
     if (!currentDesign) return;
     
@@ -82,10 +74,13 @@ export const UnifiedStudioShell = () => {
     }
   }, [currentDesign, loadStudioFromAppDesign, updateCanvas]);
 
-  // If no design is selected, show the studio hub
-  if (!currentDesign) {
-    return <StudioHub />;
-  }
+  // Load purchased design when currentDesign changes
+  useEffect(() => {
+    if (currentDesign?.isPurchased && !isLoading) {
+      setIsLoading(true);
+      loadPurchasedDesign();
+    }
+  }, [currentDesign?.id, currentDesign?.isPurchased, isLoading, loadPurchasedDesign]);
 
   // Enhanced auto-save with status indication
   const handleAutoSave = useCallback(async () => {
@@ -150,31 +145,8 @@ export const UnifiedStudioShell = () => {
       case 'b':
         setActiveTool('brush');
         break;
-      case 'g':
-        if (e.shiftKey) {
-          toggleSnap();
-        } else {
-          vmToggleGrid();
-        }
-        e.preventDefault();
-        break;
       case 'l':
-        if (e.shiftKey) {
-          setActiveRightTab('layers');
-        }
-        e.preventDefault();
-        break;
-      case 'm':
-        if (e.shiftKey) {
-          setActiveRightTab('material');
-        }
-        e.preventDefault();
-        break;
-      case 'p':
-        if (e.shiftKey) {
-          setActiveRightTab('pricing');
-        }
-        e.preventDefault();
+        setActiveTool('line');
         break;
       case 'z':
         if (e.ctrlKey || e.metaKey) {
@@ -186,6 +158,19 @@ export const UnifiedStudioShell = () => {
           e.preventDefault();
         }
         break;
+      case '=':
+      case '+':
+        if (e.ctrlKey || e.metaKey) {
+          setZoom(Math.min(zoom * 1.2, 5));
+          e.preventDefault();
+        }
+        break;
+      case '-':
+        if (e.ctrlKey || e.metaKey) {
+          setZoom(Math.max(zoom / 1.2, 0.1));
+          e.preventDefault();
+        }
+        break;
       case '0':
         if (e.ctrlKey || e.metaKey) {
           setZoom(1);
@@ -193,13 +178,43 @@ export const UnifiedStudioShell = () => {
           e.preventDefault();
         }
         break;
+      case 'g':
+        if (e.ctrlKey || e.metaKey) {
+          vmToggleGrid();
+          e.preventDefault();
+        }
+        break;
+      case 's':
+        if (e.ctrlKey || e.metaKey) {
+          handleAutoSave();
+          e.preventDefault();
+        }
+        break;
+      case 'tab':
+        e.preventDefault();
+        setLeftPanelCollapsed(!leftPanelCollapsed);
+        break;
+      case 'p':
+        if (!e.ctrlKey && !e.metaKey) {
+          setActiveRightTab('pricing');
+        }
+        break;
     }
-  }, [setActiveTool, vmToggleGrid, vmToggleRulers, toggleSnap, undo, redo, setZoom, setPanOffset, setActiveRightTab]);
+  }, [
+    setActiveTool, vmToggleRulers, vmToggleGrid, undo, redo, zoom, 
+    setZoom, setPanOffset, handleAutoSave, leftPanelCollapsed, setLeftPanelCollapsed
+  ]);
 
   useEffect(() => {
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
+
+  // If no design is selected, show the studio hub
+  if (!currentDesign) {
+    return <StudioHub />;
+  }
+
 
   if (isLoading) {
     return <PurchasedDesignLoader />;
