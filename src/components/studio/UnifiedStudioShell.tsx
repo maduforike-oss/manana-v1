@@ -24,13 +24,8 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 export const UnifiedStudioShell = () => {
+  // All hooks must be called at the top level, before any conditional returns
   const { currentDesign, saveDesign } = useAppStore();
-  
-  // If no design is selected, show the studio hub
-  if (!currentDesign) {
-    return <StudioHub />;
-  }
-
   const setActiveTool = useSetActiveTool();
   const undo = useUndo();
   const redo = useRedo();
@@ -55,6 +50,11 @@ export const UnifiedStudioShell = () => {
 
   // Sync studio state with app store
   useStudioSync();
+
+  // If no design is selected, show the studio hub
+  if (!currentDesign) {
+    return <StudioHub />;
+  }
 
   // Load purchased design when currentDesign changes
   useEffect(() => {
