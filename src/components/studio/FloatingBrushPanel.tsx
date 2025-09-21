@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Minimize2, Maximize2, Move, X, PenTool, Eye, EyeOff } from 'lucide-react';
+import { Minimize2, Maximize2, Move, X, PenTool, Eye, EyeOff, Palette } from 'lucide-react';
 import { BrushControlsPanel } from './BrushControlsPanel';
 import { EnhancedColorSelector } from './EnhancedColorSelector';
 import { BrushSettings } from '../../lib/studio/brushEngine';
 import { useStudioStore } from '@/lib/studio/store';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
 interface FloatingBrushPanelProps {
@@ -29,6 +30,7 @@ export const FloatingBrushPanel: React.FC<FloatingBrushPanelProps> = ({
   isPersistent = false,
   onTogglePersistent
 }) => {
+  const isMobile = useIsMobile();
   const [isMinimized, setIsMinimized] = useState(false);
   const [colorHistory, setColorHistory] = useState<string[]>(() => {
     const saved = localStorage.getItem('brush-color-history');
@@ -140,6 +142,84 @@ export const FloatingBrushPanel: React.FC<FloatingBrushPanelProps> = ({
   }, [position]);
 
   if (!isVisible) return null;
+
+  // Mobile layout - use bottom sheet style
+  if (isMobile) {
+    return (
+      <div className="fixed bottom-0 left-0 right-0 z-50 pointer-events-auto">
+        <Card className="bg-card/95 backdrop-blur-md border-border border-t rounded-t-lg rounded-b-none">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <PenTool className="w-4 h-4 text-primary" />
+                <h3 className="text-sm font-medium">Brush Controls</h3>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+                className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
+              >
+                <X className="w-3 h-3" />
+              </Button>
+            </div>
+          </CardHeader>
+
+          {!isMinimized && (
+            <CardContent className="p-4 max-h-[40vh] overflow-y-auto">
+              {/* Quick color swatches for mobile */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Color</span>
+                  <div 
+                    className="w-8 h-8 rounded-full border-2 border-white shadow-md"
+                    style={{ backgroundColor: brushSettings.color }}
+                  />
+                </div>
+                
+                {/* Quick color grid */}
+                <div className="grid grid-cols-8 gap-2">
+                  {['#000000', '#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#FFFFFF'].map(color => (
+                    <button
+                      key={color}
+                      className={cn(
+                        "w-8 h-8 rounded-full border-2 shadow-sm transition-transform",
+                        brushSettings.color === color ? "border-primary scale-110" : "border-white/50"
+                      )}
+                      style={{ backgroundColor: color }}
+                      onClick={() => handleBrushColorChange(color)}
+                    />
+                  ))}
+                </div>
+                
+                {/* Full color picker toggle */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsMinimized(!isMinimized)}
+                  className="w-full"
+                >
+                  <Palette className="w-4 h-4 mr-2" />
+                  More Colors
+                </Button>
+                
+                {/* Basic brush controls for mobile */}
+                <BrushControlsPanel
+                  brushSettings={brushSettings}
+                  onBrushSettingsChange={onBrushSettingsChange}
+                  activeTool={activeTool}
+                  onToolChange={onToolChange}
+                  className="border-0 bg-transparent"
+                />
+              </div>
+            </CardContent>
+          )}
+        </Card>
+      </div>
+    );
+  }
+
+  // Desktop/tablet layout - floating draggable panel
 
   return (
     <div

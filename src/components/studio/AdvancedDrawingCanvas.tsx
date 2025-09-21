@@ -3,6 +3,7 @@ import { BrushEngine, BrushStroke, BrushSettings, BRUSH_PRESETS } from '../../li
 import { CommandStack, AddStrokeCommand } from '../../lib/studio/commandStack';
 import { useStudioStore } from '../../lib/studio/store';
 import { Vec2, BrushStrokeNode } from '../../lib/studio/types';
+import { cn } from '@/lib/utils';
 
 interface AdvancedDrawingCanvasProps {
   width: number;
@@ -11,6 +12,7 @@ interface AdvancedDrawingCanvasProps {
   activeTool: 'brush' | 'eraser';
   onStrokeComplete?: (stroke: BrushStroke) => void;
   className?: string;
+  isInteractive?: boolean; // New prop to control interaction
 }
 
 export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
@@ -19,7 +21,8 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
   brushSettings,
   activeTool,
   onStrokeComplete,
-  className = ""
+  className = "",
+  isInteractive = true
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -178,9 +181,9 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
     return 0.8;
   }, []);
 
-  // Handle drawing start
+  // Handle drawing start - only when interactive
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    if (!brushEngineRef.current || !canvasRef.current) return;
+    if (!isInteractive || !brushEngineRef.current || !canvasRef.current) return;
     
     e.preventDefault();
     setIsDrawing(true);
@@ -200,11 +203,11 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
     
     // Capture pointer for smooth drawing
     (e.target as Element).setPointerCapture(e.pointerId);
-  }, [brushSettings, activeTool, screenToCanvas, getPressure]);
+  }, [isInteractive, brushSettings, activeTool, screenToCanvas, getPressure]);
 
-  // Handle drawing movement
+  // Handle drawing movement - only when interactive
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
-    if (!isDrawing || !brushEngineRef.current || !currentStroke) return;
+    if (!isInteractive || !isDrawing || !brushEngineRef.current || !currentStroke) return;
     
     e.preventDefault();
     const point = screenToCanvas(e.clientX, e.clientY);
@@ -225,11 +228,11 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
         }
       }
     }
-  }, [isDrawing, currentStroke, screenToCanvas, getPressure]);
+  }, [isInteractive, isDrawing, currentStroke, screenToCanvas, getPressure]);
 
-  // Handle drawing end
+  // Handle drawing end - only when interactive
   const handlePointerUp = useCallback((e: React.PointerEvent) => {
-    if (!isDrawing || !brushEngineRef.current || !currentStroke) return;
+    if (!isInteractive || !isDrawing || !brushEngineRef.current || !currentStroke) return;
     
     e.preventDefault();
     setIsDrawing(false);
@@ -283,7 +286,7 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
     
     setCurrentStroke(null);
     (e.target as Element).releasePointerCapture(e.pointerId);
-  }, [isDrawing, currentStroke, onStrokeComplete]);
+  }, [isInteractive, isDrawing, currentStroke, onStrokeComplete]);
 
   // Undo function
   const undo = useCallback(() => {
@@ -341,21 +344,24 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
         style={{ mixBlendMode: 'normal' }}
       />
       
-      {/* Invisible interaction canvas */}
+      {/* Invisible interaction canvas - only interactive when needed */}
       <canvas
-        className="absolute inset-0"
+        className={cn(
+          "absolute inset-0",
+          isInteractive ? "pointer-events-auto" : "pointer-events-none"
+        )}
         width={width}
         height={height}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerUp}
+        onPointerDown={isInteractive ? handlePointerDown : undefined}
+        onPointerMove={isInteractive ? handlePointerMove : undefined}
+        onPointerUp={isInteractive ? handlePointerUp : undefined}
+        onPointerLeave={isInteractive ? handlePointerUp : undefined}
         style={{ 
-          touchAction: 'none',
+          touchAction: isInteractive ? 'none' : 'auto',
           position: 'absolute',
           left: 0,
           top: 0,
-          cursor: 'none' // Hide default cursor only on drawing canvas
+          cursor: isInteractive ? 'none' : 'default'
         }}
       />
     </div>

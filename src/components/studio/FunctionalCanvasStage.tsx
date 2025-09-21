@@ -749,21 +749,25 @@ export const FunctionalCanvasStage: React.FC<FunctionalCanvasStageProps> = ({
                 </Layer>
               </Stage>
 
-              {/* Drawing Canvas Layer */}
-              {(activeTool === 'brush' || activeTool === 'eraser') && (
-                <div className="absolute inset-0 pointer-events-none">
-                  <AdvancedDrawingCanvas
-                    width={stageSize.width}
-                    height={stageSize.height}
-                    brushSettings={brushSettings}
-                    activeTool={activeTool as 'brush' | 'eraser'}
-                    onStrokeComplete={(stroke) => {
-                      console.log('Stroke completed:', stroke);
-                    }}
-                    className="pointer-events-auto"
-                  />
-                </div>
-              )}
+              {/* Drawing Canvas Layer - Always mounted to persist strokes */}
+              <div className="absolute inset-0 pointer-events-none">
+                <AdvancedDrawingCanvas
+                  width={stageSize.width}
+                  height={stageSize.height}
+                  brushSettings={brushSettings}
+                  activeTool={activeTool as 'brush' | 'eraser'}
+                  onStrokeComplete={(stroke) => {
+                    console.log('Stroke completed:', stroke);
+                  }}
+                  className={cn(
+                    "transition-opacity duration-200",
+                    (activeTool === 'brush' || activeTool === 'eraser') 
+                      ? "pointer-events-auto opacity-100" 
+                      : "pointer-events-none opacity-100"
+                  )}
+                  isInteractive={activeTool === 'brush' || activeTool === 'eraser'}
+                />
+              </div>
             </div>
           </div>
 
