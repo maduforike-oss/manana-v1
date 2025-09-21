@@ -5,9 +5,10 @@ import { useAppStore } from '@/store/useAppStore';
 /**
  * Hook to sync studio changes back to app store
  * This ensures that design changes are preserved when navigating away from studio
+ * Includes brush strokes and all design elements
  */
 export const useStudioSync = () => {
-  const { doc, zoom, panOffset, mockup } = useStudioStore();
+  const { doc, zoom, panOffset, mockup, getBrushStrokes } = useStudioStore();
   const { currentDesign, saveDesign } = useAppStore();
 
   useEffect(() => {
@@ -17,7 +18,11 @@ export const useStudioSync = () => {
     const timeoutId = setTimeout(() => {
       try {
         const canvasData = {
-          doc,
+          doc: {
+            ...doc,
+            // Ensure brush strokes are included in the doc
+            nodes: [...doc.nodes] // All nodes including brush strokes
+          },
           zoom,
           panOffset,
           mockup,
@@ -34,5 +39,5 @@ export const useStudioSync = () => {
     }, 1000); // 1 second debounce
 
     return () => clearTimeout(timeoutId);
-  }, [doc, zoom, panOffset, mockup, currentDesign, saveDesign]);
+  }, [doc, zoom, panOffset, mockup, currentDesign, saveDesign, getBrushStrokes]);
 };

@@ -10,7 +10,7 @@ export type Fill = {
 
 export type BaseNode = {
   id: string;
-  type: "text" | "image" | "shape" | "path";
+  type: "text" | "image" | "shape" | "path" | "brush-stroke";
   name: string;
   x: number;
   y: number;
@@ -61,7 +61,19 @@ export type PathNode = BaseNode & {
   closed: boolean;
 };
 
-export type Node = TextNode | ImageNode | ShapeNode | PathNode;
+export type BrushStrokeNode = BaseNode & {
+  type: "brush-stroke";
+  strokeData: {
+    color: string;
+    size: number;
+    opacity: number;
+    hardness: number;
+    points: { x: number; y: number; pressure?: number }[];
+  };
+  imageData?: string; // Base64 encoded image for fast rendering
+};
+
+export type Node = TextNode | ImageNode | ShapeNode | PathNode | BrushStrokeNode;
 
 export type PrintSurface = {
   id: string;

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { produce } from 'immer';
-import { DesignDoc, Node, CanvasConfig, HistoryEntry, Tool, MockupConfig, PrintSurface, MaterialConfig } from './types';
+import { DesignDoc, Node, CanvasConfig, HistoryEntry, Tool, MockupConfig, PrintSurface, MaterialConfig, BrushStrokeNode } from './types';
 import { CANVAS_PRESETS } from './presets';
 
 interface StudioState {
@@ -60,6 +60,10 @@ interface StudioState {
   getCanvasElement: () => HTMLCanvasElement | null;
   // Phase 2 additions
   loadStudioFromAppDesign: (design: any) => Promise<void>;
+  // Brush stroke persistence
+  addBrushStroke: (strokeData: any) => void;
+  getBrushStrokes: () => BrushStrokeNode[];
+  clearBrushCanvas: () => void;
 }
 
 const createInitialDoc = (garmentType?: string): DesignDoc => ({
@@ -409,6 +413,50 @@ export const useStudioStore = create<StudioState>((set, get) => ({
         reject(error);
       }
     });
+  },
+
+  // Brush stroke persistence
+  addBrushStroke: (strokeData) => set(produce((state) => {
+    const strokeNode: BrushStrokeNode = {
+      id: `brush-stroke-${Date.now()}`,
+      type: 'brush-stroke',
+      name: 'Brush Stroke',
+      x: 0,
+      y: 0,
+      width: 0,
+      height: 0,
+      rotation: 0,
+      opacity: strokeData.opacity || 1,
+      strokeData: {
+        color: strokeData.color,
+        size: strokeData.size,
+        opacity: strokeData.opacity || 1,
+        hardness: strokeData.hardness || 1,
+        points: strokeData.points || []
+      }
+    };
+    
+    // Calculate bounding box
+    if (strokeData.points && strokeData.points.length > 0) {
+      const xs = strokeData.points.map((p: any) => p.x);
+      const ys = strokeData.points.map((p: any) => p.y);
+      strokeNode.x = Math.min(...xs) - strokeData.size;
+      strokeNode.y = Math.min(...ys) - strokeData.size;
+      strokeNode.width = Math.max(...xs) - Math.min(...xs) + strokeData.size * 2;
+      strokeNode.height = Math.max(...ys) - Math.min(...ys) + strokeData.size * 2;
+    }
+    
+    state.doc.nodes.push(strokeNode);
+    get().saveSnapshot();
+  })),
+
+  getBrushStrokes: () => {
+    const { doc } = get();
+    return doc.nodes.filter(node => node.type === 'brush-stroke') as BrushStrokeNode[];
+  },
+
+  clearBrushCanvas: () => {
+    // This will be called to notify canvas to clear and redraw from nodes
   },
 }));
 

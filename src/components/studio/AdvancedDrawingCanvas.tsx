@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { BrushEngine, BrushStroke, BrushSettings, BRUSH_PRESETS } from '../../lib/studio/brushEngine';
 import { CommandStack, AddStrokeCommand } from '../../lib/studio/commandStack';
 import { useStudioStore } from '../../lib/studio/store';
-import { Vec2 } from '../../lib/studio/types';
+import { Vec2, BrushStrokeNode } from '../../lib/studio/types';
 
 interface AdvancedDrawingCanvasProps {
   width: number;
@@ -28,8 +28,9 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
   
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentStroke, setCurrentStroke] = useState<BrushStroke | null>(null);
+  const [needsRedraw, setNeedsRedraw] = useState(0);
 
-  const { zoom, panOffset } = useStudioStore();
+  const { zoom, panOffset, addBrushStroke, getBrushStrokes, doc } = useStudioStore();
 
   // Initialize brush engine
   useEffect(() => {
@@ -39,6 +40,74 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
       brushEngineRef.current.updateSettings(brushSettings);
     }
   }, [brushSettings]);
+
+  // Redraw existing strokes when doc changes or tools switch
+  const redrawStoredStrokes = useCallback(() => {
+    if (!canvasRef.current) return;
+    
+    const ctx = canvasRef.current.getContext('2d');
+    if (!ctx) return;
+    
+    // Clear main canvas of brush strokes only
+    ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+    
+    // Redraw all stored brush strokes
+    const brushStrokes = getBrushStrokes();
+    brushStrokes.forEach((strokeNode: BrushStrokeNode) => {
+      const { strokeData } = strokeNode;
+      if (strokeData.points && strokeData.points.length > 0) {
+        // Recreate brush engine for this stroke
+        const strokeBrush = new BrushEngine({
+          color: strokeData.color,
+          size: strokeData.size,
+          opacity: strokeData.opacity,
+          hardness: strokeData.hardness || 1,
+          type: 'pencil',
+          flow: 1.0,
+          spacing: 0.1,
+          pressureSizeMultiplier: 0.5,
+          pressureOpacityMultiplier: 0.3,
+          smoothing: 0.5,
+          blendMode: 'normal'
+        });
+        
+        // Render the stroke directly to the canvas
+        const mockStroke: BrushStroke = {
+          id: strokeNode.id,
+          points: strokeData.points.map(p => ({ 
+            x: p.x, 
+            y: p.y, 
+            pressure: p.pressure || 0.5,
+            timestamp: Date.now()
+          })),
+          brush: {
+            color: strokeData.color,
+            size: strokeData.size,
+            opacity: strokeData.opacity,
+            hardness: strokeData.hardness || 1,
+            type: 'pencil',
+            flow: 1.0,
+            spacing: 0.1,
+            pressureSizeMultiplier: 0.5,
+            pressureOpacityMultiplier: 0.3,
+            smoothing: 0.5,
+            blendMode: 'normal'
+          },
+          pressure: strokeData.points.map(p => p.pressure || 0.5),
+          velocity: strokeData.points.map(() => 1.0),
+          timestamp: Date.now(),
+          completed: true
+        };
+        
+        strokeBrush.renderStroke(mockStroke, ctx);
+      }
+    });
+  }, [getBrushStrokes]);
+
+  // Trigger redraw when doc changes or tool switches
+  useEffect(() => {
+    redrawStoredStrokes();
+  }, [redrawStoredStrokes, doc.nodes.length, activeTool, needsRedraw]);
 
   // Set up canvases
   useEffect(() => {
@@ -168,6 +237,15 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
         }
       }
       
+      // Save stroke to store for persistence
+      addBrushStroke({
+        color: completedStroke.brush.color,
+        size: completedStroke.brush.size,
+        opacity: completedStroke.brush.opacity,
+        hardness: completedStroke.brush.hardness || 1,
+        points: completedStroke.points.map(p => ({ x: p.x, y: p.y, pressure: p.pressure }))
+      });
+      
       // Add to command stack for undo/redo
       const command = new AddStrokeCommand(
         {
@@ -183,6 +261,9 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
       
       commandStackRef.current.executeCommand(command);
       onStrokeComplete?.(completedStroke);
+      
+      // Trigger redraw to ensure consistency
+      setNeedsRedraw(prev => prev + 1);
     }
     
     setCurrentStroke(null);
