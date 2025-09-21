@@ -1,23 +1,34 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { Stage, Layer, Rect, Circle, Text, Line, RegularPolygon, Transformer, Image } from 'react-konva';
 import { useStudioStore } from '../../lib/studio/store';
 import { Node, TextNode, ShapeNode, ImageNode } from '../../lib/studio/types';
 import { Button } from '@/components/ui/button';
-import { ZoomIn, ZoomOut, RotateCcw, Download, Move, Hand } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCcw, Download, Move, Hand, Grid3X3 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { getGarmentView } from '@/lib/api/garments';
+import { PrintAreaMaskManager } from '../../lib/studio/printAreaMask';
+import { StrokePipeline } from '../../lib/studio/strokePipeline';
+import { CommandStack, AddStrokeCommand } from '../../lib/studio/commandStack';
 
 export const FunctionalCanvasStage = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<any>(null);
   const transformerRef = useRef<any>(null);
+  const maskManagerRef = useRef<PrintAreaMaskManager>(new PrintAreaMaskManager());
+  const strokePipelineRef = useRef<StrokePipeline | null>(null);
+  const commandStackRef = useRef<CommandStack>(new CommandStack());
+  const artworkCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  
   const [stageSize, setStageSize] = useState({ width: 800, height: 600 });
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentPath, setCurrentPath] = useState<number[]>([]);
   const [garmentImage, setGarmentImage] = useState<HTMLImageElement | null>(null);
   const [garmentImageUrl, setGarmentImageUrl] = useState<string | null>(null);
   const [safeArea, setSafeArea] = useState({ wPx: 400, hPx: 400 });
+  const [focused, setFocused] = useState(false);
+  const [canAcceptInput, setCanAcceptInput] = useState(false);
+  const [liveStroke, setLiveStroke] = useState<any>(null);
   
   const { 
     doc, 
@@ -38,6 +49,22 @@ export const FunctionalCanvasStage = () => {
     saveSnapshot
   } = useStudioStore();
 
+  // Initialize artwork bitmap canvas
+  useEffect(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = doc.canvas.width || 800;
+    canvas.height = doc.canvas.height || 600;
+    artworkCanvasRef.current = canvas;
+    
+    // Initialize stroke pipeline
+    if (!strokePipelineRef.current) {
+      const previewCanvas = document.createElement('canvas');
+      previewCanvas.width = canvas.width;
+      previewCanvas.height = canvas.height;
+      strokePipelineRef.current = new StrokePipeline(previewCanvas);
+    }
+  }, [doc.canvas.width, doc.canvas.height]);
+
   // Handle window resize
   useEffect(() => {
     const updateStageSize = () => {
@@ -54,6 +81,30 @@ export const FunctionalCanvasStage = () => {
 
     return () => observer.disconnect();
   }, []);
+
+  // Update focus state for mobile drawing
+  useEffect(() => {
+    const shouldAcceptInput = focused && (activeTool === 'brush' || activeTool === 'eraser');
+    setCanAcceptInput(shouldAcceptInput);
+  }, [focused, activeTool]);
+
+  // Mobile touch handling
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    
+    el.style.touchAction = canAcceptInput ? "none" : "auto";
+    
+    if (canAcceptInput) {
+      const preventTouch = (e: TouchEvent) => e.preventDefault();
+      el.addEventListener('touchstart', preventTouch, { passive: false });
+      el.addEventListener('touchmove', preventTouch, { passive: false });
+      return () => {
+        el.removeEventListener('touchstart', preventTouch);
+        el.removeEventListener('touchmove', preventTouch);
+      };
+    }
+  }, [canAcceptInput]);
 
   // Load garment background image
   useEffect(() => {
@@ -355,56 +406,120 @@ export const FunctionalCanvasStage = () => {
     }
   }, [activeTool, panOffset, zoom, addNode, clearSelection, saveSnapshot]);
 
-  // Handle brush drawing
+  // Enhanced drawing with stroke persistence and print area masking
+  const isStylus = useCallback((e: any) => {
+    return e?.evt?.pointerType === "pen" || e?.evt?.pointerType === "stylus";
+  }, []);
+
+  const stageToCanvasCoords = useCallback((pos: { x: number; y: number }) => {
+    return { 
+      x: (pos.x - panOffset.x) / zoom, 
+      y: (pos.y - panOffset.y) / zoom 
+    };
+  }, [panOffset, zoom]);
+
   const handleBrushStart = useCallback((e: any) => {
-    if (activeTool === 'brush') {
-      setIsDrawing(true);
-      const pos = e.target.getStage().getPointerPosition();
-      const localPos = {
-        x: (pos.x - panOffset.x) / zoom,
-        y: (pos.y - panOffset.y) / zoom
-      };
-      setCurrentPath([localPos.x, localPos.y]);
+    setFocused(true);
+    
+    if (activeTool !== 'brush' && activeTool !== 'eraser') return;
+
+    e.evt?.preventDefault();
+    const pos = e.target.getStage().getPointerPosition();
+    if (!pos) return;
+    
+    const p = stageToCanvasCoords(pos);
+    
+    // Check if point is in print area
+    if (!maskManagerRef.current.isPointInPrintArea(p)) {
+      return;
     }
-  }, [activeTool, panOffset, zoom]);
+
+    setIsDrawing(true);
+    
+    if (strokePipelineRef.current && artworkCanvasRef.current) {
+      const strokeId = strokePipelineRef.current.startStroke(
+        p,
+        e?.evt?.pressure ?? 0.5,
+        {
+          size: 6,
+          color: activeTool === 'eraser' ? 'transparent' : "#000000",
+          opacity: 1,
+          hardness: 0.8,
+          type: activeTool === 'eraser' ? 'eraser' : 'normal'
+        }
+      );
+
+      if (strokeId) {
+        setLiveStroke({
+          id: strokeId,
+          color: activeTool === 'eraser' ? 'transparent' : "#000000",
+          size: 6,
+          opacity: 1,
+          points: [{ x: p.x, y: p.y, p: e?.evt?.pressure ?? 0.5 }],
+        });
+      }
+    }
+  }, [activeTool, stageToCanvasCoords]);
 
   const handleBrushMove = useCallback((e: any) => {
-    if (!isDrawing || activeTool !== 'brush') return;
+    if (!isDrawing || (activeTool !== 'brush' && activeTool !== 'eraser')) return;
     
-    const stage = e.target.getStage();
-    const point = stage.getPointerPosition();
-    const localPos = {
-      x: (point.x - panOffset.x) / zoom,
-      y: (point.y - panOffset.y) / zoom
-    };
+    e.evt?.preventDefault();
+    const pos = e.target.getStage().getPointerPosition();
+    if (!pos) return;
     
-    setCurrentPath(prev => [...prev, localPos.x, localPos.y]);
-  }, [isDrawing, activeTool, panOffset, zoom]);
+    const p = stageToCanvasCoords(pos);
+    
+    if (strokePipelineRef.current && liveStroke) {
+      const added = strokePipelineRef.current.addPoint(p, e?.evt?.pressure ?? 0.5);
+      
+      if (added) {
+        setLiveStroke((prev: any) =>
+          prev ? {
+            ...prev,
+            points: [...prev.points, { x: p.x, y: p.y, p: e?.evt?.pressure ?? 0.5 }],
+          } : prev
+        );
+      }
+    }
+  }, [isDrawing, activeTool, stageToCanvasCoords, liveStroke]);
 
   const handleBrushEnd = useCallback(() => {
-    if (isDrawing && currentPath.length > 4) {
-      // Create a path node from the drawing
-      const pathNode: any = {
-        id: `path-${Date.now()}`,
-        type: 'path',
-        name: 'Brush Stroke',
-        x: 0,
-        y: 0,
-        width: 100,
-        height: 100,
-        rotation: 0,
-        opacity: 1,
-        points: currentPath,
-        stroke: { color: '#000000', width: 3 },
-        closed: false
-      };
-      addNode(pathNode);
-      saveSnapshot();
-      toast('Brush stroke added!');
-    }
+    if (!isDrawing || (activeTool !== 'brush' && activeTool !== 'eraser')) return;
+    
     setIsDrawing(false);
-    setCurrentPath([]);
-  }, [isDrawing, currentPath, addNode, saveSnapshot]);
+    
+    if (strokePipelineRef.current && artworkCanvasRef.current && liveStroke) {
+      const completedStroke = strokePipelineRef.current.endStroke();
+      
+      if (completedStroke) {
+        // Rasterize stroke to bitmap
+        strokePipelineRef.current.rasterizeStroke(completedStroke, artworkCanvasRef.current);
+        
+        // Create command for undo
+        const command = new AddStrokeCommand(
+          {
+            id: completedStroke.id,
+            color: completedStroke.brush.color,
+            size: completedStroke.brush.size,
+            opacity: completedStroke.brush.opacity,
+            points: completedStroke.points.map(p => ({ x: p.x, y: p.y, p: p.pressure }))
+          },
+          artworkCanvasRef.current,
+          () => console.log('Stroke executed'),
+          () => console.log('Stroke undone')
+        );
+        
+        commandStackRef.current.executeCommand(command);
+        
+        // Save to store
+        saveSnapshot();
+        toast('Brush stroke added!');
+      }
+    }
+    
+    setLiveStroke(null);
+  }, [isDrawing, activeTool, liveStroke, saveSnapshot]);
 
   // Handle wheel zoom
   const handleWheel = useCallback((e: any) => {
@@ -487,8 +602,47 @@ export const FunctionalCanvasStage = () => {
     setPanOffset({ x: 0, y: 0 });
   };
 
+  // Enhanced undo/redo with command stack
+  const handleUndo = useCallback(() => {
+    if (commandStackRef.current.canUndo()) {
+      commandStackRef.current.undo();
+      saveSnapshot();
+    } else {
+      undo();
+    }
+  }, [undo, saveSnapshot]);
+
+  const handleRedo = useCallback(() => {
+    if (commandStackRef.current.canRedo()) {
+      commandStackRef.current.redo();
+      saveSnapshot();
+    } else {
+      redo();
+    }
+  }, [redo, saveSnapshot]);
+
+  // Mobile focus prompt
+  const FocusPrompt = () => (
+    !focused && (activeTool === "brush" || activeTool === "eraser") && (
+      <div 
+        className="absolute inset-0 z-40 flex items-center justify-center bg-black/20 backdrop-blur-sm"
+        onClick={() => setFocused(true)}
+      >
+        <div className="bg-card p-6 rounded-lg border shadow-lg text-center">
+          <p className="text-lg font-medium mb-2">Tap to start drawing</p>
+          <p className="text-sm text-muted-foreground">
+            {activeTool === 'brush' ? 'Use your stylus or finger to draw' : 'Use your stylus or finger to erase'}
+          </p>
+        </div>
+      </div>
+    )
+  );
+
   return (
     <div ref={containerRef} className="relative w-full h-full bg-muted/20">
+      {/* Focus Prompt */}
+      <FocusPrompt />
+      
       {/* Zoom and Export Controls */}
       <div className="absolute top-4 right-4 z-50 flex gap-2">
         <div className="flex gap-1 bg-card/95 backdrop-blur-sm rounded-lg border border-border/50 p-1">
@@ -604,15 +758,28 @@ export const FunctionalCanvasStage = () => {
             />
           )}
           
-          {/* Current brush stroke */}
-          {isDrawing && currentPath.length > 2 && (
+          {/* Artwork bitmap layer */}
+          {artworkCanvasRef.current && (
+            <Image
+              image={artworkCanvasRef.current}
+              x={0}
+              y={0}
+              width={doc.canvas.width}
+              height={doc.canvas.height}
+              listening={false}
+            />
+          )}
+          
+          {/* Live stroke preview */}
+          {liveStroke && (
             <Line
-              points={currentPath}
-              stroke="#000000"
-              strokeWidth={3}
-              tension={0.5}
+              points={liveStroke.points.flatMap((p: any) => [p.x, p.y])}
+              stroke={liveStroke.color}
+              strokeWidth={liveStroke.size}
+              opacity={liveStroke.opacity}
               lineCap="round"
-              globalCompositeOperation="source-over"
+              lineJoin="round"
+              listening={false}
             />
           )}
           
