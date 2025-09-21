@@ -5,15 +5,13 @@ import { TextNode } from '@/lib/studio/types';
 interface InlineTextEditorProps {
   node: TextNode;
   onComplete: () => void;
-  zoom: number;
-  panOffset: { x: number; y: number };
+  onChange?: (updates: Partial<TextNode>) => void;
 }
 
 export const InlineTextEditor: React.FC<InlineTextEditorProps> = ({
   node,
   onComplete,
-  zoom,
-  panOffset
+  onChange
 }) => {
   const [text, setText] = useState(node.text);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -26,9 +24,16 @@ export const InlineTextEditor: React.FC<InlineTextEditorProps> = ({
     }
   }, []);
 
+  const handleTextChange = (newText: string) => {
+    setText(newText);
+    onChange?.({ text: newText });
+  };
+
   const handleComplete = () => {
-    updateNode(node.id, { text });
-    saveSnapshot();
+    if (!onChange) {
+      updateNode(node.id, { text });
+      saveSnapshot();
+    }
     onComplete();
   };
 
@@ -43,10 +48,10 @@ export const InlineTextEditor: React.FC<InlineTextEditorProps> = ({
 
   const style = {
     position: 'absolute' as const,
-    left: node.x * zoom + panOffset.x,
-    top: node.y * zoom + panOffset.y,
-    width: node.width * zoom,
-    fontSize: node.fontSize * zoom,
+    left: node.x,
+    top: node.y,
+    width: node.width,
+    fontSize: node.fontSize,
     fontFamily: node.fontFamily,
     fontWeight: node.fontWeight,
     color: node.fill.color || '#000000',
@@ -64,7 +69,7 @@ export const InlineTextEditor: React.FC<InlineTextEditorProps> = ({
     <textarea
       ref={inputRef}
       value={text}
-      onChange={(e) => setText(e.target.value)}
+      onChange={(e) => handleTextChange(e.target.value)}
       onBlur={handleComplete}
       onKeyDown={handleKeyDown}
       style={style}
