@@ -468,8 +468,8 @@ function MobileSelectionView({
           />
         </div>
         
-        <ScrollArea className="w-full">
-          <div className="flex gap-2 pb-2">
+        <div className="w-full overflow-x-auto mobile-category-scroll">
+          <div className="flex gap-2 pb-2 min-w-max px-1">
             {GARMENT_CATEGORIES.map((category) => {
               const Icon = category.icon;
               const categoryCount = garments.filter(category.filter).length;
@@ -479,7 +479,7 @@ function MobileSelectionView({
                   variant={selectedCategory === category.id ? "default" : "outline"}
                   size="sm"
                   onClick={() => onCategoryChange(category.id)}
-                  className="flex items-center gap-2 whitespace-nowrap"
+                  className="flex items-center gap-2 whitespace-nowrap flex-shrink-0"
                 >
                   <Icon className="w-3 h-3" />
                   {category.name}
@@ -490,7 +490,7 @@ function MobileSelectionView({
               );
             })}
           </div>
-        </ScrollArea>
+        </div>
       </div>
 
       {/* Mobile Garments Grid */}

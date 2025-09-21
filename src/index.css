@@ -727,6 +727,20 @@ textarea {
   overscroll-behavior-y: contain;
 }
 
+/* Mobile category horizontal scrolling */
+.mobile-category-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.mobile-category-scroll::-webkit-scrollbar {
+  display: none;
+}
+
 /* Bottom navigation clearance */
 .bottom-nav-safe {
   padding-bottom: calc(60px + env(safe-area-inset-bottom));
