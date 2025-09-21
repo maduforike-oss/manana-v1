@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { 
   MousePointer2, Hand, Type, Image, Shapes, Upload,
-  Square, Circle, Triangle, Star, Minus, PenTool
+  Square, Circle, Triangle, Star, Minus, PenTool, Eraser
 } from 'lucide-react';
 import {
   Tooltip,
@@ -25,6 +25,7 @@ const primaryTools = [
   { id: 'hand', icon: Hand, label: 'Pan Canvas', shortcut: 'H' },
   { id: 'text', icon: Type, label: 'Add Text', shortcut: 'T' },
   { id: 'brush', icon: PenTool, label: 'Brush Tool', shortcut: 'B' },
+  { id: 'eraser', icon: Eraser, label: 'Eraser Tool', shortcut: 'E' },
   { id: 'image', icon: Image, label: 'Add Image', shortcut: 'I' },
 ] as const;
 

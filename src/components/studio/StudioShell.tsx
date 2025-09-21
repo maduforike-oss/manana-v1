@@ -8,7 +8,7 @@ import { EnhancedBottomControls } from './EnhancedBottomControls';
 import { useSetActiveTool, useUndo, useRedo, useSetZoom, useSetPanOffset } from '../../lib/studio/storeSelectors';
 import { useAppStore } from '../../store/useAppStore';
 import { useViewportManager } from './EnhancedViewportManager';
-import { AsyncStudioInitializer } from './optimized/AsyncStudioInitializer';
+
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Layers, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -56,6 +56,16 @@ export const StudioShell = () => {
           break;
         case 'c':
           setActiveTool('circle');
+          break;
+        case 'b':
+          if (!e.ctrlKey && !e.metaKey) {
+            setActiveTool('brush');
+          }
+          break;
+        case 'e':
+          if (!e.ctrlKey && !e.metaKey) {
+            setActiveTool('eraser');
+          }
           break;
         case 'g':
           if (e.shiftKey) {
@@ -105,8 +115,7 @@ export const StudioShell = () => {
     return () => clearInterval(interval);
   }, [autoSave]);
   return (
-    <AsyncStudioInitializer onInitialized={() => setActiveRightTab('design')}>
-      <div className="h-screen flex flex-col bg-background text-foreground">
+    <div className="h-screen flex flex-col bg-background text-foreground">
         <TopBar />
         
         <div className="flex-1 flex overflow-hidden">
@@ -213,6 +222,5 @@ export const StudioShell = () => {
           )}
         </div>
       </div>
-    </AsyncStudioInitializer>
   );
 };

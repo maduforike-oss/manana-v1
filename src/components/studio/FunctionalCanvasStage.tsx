@@ -10,6 +10,9 @@ import { getGarmentView } from '@/lib/api/garments';
 import { PrintAreaMaskManager } from '../../lib/studio/printAreaMask';
 import { StrokePipeline } from '../../lib/studio/strokePipeline';
 import { CommandStack, AddStrokeCommand } from '../../lib/studio/commandStack';
+import { BrushEngine, BrushSettings, BRUSH_PRESETS } from '../../lib/studio/brushEngine';
+import { AdvancedDrawingCanvas } from './AdvancedDrawingCanvas';
+import { BrushControlsPanel } from './BrushControlsPanel';
 
 export const FunctionalCanvasStage = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -29,6 +32,8 @@ export const FunctionalCanvasStage = () => {
   const [focused, setFocused] = useState(false);
   const [canAcceptInput, setCanAcceptInput] = useState(false);
   const [liveStroke, setLiveStroke] = useState<any>(null);
+  const [brushSettings, setBrushSettings] = useState<BrushSettings>(BRUSH_PRESETS.pencil);
+  const [showBrushControls, setShowBrushControls] = useState(false);
   
   const { 
     doc, 
@@ -42,6 +47,7 @@ export const FunctionalCanvasStage = () => {
     clearSelection,
     setZoom,
     setPanOffset,
+    setActiveTool,
     undo,
     redo,
     canUndo,
@@ -86,6 +92,7 @@ export const FunctionalCanvasStage = () => {
   useEffect(() => {
     const shouldAcceptInput = focused && (activeTool === 'brush' || activeTool === 'eraser');
     setCanAcceptInput(shouldAcceptInput);
+    setShowBrushControls(activeTool === 'brush' || activeTool === 'eraser');
   }, [focused, activeTool]);
 
   // Mobile touch handling
@@ -804,6 +811,38 @@ export const FunctionalCanvasStage = () => {
           />
         </Layer>
       </Stage>
+
+      {/* Advanced Drawing Canvas Overlay */}
+      {(activeTool === 'brush' || activeTool === 'eraser') && (
+        <div className="absolute inset-0 pointer-events-none">
+          <AdvancedDrawingCanvas
+            width={doc.canvas.width}
+            height={doc.canvas.height}
+            brushSettings={brushSettings}
+            activeTool={activeTool as 'brush' | 'eraser'}
+            onStrokeComplete={(stroke) => {
+              console.log('Stroke completed:', stroke);
+              saveSnapshot();
+            }}
+            className="pointer-events-auto"
+          />
+        </div>
+      )}
+
+      {/* Brush Controls Panel */}
+      {showBrushControls && (
+        <div className="absolute bottom-4 right-4 z-50">
+          <BrushControlsPanel
+            brushSettings={brushSettings}
+            onBrushSettingsChange={(updates) => 
+              setBrushSettings(prev => ({ ...prev, ...updates }))
+            }
+            activeTool={activeTool as 'brush' | 'eraser'}
+            onToolChange={(tool) => setActiveTool(tool)}
+            className="w-64"
+          />
+        </div>
+      )}
     </div>
   );
 };
