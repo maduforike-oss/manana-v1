@@ -36,41 +36,65 @@ export const StageIntegration: React.FC<StageIntegrationProps> = ({
     });
   }, [brushSettings, activeTool, updateCursor]);
 
-  // Track mouse movement and apply tool-specific cursor behavior
+  // Track pointer movement and apply tool-specific cursor behavior (unified for mouse/touch/stylus)
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    const handleMouseMove = (e: MouseEvent) => {
+    // Detect input type from pointer events
+    const detectInputType = (e: PointerEvent) => {
+      const isStylus = e.pointerType === 'pen' || 
+                      (e.pressure > 0 && e.pointerType === 'touch' && e.width < 10);
+      const isFinger = e.pointerType === 'touch' && !isStylus;
+      const isMouse = e.pointerType === 'mouse';
+      
+      return { isStylus, isFinger, isMouse };
+    };
+
+    const handlePointerMove = (e: PointerEvent) => {
+      const { isStylus, isFinger, isMouse } = detectInputType(e);
+      
+      // Always update cursor position for consistent tracking
       setCursorPosition(e.clientX, e.clientY);
       
       if (['brush', 'eraser'].includes(activeTool)) {
-        if (!isTrackingRef.current) {
+        // Show cursor for mouse and stylus, hide for finger touch
+        const shouldShowCursor = isMouse || isStylus;
+        
+        if (shouldShowCursor && !isTrackingRef.current) {
+          showCursor();
+          isTrackingRef.current = true;
+        } else if (!shouldShowCursor && isTrackingRef.current) {
+          hideCursor();
+          isTrackingRef.current = false;
+        }
+      }
+    };
+
+    const handlePointerEnter = (e: PointerEvent) => {
+      // Update canvas rect when entering
+      const rect = container.getBoundingClientRect();
+      setCanvasRect(rect);
+      
+      const { isStylus, isMouse } = detectInputType(e);
+      
+      if (['brush', 'eraser'].includes(activeTool)) {
+        // Show cursor for mouse and stylus only
+        if (isMouse || isStylus) {
           showCursor();
           isTrackingRef.current = true;
         }
       }
     };
 
-    const handleMouseEnter = () => {
-      // Update canvas rect when entering
-      const rect = container.getBoundingClientRect();
-      setCanvasRect(rect);
-      
-      if (['brush', 'eraser'].includes(activeTool)) {
-        showCursor();
-        isTrackingRef.current = true;
-      }
-    };
-
-    const handleMouseLeave = () => {
+    const handlePointerLeave = () => {
       if (['brush', 'eraser'].includes(activeTool)) {
         hideCursor();
         isTrackingRef.current = false;
       }
     };
 
-    const handlePointerDown = () => {
+    const handlePointerDown = (e: PointerEvent) => {
       if (['brush', 'eraser'].includes(activeTool)) {
         setDrawingState(true);
       }
@@ -108,16 +132,17 @@ export const StageIntegration: React.FC<StageIntegrationProps> = ({
 
     updateCursorStyle();
 
-    container.addEventListener('mousemove', handleMouseMove);
-    container.addEventListener('mouseenter', handleMouseEnter);
-    container.addEventListener('mouseleave', handleMouseLeave);
-    container.addEventListener('pointerdown', handlePointerDown);
-    container.addEventListener('pointerup', handlePointerUp);
+    // Use pointer events for unified handling across input types
+    container.addEventListener('pointermove', handlePointerMove, { passive: false });
+    container.addEventListener('pointerenter', handlePointerEnter, { passive: false });
+    container.addEventListener('pointerleave', handlePointerLeave, { passive: false });
+    container.addEventListener('pointerdown', handlePointerDown, { passive: false });
+    container.addEventListener('pointerup', handlePointerUp, { passive: false });
 
     return () => {
-      container.removeEventListener('mousemove', handleMouseMove);
-      container.removeEventListener('mouseenter', handleMouseEnter);
-      container.removeEventListener('mouseleave', handleMouseLeave);
+      container.removeEventListener('pointermove', handlePointerMove);
+      container.removeEventListener('pointerenter', handlePointerEnter);
+      container.removeEventListener('pointerleave', handlePointerLeave);
       container.removeEventListener('pointerdown', handlePointerDown);
       container.removeEventListener('pointerup', handlePointerUp);
       

@@ -59,6 +59,7 @@ export const ToolCursorProvider: React.FC<ToolCursorProviderProps> = ({ children
 
   const setCursorPosition = useCallback((clientX: number, clientY: number) => {
     // Use screen coordinates directly for cursor positioning
+    // This ensures the cursor appears exactly where the pointer is
     setCursorState(prev => ({ ...prev, position: { x: clientX, y: clientY } }));
   }, []);
 
@@ -99,22 +100,26 @@ export const ToolCursorProvider: React.FC<ToolCursorProviderProps> = ({ children
 const ToolCursorDisplay: React.FC = () => {
   const { cursorState } = useToolCursor();
 
-  // Only show custom cursor for brush/eraser tools
+  // Only show custom cursor for brush/eraser tools when visible
   if (!cursorState.isVisible || !['brush', 'eraser'].includes(cursorState.tool)) {
     return null;
   }
 
+  // Scale cursor size appropriately for display
   const cursorSize = Math.max(8, Math.min(40, cursorState.brushSize));
+  
+  // Position cursor precisely at pointer location
+  const cursorStyle = {
+    left: cursorState.position.x - cursorSize / 2,
+    top: cursorState.position.y - cursorSize / 2,
+    width: cursorSize,
+    height: cursorSize,
+  };
 
   return (
     <div
-      className="fixed pointer-events-none z-[9999] transition-none"
-      style={{
-        left: cursorState.position.x - cursorSize / 2,
-        top: cursorState.position.y - cursorSize / 2,
-        width: cursorSize,
-        height: cursorSize,
-      }}
+      className="fixed pointer-events-none z-[9999] transition-none will-change-transform"
+      style={cursorStyle}
     >
       {cursorState.tool === 'brush' ? (
         <div
