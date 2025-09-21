@@ -18,6 +18,7 @@ import { InlineTextEditor } from './InlineTextEditor';
 import { EraserTool } from './EraserTool';
 import { KeyboardShortcuts } from './KeyboardShortcuts';
 import { HistoryIndicator } from './HistoryIndicator';
+import { DynamicCursor } from './DynamicCursor';
 
 interface FunctionalCanvasStageProps {
   brushSettings?: BrushSettings;
@@ -858,6 +859,13 @@ export const FunctionalCanvasStage: React.FC<FunctionalCanvasStageProps> = ({
 
       {/* History Indicator */}
       <HistoryIndicator />
+
+      {/* Dynamic Cursor for Brush/Eraser */}
+      <DynamicCursor
+        activeTool={activeTool}
+        brushSize={brushSettings.size}
+        color={brushSettings.color}
+      />
 
     </div>
   );

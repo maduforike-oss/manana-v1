@@ -9,7 +9,8 @@ import {
   Brush, 
   Eraser,
   Settings,
-  Droplets
+  Droplets,
+  Circle
 } from 'lucide-react';
 import { BrushSettings, BRUSH_PRESETS } from '../../lib/studio/brushEngine';
 import { cn } from '@/lib/utils';
@@ -54,15 +55,15 @@ export const BrushControlsPanel: React.FC<BrushControlsPanelProps> = ({
           <Brush className="w-4 h-4 mr-2" />
           Brush
         </Button>
-        <Button
-          variant={activeTool === 'eraser' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => onToolChange('eraser')}
-          className="flex-1"
-        >
-          <Eraser className="w-4 h-4 mr-2" />
-          Eraser
-        </Button>
+              <Button
+                variant={activeTool === 'eraser' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => onToolChange('eraser')}
+                className="flex-1"
+              >
+                <Circle className="w-4 h-4 mr-2" />
+                Eraser
+              </Button>
       </div>
 
       {/* Brush Presets */}

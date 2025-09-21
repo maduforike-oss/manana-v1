@@ -50,8 +50,6 @@ export const FloatingBrushPanel: React.FC<FloatingBrushPanelProps> = ({
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const { doc, updateCanvas, updateGarmentColor } = useStudioStore();
-
   // Save position and color history to localStorage
   useEffect(() => {
     localStorage.setItem('floating-brush-panel-position', JSON.stringify(position));
@@ -63,10 +61,6 @@ export const FloatingBrushPanel: React.FC<FloatingBrushPanelProps> = ({
 
   const handleBrushColorChange = (color: string) => {
     onBrushSettingsChange({ color });
-  };
-
-  const handleGarmentColorChange = (colorId: string) => {
-    updateGarmentColor(colorId);
   };
 
   const addToColorHistory = (color: string) => {
@@ -81,9 +75,10 @@ export const FloatingBrushPanel: React.FC<FloatingBrushPanelProps> = ({
     if (!panelRef.current) return;
     
     const rect = panelRef.current.getBoundingClientRect();
+    const headerRect = e.currentTarget.getBoundingClientRect();
     setDragOffset({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
+      x: e.clientX - headerRect.left,
+      y: e.clientY - headerRect.top
     });
     setIsDragging(true);
   };
@@ -221,13 +216,6 @@ export const FloatingBrushPanel: React.FC<FloatingBrushPanelProps> = ({
 
         {!isMinimized && (
           <CardContent className="p-4 space-y-4">
-            {/* Garment Color Selector */}
-            <EnhancedColorSelector
-              mode="garment"
-              currentColor={doc.canvas.garmentColor || 'white'}
-              onColorChange={handleGarmentColorChange}
-            />
-            
             {/* Brush Color Selector */}
             <EnhancedColorSelector
               mode="brush"

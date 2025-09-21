@@ -142,12 +142,12 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
     if (!canvas) return { x: 0, y: 0 };
     
     const rect = canvas.getBoundingClientRect();
-    // Fix coordinate calculation to properly account for canvas position
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
+    // Account for zoom and pan transformations to match Konva stage
+    const x = (clientX - rect.left) / zoom - panOffset.x;
+    const y = (clientY - rect.top) / zoom - panOffset.y;
     
     return { x, y };
-  }, []);
+  }, [zoom, panOffset]);
 
   // Get pressure from pointer event with enhanced MacBook trackpad support
   const getPressure = useCallback((e: PointerEvent): number => {
@@ -186,7 +186,7 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
     
     // Update brush settings for eraser
     const currentSettings = activeTool === 'eraser' 
-      ? { ...brushSettings, type: 'eraser' as const, color: 'transparent' }
+      ? { ...brushSettings, type: 'eraser' as const, color: 'rgba(255,255,255,1)' }
       : brushSettings;
     
     brushEngineRef.current.updateSettings(currentSettings);
@@ -348,7 +348,7 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
         onPointerLeave={handlePointerUp}
         style={{ 
           touchAction: 'none',
-          cursor: activeTool === 'eraser' ? 'crosshair' : 'crosshair',
+          cursor: 'none', // Hide default cursor for custom cursor
           // Ensure precise positioning
           position: 'absolute',
           left: 0,
