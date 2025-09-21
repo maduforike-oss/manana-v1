@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { TopBar } from './TopBar';
 import { LeftTools } from './LeftTools';
 import { RightProps } from './RightProps';
-import { CanvasStage } from './CanvasStage';
+import { UnifiedCanvasStage } from '../../src/components/studio/UnifiedCanvasStage';
 import { useStudioStore } from '../../lib/studio/store';
 import { ShortcutsDialog } from './ShortcutsDialog';
 import { CreativeBackground } from './CreativeBackground';
@@ -140,7 +140,7 @@ export const StudioShell = () => {
         
         {/* Main Canvas Area */}
         <div className="flex-1 flex flex-col min-w-0">
-          <CanvasStage />
+          <UnifiedCanvasStage />
           
           {/* Enhanced Status Bar */}
           <div className="h-7 bg-card/95 border-t border-border/50 backdrop-blur-sm flex items-center justify-between px-4 text-xs shadow-sm">
