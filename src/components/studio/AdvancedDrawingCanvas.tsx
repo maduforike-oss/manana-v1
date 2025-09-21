@@ -73,15 +73,25 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
     if (!canvas) return { x: 0, y: 0 };
     
     const rect = canvas.getBoundingClientRect();
-    const x = (clientX - rect.left - panOffset.x) / zoom;
-    const y = (clientY - rect.top - panOffset.y) / zoom;
+    // Fix coordinate calculation to properly account for canvas position
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
     
     return { x, y };
-  }, [zoom, panOffset]);
+  }, []);
 
-  // Get pressure from pointer event
+  // Get pressure from pointer event with better Apple Pencil detection
   const getPressure = useCallback((e: PointerEvent): number => {
-    return e.pressure || (e.pointerType === 'pen' ? 0.5 : 1.0);
+    // Apple Pencil and stylus detection
+    if (e.pointerType === 'pen') {
+      return e.pressure > 0 ? e.pressure : 0.5;
+    }
+    // Touch detection - differentiate finger vs palm
+    if (e.pointerType === 'touch') {
+      return e.pressure || 0.7;
+    }
+    // Mouse fallback
+    return 1.0;
   }, []);
 
   // Handle drawing start
@@ -237,7 +247,7 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
       
       {/* Invisible interaction canvas */}
       <canvas
-        className="absolute inset-0 cursor-crosshair touch-none"
+        className="absolute inset-0 cursor-crosshair"
         width={width}
         height={height}
         onPointerDown={handlePointerDown}
@@ -246,7 +256,11 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
         onPointerLeave={handlePointerUp}
         style={{ 
           touchAction: 'none',
-          cursor: activeTool === 'eraser' ? 'crosshair' : 'crosshair'
+          cursor: activeTool === 'eraser' ? 'crosshair' : 'crosshair',
+          // Ensure precise positioning
+          position: 'absolute',
+          left: 0,
+          top: 0
         }}
       />
     </div>

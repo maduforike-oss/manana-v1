@@ -413,83 +413,8 @@ export const FunctionalCanvasStage = () => {
     }
   }, [activeTool, panOffset, zoom, addNode, clearSelection, saveSnapshot]);
 
-  // Enhanced drawing with stroke persistence and print area masking
-  const isStylus = useCallback((e: any) => {
-    return e?.evt?.pointerType === "pen" || e?.evt?.pointerType === "stylus";
-  }, []);
+  // Remove duplicate drawing system - let AdvancedDrawingCanvas handle all drawing
 
-  const stageToCanvasCoords = useCallback((pos: { x: number; y: number }) => {
-    return { 
-      x: (pos.x - panOffset.x) / zoom, 
-      y: (pos.y - panOffset.y) / zoom 
-    };
-  }, [panOffset, zoom]);
-
-  const handleBrushStart = useCallback((e: any) => {
-    setFocused(true);
-    
-    if (activeTool !== 'brush' && activeTool !== 'eraser') return;
-
-    e.evt?.preventDefault();
-    const pos = e.target.getStage().getPointerPosition();
-    if (!pos) return;
-    
-    const p = stageToCanvasCoords(pos);
-    
-    // Check if point is in print area
-    if (!maskManagerRef.current.isPointInPrintArea(p)) {
-      return;
-    }
-
-    setIsDrawing(true);
-    
-    if (strokePipelineRef.current && artworkCanvasRef.current) {
-      const strokeId = strokePipelineRef.current.startStroke(
-        p,
-        e?.evt?.pressure ?? 0.5,
-        {
-          size: 6,
-          color: activeTool === 'eraser' ? 'transparent' : "#000000",
-          opacity: 1,
-          hardness: 0.8,
-          type: activeTool === 'eraser' ? 'eraser' : 'normal'
-        }
-      );
-
-      if (strokeId) {
-        setLiveStroke({
-          id: strokeId,
-          color: activeTool === 'eraser' ? 'transparent' : "#000000",
-          size: 6,
-          opacity: 1,
-          points: [{ x: p.x, y: p.y, p: e?.evt?.pressure ?? 0.5 }],
-        });
-      }
-    }
-  }, [activeTool, stageToCanvasCoords]);
-
-  const handleBrushMove = useCallback((e: any) => {
-    if (!isDrawing || (activeTool !== 'brush' && activeTool !== 'eraser')) return;
-    
-    e.evt?.preventDefault();
-    const pos = e.target.getStage().getPointerPosition();
-    if (!pos) return;
-    
-    const p = stageToCanvasCoords(pos);
-    
-    if (strokePipelineRef.current && liveStroke) {
-      const added = strokePipelineRef.current.addPoint(p, e?.evt?.pressure ?? 0.5);
-      
-      if (added) {
-        setLiveStroke((prev: any) =>
-          prev ? {
-            ...prev,
-            points: [...prev.points, { x: p.x, y: p.y, p: e?.evt?.pressure ?? 0.5 }],
-          } : prev
-        );
-      }
-    }
-  }, [isDrawing, activeTool, stageToCanvasCoords, liveStroke]);
 
   const handleBrushEnd = useCallback(() => {
     if (!isDrawing || (activeTool !== 'brush' && activeTool !== 'eraser')) return;
@@ -734,9 +659,9 @@ export const FunctionalCanvasStage = () => {
         y={panOffset.y}
         onWheel={handleWheel}
         onClick={handleStageClick}
-        onMouseDown={handleBrushStart}
-        onMouseMove={handleBrushMove}
-        onMouseUp={handleBrushEnd}
+        onMouseDown={handleStageClick}
+        onMouseMove={() => {}}
+        onMouseUp={() => {}}
         onDragEnd={handleDragEnd}
         draggable={activeTool === 'hand'}
         className={cn(
@@ -812,9 +737,17 @@ export const FunctionalCanvasStage = () => {
         </Layer>
       </Stage>
 
-      {/* Advanced Drawing Canvas Overlay */}
+      {/* Advanced Drawing Canvas Overlay - positioned precisely over Konva stage */}
       {(activeTool === 'brush' || activeTool === 'eraser') && (
-        <div className="absolute inset-0 pointer-events-none">
+        <div 
+          className="absolute pointer-events-none z-30"
+          style={{
+            left: panOffset.x,
+            top: panOffset.y,
+            transform: `scale(${zoom})`,
+            transformOrigin: '0 0'
+          }}
+        >
           <AdvancedDrawingCanvas
             width={doc.canvas.width}
             height={doc.canvas.height}
