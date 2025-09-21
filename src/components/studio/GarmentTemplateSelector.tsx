@@ -21,6 +21,7 @@ import {
 import { getGarments, getGarmentDetail, type GarmentSummary, type GarmentDetail } from "@/lib/api/garments";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useViewportHeight } from "@/hooks/useViewportHeight";
 
 interface GarmentTemplateSelectorProps {
   onSelect: (garment: GarmentDetail, view?: string) => void;
@@ -79,6 +80,7 @@ export default function GarmentTemplateSelector({ onSelect, selectedGarmentType 
   const [mobileStep, setMobileStep] = useState<'selection' | 'preview'>('selection');
   
   const isMobile = useIsMobile();
+  const { calculateScrollHeight, availableHeight } = useViewportHeight();
 
   useEffect(() => {
     const loadGarments = async () => {
@@ -216,16 +218,17 @@ export default function GarmentTemplateSelector({ onSelect, selectedGarmentType 
         </div>
 
         {mobileStep === 'selection' ? (
-          <MobileSelectionView
-            garments={garments}
-            filteredGarments={filteredGarments}
-            selectedCategory={selectedCategory}
-            searchQuery={searchQuery}
-            onCategoryChange={setSelectedCategory}
-            onSearchChange={setSearchQuery}
-            onSelectGarment={handleSelectGarment}
-            selectedGarment={selectedGarment}
-          />
+        <MobileSelectionView
+          garments={garments}
+          filteredGarments={filteredGarments}
+          selectedCategory={selectedCategory}
+          searchQuery={searchQuery}
+          onCategoryChange={setSelectedCategory}
+          onSearchChange={setSearchQuery}
+          onSelectGarment={handleSelectGarment}
+          selectedGarment={selectedGarment}
+          availableHeight={availableHeight}
+        />
         ) : (
           <MobilePreviewView
             selectedGarment={selectedGarment}
@@ -235,6 +238,7 @@ export default function GarmentTemplateSelector({ onSelect, selectedGarmentType 
             detailLoading={detailLoading}
             onViewChange={setSelectedView}
             onUseTemplate={handleUseTemplate}
+            availableHeight={availableHeight}
           />
         )}
       </div>
@@ -435,7 +439,8 @@ function MobileSelectionView({
   onCategoryChange,
   onSearchChange,
   onSelectGarment,
-  selectedGarment
+  selectedGarment,
+  availableHeight
 }: {
   garments: GarmentSummary[];
   filteredGarments: GarmentSummary[];
@@ -445,7 +450,10 @@ function MobileSelectionView({
   onSearchChange: (query: string) => void;
   onSelectGarment: (garment: GarmentSummary) => void;
   selectedGarment: GarmentDetail | null;
+  availableHeight: number;
 }) {
+  // Calculate scroll container height (header is ~140px, padding ~32px)
+  const scrollHeight = Math.max(availableHeight - 172, 300);
   return (
     <div className="flex-1 flex flex-col">
       {/* Mobile Search & Filter */}
@@ -486,7 +494,14 @@ function MobileSelectionView({
       </div>
 
       {/* Mobile Garments Grid */}
-      <ScrollArea className="flex-1">
+      <div 
+        className="flex-1 overflow-auto modern-scroll"
+        style={{ 
+          height: `${scrollHeight}px`,
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehavior: 'contain'
+        }}
+      >
         <div className="p-4">
           {filteredGarments.length === 0 ? (
             <div className="text-center py-12">
@@ -506,7 +521,7 @@ function MobileSelectionView({
             </div>
           )}
         </div>
-      </ScrollArea>
+      </div>
     </div>
   );
 }
@@ -519,7 +534,8 @@ function MobilePreviewView({
   currentViewData,
   detailLoading,
   onViewChange,
-  onUseTemplate
+  onUseTemplate,
+  availableHeight
 }: {
   selectedGarment: GarmentDetail | null;
   selectedView: string;
@@ -528,7 +544,10 @@ function MobilePreviewView({
   detailLoading: boolean;
   onViewChange: (view: string) => void;
   onUseTemplate: () => void;
+  availableHeight: number;
 }) {
+  // Calculate scroll container height (header is ~120px, action button ~80px, padding ~32px)
+  const scrollHeight = Math.max(availableHeight - 232, 300);
   if (!selectedGarment) return null;
 
   return (
@@ -555,7 +574,14 @@ function MobilePreviewView({
       </div>
 
       {/* Mobile Preview */}
-      <div className="flex-1 p-4">
+      <div 
+        className="flex-1 p-4 overflow-auto modern-scroll"
+        style={{ 
+          height: `${scrollHeight}px`,
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehavior: 'contain'
+        }}
+      >
         {detailLoading ? (
           <div className="aspect-square bg-muted rounded-lg flex items-center justify-center">
             <Loader2 className="w-6 h-6 animate-spin" />
