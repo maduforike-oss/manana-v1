@@ -18,7 +18,8 @@ import { InlineTextEditor } from './InlineTextEditor';
 import { EraserTool } from './EraserTool';
 import { KeyboardShortcuts } from './KeyboardShortcuts';
 import { HistoryIndicator } from './HistoryIndicator';
-import { DynamicCursor } from './DynamicCursor';
+import { UnifiedCursorProvider } from './UnifiedCursorManager';
+import { CursorIntegrationWrapper } from './CursorIntegrationWrapper';
 
 interface FunctionalCanvasStageProps {
   brushSettings?: BrushSettings;
@@ -628,9 +629,20 @@ export const FunctionalCanvasStage: React.FC<FunctionalCanvasStageProps> = ({
   );
 
   return (
-    <div ref={containerRef} className="relative w-full h-full bg-muted/20">
-      {/* Focus Prompt */}
-      <FocusPrompt />
+    <UnifiedCursorProvider>
+      <CursorIntegrationWrapper
+        brushSettings={brushSettings}
+        activeTool={activeTool}
+        containerRef={containerRef}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        onMouseDown={handleStageMouseDown}
+        onMouseUp={handleStageMouseUp}
+        onClick={handleStageClick}
+      >
+        <div className="relative w-full h-full bg-muted/20">
+          {/* Focus Prompt */}
+          <FocusPrompt />
       
       {/* Zoom and Export Controls */}
       <div className="absolute top-4 right-4 z-50 flex gap-2">
@@ -857,16 +869,10 @@ export const FunctionalCanvasStage: React.FC<FunctionalCanvasStageProps> = ({
       {/* Keyboard Shortcuts */}
       <KeyboardShortcuts />
 
-      {/* History Indicator */}
-      <HistoryIndicator />
-
-      {/* Dynamic Cursor for Brush/Eraser */}
-      <DynamicCursor
-        activeTool={activeTool}
-        brushSize={brushSettings.size}
-        color={brushSettings.color}
-      />
-
-    </div>
+          {/* History Indicator */}
+          <HistoryIndicator />
+        </div>
+      </CursorIntegrationWrapper>
+    </UnifiedCursorProvider>
   );
 };

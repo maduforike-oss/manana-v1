@@ -136,15 +136,20 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
     }
   }, [width, height]);
 
-  // Convert screen coordinates to canvas coordinates
+  // Convert screen coordinates to canvas coordinates with precision
   const screenToCanvas = useCallback((clientX: number, clientY: number): Vec2 => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
     
     const rect = canvas.getBoundingClientRect();
-    // Account for zoom and pan transformations to match Konva stage
-    const x = (clientX - rect.left) / zoom - panOffset.x;
-    const y = (clientY - rect.top) / zoom - panOffset.y;
+    
+    // Calculate relative position within canvas element
+    const relativeX = clientX - rect.left;
+    const relativeY = clientY - rect.top;
+    
+    // Apply inverse zoom transformation first, then adjust for pan offset
+    const x = relativeX / zoom - panOffset.x;
+    const y = relativeY / zoom - panOffset.y;
     
     return { x, y };
   }, [zoom, panOffset]);
@@ -339,7 +344,7 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
       
       {/* Invisible interaction canvas */}
       <canvas
-        className="absolute inset-0 cursor-crosshair"
+        className="absolute inset-0 unified-cursor-area"
         width={width}
         height={height}
         onPointerDown={handlePointerDown}
@@ -348,7 +353,6 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
         onPointerLeave={handlePointerUp}
         style={{ 
           touchAction: 'none',
-          cursor: 'none', // Hide default cursor for custom cursor
           // Ensure precise positioning
           position: 'absolute',
           left: 0,

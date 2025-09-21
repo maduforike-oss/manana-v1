@@ -70,15 +70,14 @@ export const FloatingBrushPanel: React.FC<FloatingBrushPanelProps> = ({
     });
   };
 
-  // Handle drag start
+  // Handle drag start with proper offset calculation
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!panelRef.current) return;
     
-    const rect = panelRef.current.getBoundingClientRect();
-    const headerRect = e.currentTarget.getBoundingClientRect();
+    const panelRect = panelRef.current.getBoundingClientRect();
     setDragOffset({
-      x: e.clientX - headerRect.left,
-      y: e.clientY - headerRect.top
+      x: e.clientX - panelRect.left,
+      y: e.clientY - panelRect.top
     });
     setIsDragging(true);
   };
