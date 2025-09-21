@@ -143,15 +143,14 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
     
     const rect = canvas.getBoundingClientRect();
     
-    // Calculate relative position within canvas element
-    const relativeX = clientX - rect.left;
-    const relativeY = clientY - rect.top;
-    
-    // Apply inverse zoom transformation first, then adjust for pan offset
-    const x = relativeX / zoom - panOffset.x;
-    const y = relativeY / zoom - panOffset.y;
-    
-    return { x, y };
+    // Use the unified coordinate transformation
+    const { screenToCanvas: transform } = require('../../lib/studio/coordinateTransform');
+    return transform(
+      clientX, 
+      clientY, 
+      rect, 
+      { zoom, panOffset, canvasOffset: { x: 0, y: 0 } }
+    );
   }, [zoom, panOffset]);
 
   // Get pressure from pointer event with enhanced MacBook trackpad support
@@ -344,7 +343,7 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
       
       {/* Invisible interaction canvas */}
       <canvas
-        className="absolute inset-0 unified-cursor-area"
+        className="absolute inset-0"
         width={width}
         height={height}
         onPointerDown={handlePointerDown}
@@ -353,10 +352,10 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
         onPointerLeave={handlePointerUp}
         style={{ 
           touchAction: 'none',
-          // Ensure precise positioning
           position: 'absolute',
           left: 0,
-          top: 0
+          top: 0,
+          cursor: 'none' // Hide default cursor only on drawing canvas
         }}
       />
     </div>

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 import { useStudioStore } from '@/lib/studio/store';
+import { screenToCanvas } from '@/lib/studio/coordinateTransform';
 
 interface CursorState {
   tool: string;
@@ -8,40 +9,43 @@ interface CursorState {
   color: string;
   isVisible: boolean;
   isDrawing: boolean;
+  canvasRect: DOMRect | null;
 }
 
-interface UnifiedCursorContextType {
+interface ToolCursorContextType {
   cursorState: CursorState;
   updateCursor: (updates: Partial<CursorState>) => void;
-  hideCursor: () => void;
-  showCursor: () => void;
-  setCursorPosition: (x: number, y: number) => void;
+  setCursorPosition: (clientX: number, clientY: number) => void;
   setDrawingState: (isDrawing: boolean) => void;
+  setCanvasRect: (rect: DOMRect) => void;
+  showCursor: () => void;
+  hideCursor: () => void;
 }
 
-const UnifiedCursorContext = createContext<UnifiedCursorContextType | null>(null);
+const ToolCursorContext = createContext<ToolCursorContextType | null>(null);
 
-export const useUnifiedCursor = () => {
-  const context = useContext(UnifiedCursorContext);
+export const useToolCursor = () => {
+  const context = useContext(ToolCursorContext);
   if (!context) {
-    throw new Error('useUnifiedCursor must be used within UnifiedCursorProvider');
+    throw new Error('useToolCursor must be used within ToolCursorProvider');
   }
   return context;
 };
 
-interface UnifiedCursorProviderProps {
+interface ToolCursorProviderProps {
   children: React.ReactNode;
 }
 
-export const UnifiedCursorProvider: React.FC<UnifiedCursorProviderProps> = ({ children }) => {
-  const { activeTool } = useStudioStore();
+export const ToolCursorProvider: React.FC<ToolCursorProviderProps> = ({ children }) => {
+  const { activeTool, zoom, panOffset } = useStudioStore();
   const [cursorState, setCursorState] = useState<CursorState>({
     tool: activeTool,
     position: { x: 0, y: 0 },
     brushSize: 20,
     color: '#000000',
     isVisible: false,
-    isDrawing: false
+    isDrawing: false,
+    canvasRect: null
   });
 
   // Update tool when store changes
@@ -53,59 +57,50 @@ export const UnifiedCursorProvider: React.FC<UnifiedCursorProviderProps> = ({ ch
     setCursorState(prev => ({ ...prev, ...updates }));
   }, []);
 
-  const hideCursor = useCallback(() => {
-    setCursorState(prev => ({ ...prev, isVisible: false }));
-  }, []);
-
-  const showCursor = useCallback(() => {
-    setCursorState(prev => ({ ...prev, isVisible: true }));
-  }, []);
-
-  const setCursorPosition = useCallback((x: number, y: number) => {
-    setCursorState(prev => ({ ...prev, position: { x, y } }));
+  const setCursorPosition = useCallback((clientX: number, clientY: number) => {
+    // Use screen coordinates directly for cursor positioning
+    setCursorState(prev => ({ ...prev, position: { x: clientX, y: clientY } }));
   }, []);
 
   const setDrawingState = useCallback((isDrawing: boolean) => {
     setCursorState(prev => ({ ...prev, isDrawing }));
   }, []);
 
-  const value: UnifiedCursorContextType = {
+  const setCanvasRect = useCallback((rect: DOMRect) => {
+    setCursorState(prev => ({ ...prev, canvasRect: rect }));
+  }, []);
+
+  const showCursor = useCallback(() => {
+    setCursorState(prev => ({ ...prev, isVisible: true }));
+  }, []);
+
+  const hideCursor = useCallback(() => {
+    setCursorState(prev => ({ ...prev, isVisible: false }));
+  }, []);
+
+  const value: ToolCursorContextType = {
     cursorState,
     updateCursor,
-    hideCursor,
-    showCursor,
     setCursorPosition,
-    setDrawingState
+    setDrawingState,
+    setCanvasRect,
+    showCursor,
+    hideCursor
   };
 
   return (
-    <UnifiedCursorContext.Provider value={value}>
+    <ToolCursorContext.Provider value={value}>
       {children}
-      <UnifiedCursorDisplay />
-    </UnifiedCursorContext.Provider>
+      <ToolCursorDisplay />
+    </ToolCursorContext.Provider>
   );
 };
 
-const UnifiedCursorDisplay: React.FC = () => {
-  const { cursorState } = useUnifiedCursor();
-  const cursorRef = useRef<HTMLDivElement>(null);
+const ToolCursorDisplay: React.FC = () => {
+  const { cursorState } = useToolCursor();
 
-  // Hide default cursor on drawing areas
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.textContent = `
-      .unified-cursor-area, .unified-cursor-area * {
-        cursor: none !important;
-      }
-    `;
-    document.head.appendChild(style);
-    
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
-
-  if (!cursorState.isVisible || (!['brush', 'eraser'].includes(cursorState.tool))) {
+  // Only show custom cursor for brush/eraser tools
+  if (!cursorState.isVisible || !['brush', 'eraser'].includes(cursorState.tool)) {
     return null;
   }
 
@@ -113,7 +108,6 @@ const UnifiedCursorDisplay: React.FC = () => {
 
   return (
     <div
-      ref={cursorRef}
       className="fixed pointer-events-none z-[9999] transition-none"
       style={{
         left: cursorState.position.x - cursorSize / 2,
