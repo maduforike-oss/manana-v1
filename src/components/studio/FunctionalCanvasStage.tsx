@@ -12,6 +12,8 @@ import { StrokePipeline } from '../../lib/studio/strokePipeline';
 import { CommandStack, AddStrokeCommand } from '../../lib/studio/commandStack';
 import { BrushEngine, BrushSettings, BRUSH_PRESETS } from '../../lib/studio/brushEngine';
 import { AdvancedDrawingCanvas } from './AdvancedDrawingCanvas';
+import { FloatingBrushPanel } from './FloatingBrushPanel';
+import { CanvasDimensionsSync } from './CanvasDimensionsSync';
 import { InlineTextEditor } from './InlineTextEditor';
 import { EraserTool } from './EraserTool';
 import { KeyboardShortcuts } from './KeyboardShortcuts';
@@ -43,7 +45,10 @@ export const FunctionalCanvasStage: React.FC<FunctionalCanvasStageProps> = ({
   const [liveStroke, setLiveStroke] = useState<any>(null);
   const [editingTextNode, setEditingTextNode] = useState<TextNode | null>(null);
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
-  const brushSettings = externalBrushSettings || BRUSH_PRESETS.pencil;
+  const [showBrushPanel, setShowBrushPanel] = useState(false);
+  const [isPersistentBrushPanel, setIsPersistentBrushPanel] = useState(false);
+  const [brushSettings, setBrushSettings] = useState<BrushSettings>(externalBrushSettings || BRUSH_PRESETS.pencil);
+  const [needsRedraw, setNeedsRedraw] = useState(0);
   
   const { 
     doc, 
@@ -64,6 +69,13 @@ export const FunctionalCanvasStage: React.FC<FunctionalCanvasStageProps> = ({
     canRedo,
     saveSnapshot
   } = useStudioStore();
+
+  // Show brush panel when brush/eraser tool is active or when persistent
+  useEffect(() => {
+    setShowBrushPanel(
+      isPersistentBrushPanel || activeTool === 'brush' || activeTool === 'eraser'
+    );
+  }, [activeTool, isPersistentBrushPanel]);
 
   // Initialize artwork bitmap canvas
   useEffect(() => {
@@ -798,12 +810,54 @@ export const FunctionalCanvasStage: React.FC<FunctionalCanvasStageProps> = ({
             activeTool={activeTool as 'brush' | 'eraser'}
             onStrokeComplete={(stroke) => {
               console.log('Stroke completed:', stroke);
+              // Ensure canvas syncs with store state
+              setNeedsRedraw(prev => prev + 1);
               saveSnapshot();
             }}
             className="pointer-events-auto"
           />
         </div>
       )}
+
+      {/* Floating Brush Panel */}
+      <FloatingBrushPanel
+        isVisible={showBrushPanel}
+        onClose={() => {
+          setShowBrushPanel(false);
+          setIsPersistentBrushPanel(false);
+        }}
+        brushSettings={brushSettings}
+        onBrushSettingsChange={(updates) => 
+          setBrushSettings(prev => ({ ...prev, ...updates }))
+        }
+        activeTool={activeTool}
+        onToolChange={(tool) => setActiveTool(tool)}
+        isPersistent={isPersistentBrushPanel}
+        onTogglePersistent={() => setIsPersistentBrushPanel(!isPersistentBrushPanel)}
+      />
+
+      {/* Inline Text Editor */}
+      {editingTextNode && (
+        <InlineTextEditor
+          node={editingTextNode}
+          onComplete={() => setEditingTextNode(null)}
+          zoom={zoom}
+          panOffset={panOffset}
+        />
+      )}
+
+      {/* Canvas Dimensions Sync */}
+      <CanvasDimensionsSync
+        width={doc.canvas.width}
+        height={doc.canvas.height}
+        garmentType={doc.canvas.garmentType}
+      />
+
+      {/* Keyboard Shortcuts */}
+      <KeyboardShortcuts />
+
+      {/* History Indicator */}
+      <HistoryIndicator />
 
     </div>
   );

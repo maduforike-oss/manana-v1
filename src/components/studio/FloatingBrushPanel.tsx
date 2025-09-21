@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Minimize2, Maximize2, Move, X, PenTool } from 'lucide-react';
+import { Minimize2, Maximize2, Move, X, PenTool, Eye, EyeOff } from 'lucide-react';
 import { BrushControlsPanel } from './BrushControlsPanel';
+import { EnhancedColorSelector } from './EnhancedColorSelector';
 import { BrushSettings } from '../../lib/studio/brushEngine';
+import { useStudioStore } from '@/lib/studio/store';
 import { cn } from '@/lib/utils';
 
 interface FloatingBrushPanelProps {
@@ -13,6 +15,8 @@ interface FloatingBrushPanelProps {
   onBrushSettingsChange: (settings: Partial<BrushSettings>) => void;
   activeTool: string;
   onToolChange: (tool: 'brush' | 'eraser') => void;
+  isPersistent?: boolean;
+  onTogglePersistent?: () => void;
 }
 
 export const FloatingBrushPanel: React.FC<FloatingBrushPanelProps> = ({
@@ -21,9 +25,15 @@ export const FloatingBrushPanel: React.FC<FloatingBrushPanelProps> = ({
   brushSettings,
   onBrushSettingsChange,
   activeTool,
-  onToolChange
+  onToolChange,
+  isPersistent = false,
+  onTogglePersistent
 }) => {
   const [isMinimized, setIsMinimized] = useState(false);
+  const [colorHistory, setColorHistory] = useState<string[]>(() => {
+    const saved = localStorage.getItem('brush-color-history');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [position, setPosition] = useState(() => {
     // Load saved position from localStorage
     const saved = localStorage.getItem('floating-brush-panel-position');
@@ -40,10 +50,31 @@ export const FloatingBrushPanel: React.FC<FloatingBrushPanelProps> = ({
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const panelRef = useRef<HTMLDivElement>(null);
 
-  // Save position to localStorage when it changes
+  const { doc, updateCanvas, updateGarmentColor } = useStudioStore();
+
+  // Save position and color history to localStorage
   useEffect(() => {
     localStorage.setItem('floating-brush-panel-position', JSON.stringify(position));
   }, [position]);
+
+  useEffect(() => {
+    localStorage.setItem('brush-color-history', JSON.stringify(colorHistory));
+  }, [colorHistory]);
+
+  const handleBrushColorChange = (color: string) => {
+    onBrushSettingsChange({ color });
+  };
+
+  const handleGarmentColorChange = (colorId: string) => {
+    updateGarmentColor(colorId);
+  };
+
+  const addToColorHistory = (color: string) => {
+    setColorHistory(prev => {
+      const newHistory = [color, ...prev.filter(c => c !== color)].slice(0, 10);
+      return newHistory;
+    });
+  };
 
   // Handle drag start
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -145,6 +176,22 @@ export const FloatingBrushPanel: React.FC<FloatingBrushPanelProps> = ({
             </div>
             
             <div className="flex items-center gap-1">
+              {/* Persistent toggle */}
+              {onTogglePersistent && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onTogglePersistent}
+                  className={cn(
+                    "h-6 w-6 p-0",
+                    isPersistent ? "bg-primary text-primary-foreground" : "hover:bg-accent"
+                  )}
+                  title={isPersistent ? "Hide when tool changes" : "Keep visible always"}
+                >
+                  {isPersistent ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                </Button>
+              )}
+              
               {/* Minimize/Maximize button */}
               <Button
                 variant="ghost"
@@ -173,7 +220,25 @@ export const FloatingBrushPanel: React.FC<FloatingBrushPanelProps> = ({
         </CardHeader>
 
         {!isMinimized && (
-          <CardContent className="p-0">
+          <CardContent className="p-4 space-y-4">
+            {/* Garment Color Selector */}
+            <EnhancedColorSelector
+              mode="garment"
+              currentColor={doc.canvas.garmentColor || 'white'}
+              onColorChange={handleGarmentColorChange}
+            />
+            
+            {/* Brush Color Selector */}
+            <EnhancedColorSelector
+              mode="brush"
+              currentColor={brushSettings.color}
+              onColorChange={handleBrushColorChange}
+              colorHistory={colorHistory}
+              onAddToHistory={addToColorHistory}
+              showHex={true}
+            />
+            
+            {/* Brush Controls */}
             <BrushControlsPanel
               brushSettings={brushSettings}
               onBrushSettingsChange={onBrushSettingsChange}
