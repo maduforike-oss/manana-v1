@@ -3,6 +3,7 @@ import App from './App.tsx'
 import './index.css'
 import { ThemeProvider } from './components/ui/theme-provider'
 import { AuthProvider } from './lib/auth-context'
+import { RealUserProvider } from './components/studio/RealUserProvider'
 import './utils/setApiKey' // Auto-set API key
 import { devAutoSignIn } from './lib/devAuth' // Dev auto sign-in
 
@@ -12,7 +13,9 @@ devAutoSignIn();
 createRoot(document.getElementById("root")!).render(
   <ThemeProvider defaultTheme="light" storageKey="manana-theme">
     <AuthProvider>
-      <App />
+      <RealUserProvider>
+        <App />
+      </RealUserProvider>
     </AuthProvider>
   </ThemeProvider>
 );

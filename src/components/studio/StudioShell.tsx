@@ -12,6 +12,8 @@ import { AsyncStudioInitializer } from './optimized/AsyncStudioInitializer';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Layers, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useGlobalPanelState } from '@/hooks/useGlobalPanelState';
+import { useSupabaseDesignPersistence } from '@/hooks/useSupabaseDesignPersistence';
 
 export const StudioShell = () => {
   const setActiveTool = useSetActiveTool();
@@ -21,9 +23,15 @@ export const StudioShell = () => {
   const setPanOffset = useSetPanOffset();
   const { currentDesign } = useAppStore();
   const { toggleGrid, toggleRulers, toggleSnap, toggleBoundingBox } = useViewportManager();
-  const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
-  const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
-  const [activeRightTab, setActiveRightTab] = useState('design'); // Auto-open design tab
+  const { 
+    leftPanelCollapsed, 
+    rightPanelCollapsed, 
+    activeRightTab,
+    toggleLeftPanel,
+    toggleRightPanel,
+    setActiveRightTab 
+  } = useGlobalPanelState();
+  const { autoSave } = useSupabaseDesignPersistence();
 
   // Enhanced keyboard shortcuts with performance optimization
   useEffect(() => {
@@ -90,6 +98,12 @@ export const StudioShell = () => {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [setActiveTool, toggleGrid, toggleRulers, toggleSnap, toggleBoundingBox, undo, redo, setZoom, setPanOffset]);
+
+  // Auto-save every 10 seconds
+  useEffect(() => {
+    const interval = setInterval(autoSave, 10000);
+    return () => clearInterval(interval);
+  }, [autoSave]);
   return (
     <AsyncStudioInitializer onInitialized={() => setActiveRightTab('design')}>
       <div className="h-screen flex flex-col bg-background text-foreground">
@@ -108,7 +122,7 @@ export const StudioShell = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setLeftPanelCollapsed(!leftPanelCollapsed)}
+            onClick={toggleLeftPanel}
             className={cn(
               "absolute left-0 top-1/2 -translate-y-1/2 z-10 h-8 w-6 rounded-r-md bg-card border border-l-0 hover:bg-accent transition-all duration-200",
               leftPanelCollapsed ? "translate-x-0" : "translate-x-16"
@@ -157,7 +171,7 @@ export const StudioShell = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setRightPanelCollapsed(!rightPanelCollapsed)}
+            onClick={toggleRightPanel}
             className={cn(
               "absolute right-0 top-1/2 -translate-y-1/2 z-10 h-8 w-6 rounded-l-md bg-card border border-r-0 hover:bg-accent transition-all duration-200",
               rightPanelCollapsed ? "translate-x-0" : "-translate-x-80"
@@ -177,7 +191,7 @@ export const StudioShell = () => {
                 <Button
                   variant="secondary"
                   size="sm"
-                  onClick={() => setLeftPanelCollapsed(false)}
+                  onClick={toggleLeftPanel}
                   className="shadow-lg animate-fade-in"
                 >
                   <Settings className="w-4 h-4 mr-1" />
@@ -188,7 +202,7 @@ export const StudioShell = () => {
                 <Button
                   variant="secondary"
                   size="sm"
-                  onClick={() => setRightPanelCollapsed(false)}
+                  onClick={toggleRightPanel}
                   className="shadow-lg animate-fade-in"
                 >
                   <Layers className="w-4 h-4 mr-1" />

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { useRealProfile } from '@/hooks/useRealProfile';
 
 export interface Design {
   id: string;
@@ -262,9 +263,14 @@ export const useAppStore = create<AppState>()(
         const state = get();
         if (!state.user) return false;
         
-        // Check design limits
-        if (state.user.designsThisMonth >= state.user.maxDesigns) {
-          return false;
+        // For unlimited plans, always allow creation
+        if (state.user.plan === 'premium' || state.user.maxDesigns === -1) {
+          // Create design without limit check
+        } else {
+          // Check design limits for basic plans
+          if (state.user.designsThisMonth >= state.user.maxDesigns) {
+            return false;
+          }
         }
         
         const newDesign: Design = {
