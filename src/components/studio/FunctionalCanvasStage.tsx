@@ -14,7 +14,13 @@ import { BrushEngine, BrushSettings, BRUSH_PRESETS } from '../../lib/studio/brus
 import { AdvancedDrawingCanvas } from './AdvancedDrawingCanvas';
 import { BrushControlsPanel } from './BrushControlsPanel';
 
-export const FunctionalCanvasStage = () => {
+interface FunctionalCanvasStageProps {
+  brushSettings?: BrushSettings;
+}
+
+export const FunctionalCanvasStage: React.FC<FunctionalCanvasStageProps> = ({ 
+  brushSettings: externalBrushSettings 
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<any>(null);
   const transformerRef = useRef<any>(null);
@@ -32,8 +38,7 @@ export const FunctionalCanvasStage = () => {
   const [focused, setFocused] = useState(false);
   const [canAcceptInput, setCanAcceptInput] = useState(false);
   const [liveStroke, setLiveStroke] = useState<any>(null);
-  const [brushSettings, setBrushSettings] = useState<BrushSettings>(BRUSH_PRESETS.pencil);
-  const [showBrushControls, setShowBrushControls] = useState(false);
+  const brushSettings = externalBrushSettings || BRUSH_PRESETS.pencil;
   
   const { 
     doc, 
@@ -92,7 +97,6 @@ export const FunctionalCanvasStage = () => {
   useEffect(() => {
     const shouldAcceptInput = focused && (activeTool === 'brush' || activeTool === 'eraser');
     setCanAcceptInput(shouldAcceptInput);
-    setShowBrushControls(activeTool === 'brush' || activeTool === 'eraser');
   }, [focused, activeTool]);
 
   // Mobile touch handling
@@ -762,20 +766,6 @@ export const FunctionalCanvasStage = () => {
         </div>
       )}
 
-      {/* Brush Controls Panel */}
-      {showBrushControls && (
-        <div className="absolute bottom-4 right-4 z-50">
-          <BrushControlsPanel
-            brushSettings={brushSettings}
-            onBrushSettingsChange={(updates) => 
-              setBrushSettings(prev => ({ ...prev, ...updates }))
-            }
-            activeTool={activeTool as 'brush' | 'eraser'}
-            onToolChange={(tool) => setActiveTool(tool)}
-            className="w-64"
-          />
-        </div>
-      )}
     </div>
   );
 };

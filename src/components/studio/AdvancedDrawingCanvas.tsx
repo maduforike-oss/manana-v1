@@ -149,7 +149,7 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
     return { x, y };
   }, []);
 
-  // Get pressure from pointer event with better Apple Pencil detection
+  // Get pressure from pointer event with enhanced MacBook trackpad support
   const getPressure = useCallback((e: PointerEvent): number => {
     // Apple Pencil and stylus detection
     if (e.pointerType === 'pen') {
@@ -159,8 +159,19 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
     if (e.pointerType === 'touch') {
       return e.pressure || 0.7;
     }
-    // Mouse fallback
-    return 1.0;
+    // Enhanced mouse/trackpad handling for MacBook
+    if (e.pointerType === 'mouse') {
+      // Check for Force Touch on MacBook trackpads
+      const force = (e as any).force || (e as any).webkitForce || 0;
+      if (force > 0) {
+        return Math.max(0.3, Math.min(1.0, force));
+      }
+      // Simulate variable pressure based on speed for regular mouse
+      const speed = Math.abs(e.movementX || 0) + Math.abs(e.movementY || 0);
+      return Math.max(0.5, Math.min(0.9, 1.0 - speed / 200));
+    }
+    // Default pressure
+    return 0.8;
   }, []);
 
   // Handle drawing start

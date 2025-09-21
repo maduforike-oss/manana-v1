@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { TopBar } from './TopBar';
 import { EnhancedLeftTools } from './EnhancedLeftTools';
 import { RightProps } from './RightProps';
-import { SimplifiedCanvasStage } from './SimplifiedCanvasStage';
+import { FunctionalCanvasStage } from './FunctionalCanvasStage';
 import { ColorSelector } from './ColorSelector';
 import { EnhancedBottomControls } from './EnhancedBottomControls';
 import { useSetActiveTool, useUndo, useRedo, useSetZoom, useSetPanOffset } from '../../lib/studio/storeSelectors';
@@ -14,6 +14,9 @@ import { ChevronLeft, ChevronRight, Layers, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useGlobalPanelState } from '@/hooks/useGlobalPanelState';
 import { useSupabaseDesignPersistence } from '@/hooks/useSupabaseDesignPersistence';
+import { FloatingBrushPanel } from './FloatingBrushPanel';
+import { BrushSettings, BRUSH_PRESETS } from '../../lib/studio/brushEngine';
+import { useStudioStore } from '../../lib/studio/store';
 
 export const StudioShell = () => {
   const setActiveTool = useSetActiveTool();
@@ -32,6 +35,22 @@ export const StudioShell = () => {
     setActiveRightTab 
   } = useGlobalPanelState();
   const { autoSave } = useSupabaseDesignPersistence();
+  
+  // Brush panel state
+  const { activeTool } = useStudioStore();
+  const [showBrushPanel, setShowBrushPanel] = useState(false);
+  const [brushSettings, setBrushSettings] = useState<BrushSettings>(BRUSH_PRESETS.pencil);
+
+  // Show brush panel when brush/eraser tools are active
+  useEffect(() => {
+    if (activeTool === 'brush' || activeTool === 'eraser') {
+      setShowBrushPanel(true);
+    }
+  }, [activeTool]);
+
+  const handleBrushToolChange = (tool: 'brush' | 'eraser') => {
+    setActiveTool(tool);
+  };
 
   // Enhanced keyboard shortcuts with performance optimization
   useEffect(() => {
@@ -59,12 +78,19 @@ export const StudioShell = () => {
           break;
         case 'b':
           if (!e.ctrlKey && !e.metaKey) {
-            setActiveTool('brush');
+            if (e.shiftKey) {
+              // Toggle brush panel with Shift+B
+              setShowBrushPanel(!showBrushPanel);
+            } else {
+              setActiveTool('brush');
+              setShowBrushPanel(true);
+            }
           }
           break;
         case 'e':
           if (!e.ctrlKey && !e.metaKey) {
             setActiveTool('eraser');
+            setShowBrushPanel(true);
           }
           break;
         case 'g':
@@ -146,7 +172,7 @@ export const StudioShell = () => {
           
           {/* Main Canvas Area */}
           <div className="flex-1 flex flex-col min-w-0 relative">
-            <SimplifiedCanvasStage />
+            <FunctionalCanvasStage brushSettings={brushSettings} />
             
             {/* Color Selector - Fixed Position */}
             <div className="absolute top-4 right-4 z-50 pointer-events-auto">
@@ -220,6 +246,16 @@ export const StudioShell = () => {
               )}
             </div>
           )}
+
+          {/* Floating Brush Panel */}
+          <FloatingBrushPanel
+            isVisible={showBrushPanel}
+            onClose={() => setShowBrushPanel(false)}
+            brushSettings={brushSettings}
+            onBrushSettingsChange={(settings) => setBrushSettings(prev => ({ ...prev, ...settings }))}
+            activeTool={activeTool}
+            onToolChange={handleBrushToolChange}
+          />
         </div>
       </div>
   );
