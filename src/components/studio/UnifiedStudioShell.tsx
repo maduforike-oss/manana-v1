@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { TopBar } from './TopBar';
 import { EnhancedLeftTools } from './EnhancedLeftTools';
 import { RightProps } from './RightProps';
-import { UnifiedCanvasStage } from './UnifiedCanvasStage';
+import { FunctionalCanvasStage } from './FunctionalCanvasStage';
 import { ColorSelector } from './ColorSelector';
 import { EnhancedBottomControls } from './EnhancedBottomControls';
 import { StudioHub } from './StudioHub';
@@ -292,8 +292,8 @@ export const UnifiedStudioShell = () => {
           
           {/* Main Canvas Area with Enhanced Features */}
           <div className="flex-1 flex flex-col min-w-0 relative">
-            {/* Main Unified Canvas */}
-            <UnifiedCanvasStage />
+            {/* Main Functional Canvas */}
+            <FunctionalCanvasStage />
             
             {/* Floating Help Button */}
             <Button
