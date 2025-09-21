@@ -3,7 +3,7 @@ import { TopBar } from './TopBar';
 import { EnhancedLeftTools } from './EnhancedLeftTools';
 import { RightProps } from './RightProps';
 import { FunctionalCanvasStage } from './FunctionalCanvasStage';
-import { ColorSelector } from './ColorSelector';
+import { GarmentColorSelector } from './GarmentColorSelector';
 import { EnhancedBottomControls } from './EnhancedBottomControls';
 import { useSetActiveTool, useUndo, useRedo, useSetZoom, useSetPanOffset } from '../../lib/studio/storeSelectors';
 import { useAppStore } from '../../store/useAppStore';
@@ -176,7 +176,7 @@ export const StudioShell = () => {
             
             {/* Color Selector - Fixed Position */}
             <div className="absolute top-4 right-4 z-50 pointer-events-auto">
-              <ColorSelector />
+              <GarmentColorSelector />
             </div>
             
             {/* Enhanced Bottom Controls */}
