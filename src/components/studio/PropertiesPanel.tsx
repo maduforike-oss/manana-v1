@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,16 +8,42 @@ import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useStudioStore } from '../../lib/studio/store';
 import { TextNode, ShapeNode, ImageNode } from '../../lib/studio/types';
 import { GOOGLE_FONTS, COLOR_SWATCHES } from '../../lib/studio/presets';
-import { AlignLeft, AlignCenter, AlignRight, FlipHorizontal, FlipVertical } from 'lucide-react';
+import { AlignLeft, AlignCenter, AlignRight, ChevronDown, Palette, Move, RotateCw } from 'lucide-react';
 
 export const PropertiesPanel = () => {
   const { doc, updateNode, alignToArtboard, distributeSelection } = useStudioStore();
+  const [expandedSections, setExpandedSections] = useState({
+    text: true,
+    appearance: true,
+    transform: true,
+    alignment: false
+  });
   
   const selectedNodes = doc.nodes.filter(node => doc.selectedIds.includes(node.id));
   const selectedNode = selectedNodes.length === 1 ? selectedNodes[0] : null;
+
+  // Auto-expand relevant sections based on selected element type
+  useEffect(() => {
+    if (selectedNode) {
+      setExpandedSections(prev => ({
+        ...prev,
+        text: selectedNode.type === 'text',
+        appearance: true,
+        transform: true
+      }));
+    }
+  }, [selectedNode?.type]);
+
+  const toggleSection = (section: keyof typeof expandedSections) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
 
   if (!selectedNode) {
     return (
@@ -31,16 +58,27 @@ export const PropertiesPanel = () => {
   };
 
   const renderTextProperties = (node: TextNode) => (
-    <ScrollArea className="h-full">
-      <div className="p-4 space-y-4">
-        <div>
-          <Label className="text-foreground/90 font-medium">Text</Label>
-          <Input
-            value={node.text}
-            onChange={(e) => handleUpdate({ text: e.target.value })}
-            className="mt-1"
-          />
-        </div>
+    <Collapsible open={expandedSections.text} onOpenChange={() => toggleSection('text')}>
+      <CollapsibleTrigger asChild>
+        <Button variant="ghost" className="w-full justify-between p-2 h-auto">
+          <div className="flex items-center gap-2">
+            <AlignLeft className="w-4 h-4" />
+            <span className="font-medium">Text Properties</span>
+          </div>
+          <ChevronDown className={`w-4 h-4 transition-transform ${expandedSections.text ? 'rotate-180' : ''}`} />
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div className="p-4 space-y-4">
+          <div>
+            <Label className="text-foreground/90 font-medium">Text Content</Label>
+            <Input
+              value={node.text}
+              onChange={(e) => handleUpdate({ text: e.target.value })}
+              className="mt-1"
+              placeholder="Enter text..."
+            />
+          </div>
 
         <div>
           <Label className="text-foreground/90 font-medium">Font Family</Label>
@@ -157,15 +195,26 @@ export const PropertiesPanel = () => {
             className="mt-2"
           />
         </div>
-      </div>
-    </ScrollArea>
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 
   const renderShapeProperties = (node: ShapeNode) => (
-    <ScrollArea className="h-full">
-      <div className="p-4 space-y-4">
-        <div>
-          <Label className="text-foreground/90 font-medium">Fill Color</Label>
+    <Collapsible open={expandedSections.appearance} onOpenChange={() => toggleSection('appearance')}>
+      <CollapsibleTrigger asChild>
+        <Button variant="ghost" className="w-full justify-between p-2 h-auto">
+          <div className="flex items-center gap-2">
+            <Palette className="w-4 h-4" />
+            <span className="font-medium">Appearance</span>
+          </div>
+          <ChevronDown className={`w-4 h-4 transition-transform ${expandedSections.appearance ? 'rotate-180' : ''}`} />
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div className="p-4 space-y-4">
+          <div>
+            <Label className="text-foreground/90 font-medium">Fill Color</Label>
           <div className="grid grid-cols-5 gap-2 mt-2">
             {COLOR_SWATCHES.map(color => (
               <button
@@ -236,16 +285,27 @@ export const PropertiesPanel = () => {
             />
           </div>
         )}
-      </div>
-    </ScrollArea>
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 
   const renderCommonProperties = () => (
-    <div className="p-4 space-y-4">
-      <Separator />
-      
-        <div>
-          <Label className="text-foreground/90 font-medium">Position & Size</Label>
+    <div className="space-y-2">
+      <Collapsible open={expandedSections.transform} onOpenChange={() => toggleSection('transform')}>
+        <CollapsibleTrigger asChild>
+          <Button variant="ghost" className="w-full justify-between p-2 h-auto">
+            <div className="flex items-center gap-2">
+              <Move className="w-4 h-4" />
+              <span className="font-medium">Transform</span>
+            </div>
+            <ChevronDown className={`w-4 h-4 transition-transform ${expandedSections.transform ? 'rotate-180' : ''}`} />
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="p-4 space-y-4">
+            <div>
+              <Label className="text-foreground/90 font-medium">Position & Size</Label>
         <div className="grid grid-cols-2 gap-2 mt-2">
           <div>
             <Label className="text-xs text-foreground/80 font-medium">X</Label>
@@ -304,12 +364,25 @@ export const PropertiesPanel = () => {
           step={0.01}
           className="mt-2"
         />
-      </div>
+            </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
 
-      <Separator />
-
-      <div>
-        <Label>Align to Artboard</Label>
+      <Collapsible open={expandedSections.alignment} onOpenChange={() => toggleSection('alignment')}>
+        <CollapsibleTrigger asChild>
+          <Button variant="ghost" className="w-full justify-between p-2 h-auto">
+            <div className="flex items-center gap-2">
+              <RotateCw className="w-4 h-4" />
+              <span className="font-medium">Alignment</span>
+            </div>
+            <ChevronDown className={`w-4 h-4 transition-transform ${expandedSections.alignment ? 'rotate-180' : ''}`} />
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="p-4 space-y-4">
+            <div>
+              <Label>Align to Artboard</Label>
         <div className="grid grid-cols-3 gap-1 mt-2">
           <Button variant="outline" size="sm" onClick={() => alignToArtboard('left')}>
             Left
@@ -343,8 +416,11 @@ export const PropertiesPanel = () => {
               Vertical
             </Button>
           </div>
-        </div>
-      )}
+            </div>
+          )}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 

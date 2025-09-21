@@ -12,7 +12,10 @@ import { StrokePipeline } from '../../lib/studio/strokePipeline';
 import { CommandStack, AddStrokeCommand } from '../../lib/studio/commandStack';
 import { BrushEngine, BrushSettings, BRUSH_PRESETS } from '../../lib/studio/brushEngine';
 import { AdvancedDrawingCanvas } from './AdvancedDrawingCanvas';
-import { BrushControlsPanel } from './BrushControlsPanel';
+import { InlineTextEditor } from './InlineTextEditor';
+import { EraserTool } from './EraserTool';
+import { KeyboardShortcuts } from './KeyboardShortcuts';
+import { HistoryIndicator } from './HistoryIndicator';
 
 interface FunctionalCanvasStageProps {
   brushSettings?: BrushSettings;
@@ -38,6 +41,8 @@ export const FunctionalCanvasStage: React.FC<FunctionalCanvasStageProps> = ({
   const [focused, setFocused] = useState(false);
   const [canAcceptInput, setCanAcceptInput] = useState(false);
   const [liveStroke, setLiveStroke] = useState<any>(null);
+  const [editingTextNode, setEditingTextNode] = useState<TextNode | null>(null);
+  const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
   const brushSettings = externalBrushSettings || BRUSH_PRESETS.pencil;
   
   const { 
@@ -291,6 +296,7 @@ export const FunctionalCanvasStage: React.FC<FunctionalCanvasStageProps> = ({
             height={textNode.height}
             stroke={isSelected ? '#0066FF' : undefined}
             strokeWidth={isSelected ? 2 : 0}
+            onDblClick={() => setEditingTextNode(textNode)}
           />
         );
       }
@@ -359,6 +365,58 @@ export const FunctionalCanvasStage: React.FC<FunctionalCanvasStageProps> = ({
     return null;
   };
 
+  // Enhanced shape creation with drag
+  const handleStageMouseDown = useCallback((e: any) => {
+    if (e.target !== e.target.getStage()) return;
+    
+    const pos = e.target.getStage().getPointerPosition();
+    const localPos = {
+      x: (pos.x - panOffset.x) / zoom,
+      y: (pos.y - panOffset.y) / zoom
+    };
+
+    if (['rect', 'circle', 'line'].includes(activeTool)) {
+      setDragStart(localPos);
+    }
+  }, [activeTool, panOffset, zoom]);
+
+  const handleStageMouseUp = useCallback((e: any) => {
+    if (e.target !== e.target.getStage()) return;
+    
+    const pos = e.target.getStage().getPointerPosition();
+    const localPos = {
+      x: (pos.x - panOffset.x) / zoom,
+      y: (pos.y - panOffset.y) / zoom
+    };
+
+    if (dragStart && ['rect', 'circle', 'line'].includes(activeTool)) {
+      const width = Math.abs(localPos.x - dragStart.x);
+      const height = Math.abs(localPos.y - dragStart.y);
+      
+      if (width > 5 && height > 5) { // Minimum size threshold
+        const shapeNode: ShapeNode = {
+          id: `${activeTool}-${Date.now()}`,
+          type: 'shape',
+          name: `${activeTool.charAt(0).toUpperCase() + activeTool.slice(1)} Shape`,
+          x: Math.min(dragStart.x, localPos.x),
+          y: Math.min(dragStart.y, localPos.y),
+          width,
+          height,
+          rotation: 0,
+          opacity: 1,
+          shape: activeTool as any,
+          fill: { type: 'solid', color: '#3B82F6' },
+          stroke: { color: '#1E40AF', width: 2 }
+        };
+        addNode(shapeNode);
+        saveSnapshot();
+        toast(`${activeTool} shape created!`);
+      }
+      setDragStart(null);
+      return;
+    }
+  }, [activeTool, panOffset, zoom, addNode, clearSelection, saveSnapshot, dragStart]);
+
   // Handle stage click for tool interactions
   const handleStageClick = useCallback((e: any) => {
     if (e.target === e.target.getStage()) {
@@ -392,27 +450,9 @@ export const FunctionalCanvasStage: React.FC<FunctionalCanvasStageProps> = ({
         };
         addNode(textNode);
         saveSnapshot();
-        toast('Text added! Click to select and edit.');
-      }
-      
-      else if (activeTool === 'rect' || activeTool === 'circle') {
-        const shapeNode: ShapeNode = {
-          id: `${activeTool}-${Date.now()}`,
-          type: 'shape',
-          name: `${activeTool.charAt(0).toUpperCase() + activeTool.slice(1)} Shape`,
-          x: localPos.x,
-          y: localPos.y,
-          width: 100,
-          height: 100,
-          rotation: 0,
-          opacity: 1,
-          shape: activeTool as any,
-          fill: { type: 'solid', color: '#3B82F6' },
-          stroke: { color: '#1E40AF', width: 2 }
-        };
-        addNode(shapeNode);
-        saveSnapshot();
-        toast(`${activeTool} shape added!`);
+        toast('Text added! Double-click to edit.');
+        // Auto-start editing new text
+        setTimeout(() => setEditingTextNode(textNode), 100);
       }
     }
   }, [activeTool, panOffset, zoom, addNode, clearSelection, saveSnapshot]);
@@ -663,9 +703,8 @@ export const FunctionalCanvasStage: React.FC<FunctionalCanvasStageProps> = ({
         y={panOffset.y}
         onWheel={handleWheel}
         onClick={handleStageClick}
-        onMouseDown={handleStageClick}
-        onMouseMove={() => {}}
-        onMouseUp={() => {}}
+        onMouseDown={handleStageMouseDown}
+        onMouseUp={handleStageMouseUp}
         onDragEnd={handleDragEnd}
         draggable={activeTool === 'hand'}
         className={cn(
