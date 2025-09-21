@@ -186,7 +186,7 @@ export default function GarmentTemplateSelector({ onSelect, selectedGarmentType 
   // Mobile Layout
   if (isMobile) {
     return (
-      <div className="flex flex-col">
+      <div className="min-h-screen flex flex-col">
         {/* Mobile Header */}
         <div className="p-4 border-b bg-gradient-to-r from-background to-muted/30">
           <div className="flex items-center gap-3">
@@ -449,7 +449,7 @@ function MobileSelectionView({
   selectedGarment: GarmentDetail | null;
 }) {
   return (
-    <div className="flex flex-col pb-20">
+    <div className="flex-1 flex flex-col">
       {/* Mobile Search & Filter */}
       <div className="p-4 space-y-3 border-b bg-muted/30">
         <div className="relative">
@@ -488,7 +488,7 @@ function MobileSelectionView({
       </div>
 
       {/* Mobile Garments Grid */}
-      <div className="p-4">
+      <div className="flex-1 overflow-y-auto p-4">
         {filteredGarments.length === 0 ? (
           <div className="text-center py-12">
             <Shirt className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
@@ -532,7 +532,7 @@ function MobilePreviewView({
   if (!selectedGarment) return null;
 
   return (
-    <div className="flex flex-col">
+    <div className="flex-1 flex flex-col">
       {/* View Options */}
       <div className="p-4 border-b">
         <h4 className="font-medium mb-3 flex items-center gap-2">
@@ -555,7 +555,7 @@ function MobilePreviewView({
       </div>
 
       {/* Mobile Preview */}
-      <div className="p-4 pb-20">
+      <div className="flex-1 overflow-y-auto p-4">
         {detailLoading ? (
           <div className="aspect-square bg-muted rounded-lg flex items-center justify-center">
             <Loader2 className="w-6 h-6 animate-spin" />
