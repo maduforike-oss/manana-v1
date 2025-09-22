@@ -64,15 +64,12 @@ export const UnifiedCursorProvider: React.FC<UnifiedCursorProviderProps> = ({ ch
   }, []);
 
   const updateCursorPosition = useCallback((clientX: number, clientY: number) => {
-    // Check if cursor should be visible based on canvas bounds
-    const shouldShow = isPointInCanvas(clientX, clientY) && ['brush', 'eraser'].includes(cursorState.tool);
-    
-    setCursorState(prev => ({
-      ...prev,
-      position: { x: clientX, y: clientY },
-      isVisible: shouldShow
+    // Use exact screen coordinates for pixel-perfect cursor positioning
+    setCursorState(prev => ({ 
+      ...prev, 
+      position: { x: clientX, y: clientY } 
     }));
-  }, [isPointInCanvas, cursorState.tool]);
+  }, []);
 
   const updateCursorSettings = useCallback((updates: Partial<CursorState>) => {
     setCursorState(prev => ({ ...prev, ...updates }));

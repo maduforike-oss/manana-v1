@@ -64,9 +64,16 @@ export const UnifiedCoordinateProvider: React.FC<UnifiedCoordinateProviderProps>
   }, [mapper]);
 
   const isPointInCanvas = useCallback((screenX: number, screenY: number) => {
-    if (!mapper) return false;
-    return mapper.isPointInCanvas(screenX, screenY);
-  }, [mapper]);
+    if (!canvasRect) return false;
+    
+    // Use precise boundary detection with sub-pixel accuracy
+    return (
+      screenX >= canvasRect.left &&
+      screenX <= canvasRect.left + canvasRect.width &&
+      screenY >= canvasRect.top &&
+      screenY <= canvasRect.top + canvasRect.height
+    );
+  }, [canvasRect]);
 
   const getCanvasBounds = useCallback(() => {
     if (!mapper) return null;

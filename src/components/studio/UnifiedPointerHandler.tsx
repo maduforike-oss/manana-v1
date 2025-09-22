@@ -68,6 +68,12 @@ export const UnifiedPointerHandler: React.FC<UnifiedPointerHandlerProps> = ({
     };
 
     const handlePointerEnter = (e: PointerEvent) => {
+      // Update canvas rect immediately on enter for precise boundary detection
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        updateCanvasRect(rect);
+      }
+      
       const inputType = detectInputType(e);
       if (inputType !== 'touch') { // Don't show cursor for touch
         showCursor();
