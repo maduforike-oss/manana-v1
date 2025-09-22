@@ -12,28 +12,9 @@ import { StrokePipeline } from '../../lib/studio/strokePipeline';
 import { CommandStack, AddStrokeCommand } from '../../lib/studio/commandStack';
 import { BrushEngine, BrushSettings, BRUSH_PRESETS } from '../../lib/studio/brushEngine';
 import { AdvancedDrawingCanvas } from './AdvancedDrawingCanvas';
-import { FloatingBrushPanel } from './FloatingBrushPanel';
-import { CanvasDimensionsSync } from './CanvasDimensionsSync';
-import { InlineTextEditor } from './InlineTextEditor';
-import { EraserTool } from './EraserTool';
-import { KeyboardShortcuts } from './KeyboardShortcuts';
-import { HistoryIndicator } from './HistoryIndicator';
-import { ToolCursorProvider } from './ToolCursorManager';
-import { StageIntegration } from './StageIntegration';
-import { UnifiedCoordinateProvider } from './UnifiedCoordinateSystem';
-import { UnifiedCursorProvider } from './UnifiedCursorSystem';
-import { UnifiedPointerHandler } from './UnifiedPointerHandler';
-import { PerformanceOptimizer } from './PerformanceOptimizer';
-import { CursorDebugger } from './CursorDebugger';
-import { StudioDiagnostics } from './StudioDiagnostics';
+import { BrushControlsPanel } from './BrushControlsPanel';
 
-interface FunctionalCanvasStageProps {
-  brushSettings?: BrushSettings;
-}
-
-export const FunctionalCanvasStage: React.FC<FunctionalCanvasStageProps> = ({ 
-  brushSettings: externalBrushSettings 
-}) => {
+export const FunctionalCanvasStage = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<any>(null);
   const transformerRef = useRef<any>(null);
@@ -51,12 +32,8 @@ export const FunctionalCanvasStage: React.FC<FunctionalCanvasStageProps> = ({
   const [focused, setFocused] = useState(false);
   const [canAcceptInput, setCanAcceptInput] = useState(false);
   const [liveStroke, setLiveStroke] = useState<any>(null);
-  const [editingTextNode, setEditingTextNode] = useState<TextNode | null>(null);
-  const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
-  const [showBrushPanel, setShowBrushPanel] = useState(false);
-  const [isPersistentBrushPanel, setIsPersistentBrushPanel] = useState(false);
-  const [brushSettings, setBrushSettings] = useState<BrushSettings>(externalBrushSettings || BRUSH_PRESETS.pencil);
-  const [needsRedraw, setNeedsRedraw] = useState(0);
+  const [brushSettings, setBrushSettings] = useState<BrushSettings>(BRUSH_PRESETS.pencil);
+  const [showBrushControls, setShowBrushControls] = useState(false);
   
   const { 
     doc, 
@@ -75,16 +52,8 @@ export const FunctionalCanvasStage: React.FC<FunctionalCanvasStageProps> = ({
     redo,
     canUndo,
     canRedo,
-    saveSnapshot,
-    toggleGrid
+    saveSnapshot
   } = useStudioStore();
-
-  // Show brush panel when brush/eraser tool is active or when persistent
-  useEffect(() => {
-    setShowBrushPanel(
-      isPersistentBrushPanel || activeTool === 'brush' || activeTool === 'eraser'
-    );
-  }, [activeTool, isPersistentBrushPanel]);
 
   // Initialize artwork bitmap canvas
   useEffect(() => {
@@ -123,6 +92,7 @@ export const FunctionalCanvasStage: React.FC<FunctionalCanvasStageProps> = ({
   useEffect(() => {
     const shouldAcceptInput = focused && (activeTool === 'brush' || activeTool === 'eraser');
     setCanAcceptInput(shouldAcceptInput);
+    setShowBrushControls(activeTool === 'brush' || activeTool === 'eraser');
   }, [focused, activeTool]);
 
   // Mobile touch handling
@@ -317,7 +287,6 @@ export const FunctionalCanvasStage: React.FC<FunctionalCanvasStageProps> = ({
             height={textNode.height}
             stroke={isSelected ? '#0066FF' : undefined}
             strokeWidth={isSelected ? 2 : 0}
-            onDblClick={() => setEditingTextNode(textNode)}
           />
         );
       }
@@ -386,67 +355,12 @@ export const FunctionalCanvasStage: React.FC<FunctionalCanvasStageProps> = ({
     return null;
   };
 
-  // Enhanced shape creation with drag
-  const handleStageMouseDown = useCallback((e: any) => {
-    const stage = e.target.getStage();
-    if (!stage || e.target !== stage) return;
-    
-    const pos = stage.getPointerPosition();
-    const localPos = {
-      x: (pos.x - panOffset.x) / zoom,
-      y: (pos.y - panOffset.y) / zoom
-    };
-
-    if (['rect', 'circle', 'line'].includes(activeTool)) {
-      setDragStart(localPos);
-    }
-  }, [activeTool, panOffset, zoom]);
-
-  const handleStageMouseUp = useCallback((e: any) => {
-    const stage = e.target.getStage();
-    if (!stage || e.target !== stage) return;
-    
-    const pos = stage.getPointerPosition();
-    const localPos = {
-      x: (pos.x - panOffset.x) / zoom,
-      y: (pos.y - panOffset.y) / zoom
-    };
-
-    if (dragStart && ['rect', 'circle', 'line'].includes(activeTool)) {
-      const width = Math.abs(localPos.x - dragStart.x);
-      const height = Math.abs(localPos.y - dragStart.y);
-      
-      if (width > 5 && height > 5) { // Minimum size threshold
-        const shapeNode: ShapeNode = {
-          id: `${activeTool}-${Date.now()}`,
-          type: 'shape',
-          name: `${activeTool.charAt(0).toUpperCase() + activeTool.slice(1)} Shape`,
-          x: Math.min(dragStart.x, localPos.x),
-          y: Math.min(dragStart.y, localPos.y),
-          width,
-          height,
-          rotation: 0,
-          opacity: 1,
-          shape: activeTool as any,
-          fill: { type: 'solid', color: '#3B82F6' },
-          stroke: { color: '#1E40AF', width: 2 }
-        };
-        addNode(shapeNode);
-        saveSnapshot();
-        toast(`${activeTool} shape created!`);
-      }
-      setDragStart(null);
-      return;
-    }
-  }, [activeTool, panOffset, zoom, addNode, clearSelection, saveSnapshot, dragStart]);
-
   // Handle stage click for tool interactions
   const handleStageClick = useCallback((e: any) => {
-    const stage = e.target.getStage();
-    if (stage && e.target === stage) {
+    if (e.target === e.target.getStage()) {
       clearSelection();
       
-      const pos = stage.getPointerPosition();
+      const pos = e.target.getStage().getPointerPosition();
       const localPos = {
         x: (pos.x - panOffset.x) / zoom,
         y: (pos.y - panOffset.y) / zoom
@@ -474,377 +388,394 @@ export const FunctionalCanvasStage: React.FC<FunctionalCanvasStageProps> = ({
         };
         addNode(textNode);
         saveSnapshot();
-        toast('Text added! Double-click to edit.');
-        // Auto-start editing new text
-        setTimeout(() => setEditingTextNode(textNode), 100);
+        toast('Text added! Click to select and edit.');
+      }
+      
+      else if (activeTool === 'rect' || activeTool === 'circle') {
+        const shapeNode: ShapeNode = {
+          id: `${activeTool}-${Date.now()}`,
+          type: 'shape',
+          name: `${activeTool.charAt(0).toUpperCase() + activeTool.slice(1)} Shape`,
+          x: localPos.x,
+          y: localPos.y,
+          width: 100,
+          height: 100,
+          rotation: 0,
+          opacity: 1,
+          shape: activeTool as any,
+          fill: { type: 'solid', color: '#3B82F6' },
+          stroke: { color: '#1E40AF', width: 2 }
+        };
+        addNode(shapeNode);
+        saveSnapshot();
+        toast(`${activeTool} shape added!`);
       }
     }
   }, [activeTool, panOffset, zoom, addNode, clearSelection, saveSnapshot]);
 
-  return (
-    <PerformanceOptimizer enableDebug={process.env.NODE_ENV === 'development'}>
-      <UnifiedCoordinateProvider>
-        <UnifiedCursorProvider>
-          <ToolCursorProvider>
-          <div className="h-full bg-workspace text-foreground overflow-hidden">
-        <div className="flex flex-col h-full">
-          {/* Top toolbar */}
-          <div className="flex items-center justify-between p-3 border-b border-border bg-background">
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setActiveTool('select')}
-                className={cn(
-                  "p-2 transition-colors duration-200 flex items-center justify-center",
-                  activeTool === 'select' 
-                    ? "bg-primary text-primary-foreground" 
-                    : "hover:bg-muted"
-                )}
-              >
-                <Move className="w-4 h-4" />
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setActiveTool('brush')}
-                className={cn(
-                  "p-2 transition-colors duration-200 flex items-center justify-center",
-                  activeTool === 'brush' 
-                    ? "bg-primary text-primary-foreground" 
-                    : "hover:bg-muted"
-                )}
-              >
-                <Hand className="w-4 h-4" />
-              </Button>
+  // Remove duplicate drawing system - let AdvancedDrawingCanvas handle all drawing
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setActiveTool('text')}
-                className={cn(
-                  "p-2 transition-colors duration-200 flex items-center justify-center",
-                  activeTool === 'text' 
-                    ? "bg-primary text-primary-foreground" 
-                    : "hover:bg-muted"
-                )}
-              >
-                T
-              </Button>
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setActiveTool('rect')}
-                className={cn(
-                  "p-2 transition-colors duration-200 flex items-center justify-center",
-                  activeTool === 'rect' 
-                    ? "bg-primary text-primary-foreground" 
-                    : "hover:bg-muted"
-                )}
-              >
-                □
-              </Button>
+  const handleBrushEnd = useCallback(() => {
+    if (!isDrawing || (activeTool !== 'brush' && activeTool !== 'eraser')) return;
+    
+    setIsDrawing(false);
+    
+    if (strokePipelineRef.current && artworkCanvasRef.current && liveStroke) {
+      const completedStroke = strokePipelineRef.current.endStroke();
+      
+      if (completedStroke) {
+        // Rasterize stroke to bitmap
+        strokePipelineRef.current.rasterizeStroke(completedStroke, artworkCanvasRef.current);
+        
+        // Create command for undo
+        const command = new AddStrokeCommand(
+          {
+            id: completedStroke.id,
+            color: completedStroke.brush.color,
+            size: completedStroke.brush.size,
+            opacity: completedStroke.brush.opacity,
+            points: completedStroke.points.map(p => ({ x: p.x, y: p.y, p: p.pressure }))
+          },
+          artworkCanvasRef.current,
+          () => console.log('Stroke executed'),
+          () => console.log('Stroke undone')
+        );
+        
+        commandStackRef.current.executeCommand(command);
+        
+        // Save to store
+        saveSnapshot();
+        toast('Brush stroke added!');
+      }
+    }
+    
+    setLiveStroke(null);
+  }, [isDrawing, activeTool, liveStroke, saveSnapshot]);
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setActiveTool('circle')}
-                className={cn(
-                  "p-2 transition-colors duration-200 flex items-center justify-center",
-                  activeTool === 'circle' 
-                    ? "bg-primary text-primary-foreground" 
-                    : "hover:bg-muted"
-                )}
-              >
-                ○
-              </Button>
-            </div>
+  // Handle wheel zoom
+  const handleWheel = useCallback((e: any) => {
+    e.evt.preventDefault();
+    
+    const scaleBy = 1.1;
+    const stage = e.target.getStage();
+    const oldScale = stage.scaleX();
+    const pointer = stage.getPointerPosition();
+    
+    const newScale = e.evt.deltaY > 0 ? oldScale / scaleBy : oldScale * scaleBy;
+    const clampedScale = Math.max(0.1, Math.min(5, newScale));
+    
+    setZoom(clampedScale);
+    
+    // Adjust pan to zoom towards cursor
+    const mousePointTo = {
+      x: (pointer.x - panOffset.x) / oldScale,
+      y: (pointer.y - panOffset.y) / oldScale,
+    };
+    
+    const newPos = {
+      x: pointer.x - mousePointTo.x * clampedScale,
+      y: pointer.y - mousePointTo.y * clampedScale,
+    };
+    
+    setPanOffset(newPos);
+  }, [panOffset, setZoom, setPanOffset]);
 
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setZoom(zoom * 0.9)}
-                disabled={zoom <= 0.1}
-              >
-                <ZoomOut className="w-4 h-4" />
-              </Button>
-              
-              <span className="text-sm font-mono min-w-[50px] text-center">
-                {Math.round(zoom * 100)}%
-              </span>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setZoom(zoom * 1.1)}
-                disabled={zoom >= 5}
-              >
-                <ZoomIn className="w-4 h-4" />
-              </Button>
+  // Handle pan
+  const handleDragEnd = useCallback((e: any) => {
+    if (activeTool === 'hand') {
+      setPanOffset({
+        x: e.target.x(),
+        y: e.target.y()
+      });
+    }
+  }, [activeTool, setPanOffset]);
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setZoom(1);
-                  setPanOffset({ x: 0, y: 0 });
-                }}
-              >
-                <RotateCcw className="w-4 h-4" />
-              </Button>
+  // Update transformer
+  useEffect(() => {
+    if (transformerRef.current && doc.selectedIds.length > 0) {
+      const nodes = doc.selectedIds.map(id => 
+        stageRef.current?.findOne(`#${id}`)
+      ).filter(Boolean);
+      
+      transformerRef.current.nodes(nodes);
+      transformerRef.current.getLayer()?.batchDraw();
+    }
+  }, [doc.selectedIds]);
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => toggleGrid()}
-                className={cn(
-                  doc.canvas.showGrid ? "bg-muted" : ""
-                )}
-              >
-                <Grid3X3 className="w-4 h-4" />
-              </Button>
+  // Export functionality
+  const handleExport = useCallback(() => {
+    if (!stageRef.current) return;
+    
+    try {
+      const dataURL = stageRef.current.toDataURL({
+        mimeType: 'image/png',
+        quality: 1,
+        pixelRatio: 2 // 2x for higher quality
+      });
+      
+      const link = document.createElement('a');
+      link.download = `${doc.title || 'design'}.png`;
+      link.href = dataURL;
+      link.click();
+      
+      toast('Design exported successfully!');
+    } catch (error) {
+      console.error('Export failed:', error);
+      toast('Export failed. Please try again.');
+    }
+  }, [doc.title]);
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  // Export functionality here
-                  toast('Export feature coming soon!');
-                }}
-              >
-                <Download className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
+  // Zoom controls
+  const zoomIn = () => setZoom(Math.min(zoom * 1.2, 5));
+  const zoomOut = () => setZoom(Math.max(zoom / 1.2, 0.1));
+  const resetView = () => {
+    setZoom(1);
+    setPanOffset({ x: 0, y: 0 });
+  };
 
-          {/* Main canvas area with cursor integration */}
-          <div
-            ref={containerRef}
-            className="relative flex-1 overflow-hidden bg-workspace focus:outline-none"
-            tabIndex={0}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
-            onMouseDown={handleStageMouseDown}
-            onMouseUp={handleStageMouseUp}
-            onClick={handleStageClick}
-          >
-            <StageIntegration
-              brushSettings={brushSettings}
-              activeTool={activeTool}
-              containerRef={containerRef}
-            />
-            
-            <div className="relative w-full h-full overflow-hidden">
-              {/* Background pattern */}
-              <div className="absolute inset-0 opacity-5">
-                <svg width="40" height="40" className="absolute inset-0">
-                  <pattern
-                    id="grid-pattern"
-                    x="0"
-                    y="0"
-                    width="40"
-                    height="40"
-                    patternUnits="userSpaceOnUse"
-                  >
-                    <path
-                      d="M 40 0 L 0 0 0 40"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1"
-                    />
-                  </pattern>
-                  <rect width="100%" height="100%" fill="url(#grid-pattern)" />
-                </svg>
-              </div>
+  // Enhanced undo/redo with command stack
+  const handleUndo = useCallback(() => {
+    if (commandStackRef.current.canUndo()) {
+      commandStackRef.current.undo();
+      saveSnapshot();
+    } else {
+      undo();
+    }
+  }, [undo, saveSnapshot]);
 
-              <Stage
-                ref={stageRef}
-                width={stageSize.width}
-                height={stageSize.height}
-                scaleX={zoom}
-                scaleY={zoom}
-                x={panOffset.x * zoom}
-                y={panOffset.y * zoom}
-                onMouseDown={handleStageMouseDown}
-                onMouseUp={handleStageMouseUp}
-                onClick={handleStageClick}
-                onWheel={(e) => {
-                  e.evt.preventDefault();
-                  const scaleBy = 1.05;
-                  const stage = e.target.getStage();
-                  const pointer = stage.getPointerPosition();
-                  const mousePointTo = {
-                    x: (pointer.x - stage.x()) / stage.scaleX(),
-                    y: (pointer.y - stage.y()) / stage.scaleY(),
-                  };
+  const handleRedo = useCallback(() => {
+    if (commandStackRef.current.canRedo()) {
+      commandStackRef.current.redo();
+      saveSnapshot();
+    } else {
+      redo();
+    }
+  }, [redo, saveSnapshot]);
 
-                  const newScale = e.evt.deltaY > 0 ? zoom / scaleBy : zoom * scaleBy;
-                  const clampedScale = Math.max(0.1, Math.min(5, newScale));
-                  setZoom(clampedScale);
-
-                  const newPos = {
-                    x: pointer.x - mousePointTo.x * clampedScale,
-                    y: pointer.y - mousePointTo.y * clampedScale,
-                  };
-                  setPanOffset({ x: newPos.x / clampedScale, y: newPos.y / clampedScale });
-                }}
-                draggable={activeTool === 'select'}
-                onDragEnd={(e) => {
-                  const stage = e.target;
-                  setPanOffset({
-                    x: stage.x() / zoom,
-                    y: stage.y() / zoom
-                  });
-                }}
-              >
-                <Layer>
-                  {/* Background garment image */}
-                  {garmentImage && (
-                    <Image
-                      image={garmentImage}
-                      x={0}
-                      y={0}
-                      width={doc.canvas.width || 800}
-                      height={doc.canvas.height || 600}
-                      listening={false}
-                      opacity={0.8}
-                    />
-                  )}
-
-                  {/* Grid */}
-                  {renderGrid()}
-
-                  {/* Safe area outline */}
-                  <Rect
-                    x={(doc.canvas.width - safeArea.wPx) / 2}
-                    y={(doc.canvas.height - safeArea.hPx) / 2}
-                    width={safeArea.wPx}
-                    height={safeArea.hPx}
-                    stroke="#0066FF"
-                    strokeWidth={1 / zoom}
-                    strokeEnabled={doc.canvas.showGrid}
-                    dash={[5 / zoom, 5 / zoom]}
-                    listening={false}
-                    opacity={0.5}
-                  />
-
-                  {/* Design nodes */}
-                  {doc.nodes.map(renderNode)}
-
-                  {/* Live drawing preview */}
-                  {liveStroke && (
-                    <Line
-                      points={liveStroke.points}
-                      stroke={liveStroke.stroke}
-                      strokeWidth={liveStroke.strokeWidth}
-                      globalCompositeOperation={
-                        activeTool === 'eraser' ? 'destination-out' : 'source-over'
-                      }
-                      listening={false}
-                    />
-                  )}
-                </Layer>
-
-                <Layer>
-                  <Transformer
-                    ref={transformerRef}
-                    boundBoxFunc={(oldBox, newBox) => {
-                      if (newBox.width < 10 || newBox.height < 10) {
-                        return oldBox;
-                      }
-                      return newBox;
-                    }}
-                  />
-                </Layer>
-              </Stage>
-
-              {/* Unified Pointer Handler for coordinated input management */}
-              <UnifiedPointerHandler
-                containerRef={containerRef}
-                onPointerEvent={(event, type) => {
-                  // Handle drawing events here if needed
-                  console.log('Unified pointer event:', type, event);
-                }}
-              />
-
-              {/* Drawing Canvas Layer - Always mounted to persist strokes */}
-              <div className="absolute inset-0 pointer-events-none">
-                <AdvancedDrawingCanvas
-                  width={stageSize.width}
-                  height={stageSize.height}
-                  brushSettings={brushSettings}
-                  canvasTool={activeTool as 'brush' | 'eraser'}
-                  onStrokeComplete={(stroke) => {
-                    console.log('Stroke completed:', stroke);
-                  }}
-                  className={cn(
-                    "transition-opacity duration-200",
-                    (activeTool === 'brush' || activeTool === 'eraser') 
-                      ? "pointer-events-auto opacity-100" 
-                      : "pointer-events-none opacity-100"
-                  )}
-                  isInteractive={activeTool === 'brush' || activeTool === 'eraser'}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Floating brush panel */}
-          {showBrushPanel && (
-            <FloatingBrushPanel
-              isVisible={showBrushPanel}
-              brushSettings={brushSettings}
-              onBrushSettingsChange={(newSettings) => setBrushSettings(prev => ({ ...prev, ...newSettings }))}
-              activeTool={activeTool}
-              onToolChange={setActiveTool}
-              onClose={() => setShowBrushPanel(false)}
-              onTogglePersistent={() => setIsPersistentBrushPanel(!isPersistentBrushPanel)}
-              isPersistent={isPersistentBrushPanel}
-            />
-          )}
-
-          {/* Text editor */}
-          {editingTextNode && (
-            <InlineTextEditor
-              node={editingTextNode}
-              onChange={(updates) => {
-                updateNode(editingTextNode.id, updates);
-                saveSnapshot();
-              }}
-              onComplete={() => setEditingTextNode(null)}
-            />
-          )}
-
-          {/* Canvas dimensions sync */}
-          <CanvasDimensionsSync 
-            width={stageSize.width}
-            height={stageSize.height}
-          />
-
-          {/* Keyboard shortcuts */}
-          <KeyboardShortcuts />
-
-          {/* History indicator */}
-          <HistoryIndicator />
-
-          {/* Debug tools - only in development */}
-          <CursorDebugger enabled={process.env.NODE_ENV === 'development'} />
-          <StudioDiagnostics enabled={process.env.NODE_ENV === 'development'} />
-          
-          {/* Mobile drawing hints */}
-          {canAcceptInput && (
-            <div className="absolute top-20 left-1/2 transform -translate-x-1/2 bg-background/90 px-3 py-1 rounded-lg text-sm text-muted-foreground pointer-events-none">
-              Tap and drag to draw
-            </div>
-          )}
+  // Mobile focus prompt
+  const FocusPrompt = () => (
+    !focused && (activeTool === "brush" || activeTool === "eraser") && (
+      <div 
+        className="absolute inset-0 z-40 flex items-center justify-center bg-black/20 backdrop-blur-sm"
+        onClick={() => setFocused(true)}
+      >
+        <div className="bg-card p-6 rounded-lg border shadow-lg text-center">
+          <p className="text-lg font-medium mb-2">Tap to start drawing</p>
+          <p className="text-sm text-muted-foreground">
+            {activeTool === 'brush' ? 'Use your stylus or finger to draw' : 'Use your stylus or finger to erase'}
+          </p>
         </div>
       </div>
-    </ToolCursorProvider>
-        </UnifiedCursorProvider>
-      </UnifiedCoordinateProvider>
-    </PerformanceOptimizer>
+    )
+  );
+
+  return (
+    <div ref={containerRef} className="relative w-full h-full bg-muted/20">
+      {/* Focus Prompt */}
+      <FocusPrompt />
+      
+      {/* Zoom and Export Controls */}
+      <div className="absolute top-4 right-4 z-50 flex gap-2">
+        <div className="flex gap-1 bg-card/95 backdrop-blur-sm rounded-lg border border-border/50 p-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={zoomOut}
+            disabled={zoom <= 0.1}
+            className="h-8 w-8 p-0"
+          >
+            <ZoomOut className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={resetView}
+            className="h-8 px-3 text-xs font-mono"
+          >
+            {Math.round(zoom * 100)}%
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={zoomIn}
+            disabled={zoom >= 5}
+            className="h-8 w-8 p-0"
+          >
+            <ZoomIn className="w-4 h-4" />
+          </Button>
+        </div>
+        
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleExport}
+          className="bg-card/95 backdrop-blur-sm border-border/50"
+        >
+          <Download className="w-4 h-4 mr-2" />
+          Export PNG
+        </Button>
+      </div>
+
+      {/* Undo/Redo Controls */}
+      <div className="absolute top-4 left-4 z-50 flex gap-1 bg-card/95 backdrop-blur-sm rounded-lg border border-border/50 p-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={undo}
+          disabled={!canUndo}
+          className="h-8 w-8 p-0"
+        >
+          <RotateCcw className="w-4 h-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={redo}
+          disabled={!canRedo}
+          className="h-8 w-8 p-0"
+        >
+          <RotateCcw className="w-4 h-4 scale-x-[-1]" />
+        </Button>
+      </div>
+
+      {/* Tool indicator */}
+      <div className="absolute bottom-4 left-4 z-50 bg-card/95 backdrop-blur-sm rounded-lg border border-border/50 px-3 py-2">
+        <div className="flex items-center gap-2 text-sm">
+          {activeTool === 'hand' && <Hand className="w-4 h-4" />}
+          {activeTool === 'select' && <Move className="w-4 h-4" />}
+          <span className="font-medium capitalize">{activeTool} Tool</span>
+        </div>
+      </div>
+
+      {/* Canvas */}
+      <Stage
+        ref={stageRef}
+        width={stageSize.width}
+        height={stageSize.height}
+        scaleX={zoom}
+        scaleY={zoom}
+        x={panOffset.x}
+        y={panOffset.y}
+        onWheel={handleWheel}
+        onClick={handleStageClick}
+        onMouseDown={handleStageClick}
+        onMouseMove={() => {}}
+        onMouseUp={() => {}}
+        onDragEnd={handleDragEnd}
+        draggable={activeTool === 'hand'}
+        className={cn(
+          "outline-none",
+          activeTool === 'select' && "cursor-default",
+          activeTool === 'hand' && "cursor-grab",
+          activeTool === 'text' && "cursor-text",
+          activeTool === 'brush' && "cursor-crosshair",
+          (activeTool === 'rect' || activeTool === 'circle') && "cursor-crosshair"
+        )}
+      >
+        <Layer>
+          {/* Grid */}
+          {renderGrid()}
+          
+          {/* Garment Background Image */}
+          {garmentImage && (
+            <Image
+              image={garmentImage}
+              x={50}
+              y={50}
+              width={Math.min(stageSize.width - 100, garmentImage.width * 0.8)}
+              height={Math.min(stageSize.height - 100, garmentImage.height * 0.8)}
+              listening={false}
+              opacity={0.9}
+            />
+          )}
+          
+          {/* Artwork bitmap layer */}
+          {artworkCanvasRef.current && (
+            <Image
+              image={artworkCanvasRef.current}
+              x={0}
+              y={0}
+              width={doc.canvas.width}
+              height={doc.canvas.height}
+              listening={false}
+            />
+          )}
+          
+          {/* Live stroke preview */}
+          {liveStroke && (
+            <Line
+              points={liveStroke.points.flatMap((p: any) => [p.x, p.y])}
+              stroke={liveStroke.color}
+              strokeWidth={liveStroke.size}
+              opacity={liveStroke.opacity}
+              lineCap="round"
+              lineJoin="round"
+              listening={false}
+            />
+          )}
+          
+          {/* Design nodes */}
+          {doc.nodes.map(renderNode)}
+          
+          {/* Transformer for selected nodes */}
+          <Transformer
+            ref={transformerRef}
+            boundBoxFunc={(oldBox, newBox) => {
+              // Limit resize
+              if (newBox.width < 10 || newBox.height < 10) {
+                return oldBox;
+              }
+              return newBox;
+            }}
+            anchorStroke="#0066FF"
+            anchorFill="#FFFFFF"
+            anchorSize={8}
+            borderStroke="#0066FF"
+            borderDash={[3, 3]}
+          />
+        </Layer>
+      </Stage>
+
+      {/* Advanced Drawing Canvas Overlay - positioned precisely over Konva stage */}
+      {(activeTool === 'brush' || activeTool === 'eraser') && (
+        <div 
+          className="absolute pointer-events-none z-30"
+          style={{
+            left: panOffset.x,
+            top: panOffset.y,
+            transform: `scale(${zoom})`,
+            transformOrigin: '0 0'
+          }}
+        >
+          <AdvancedDrawingCanvas
+            width={doc.canvas.width}
+            height={doc.canvas.height}
+            brushSettings={brushSettings}
+            activeTool={activeTool as 'brush' | 'eraser'}
+            onStrokeComplete={(stroke) => {
+              console.log('Stroke completed:', stroke);
+              saveSnapshot();
+            }}
+            className="pointer-events-auto"
+          />
+        </div>
+      )}
+
+      {/* Brush Controls Panel */}
+      {showBrushControls && (
+        <div className="absolute bottom-4 right-4 z-50">
+          <BrushControlsPanel
+            brushSettings={brushSettings}
+            onBrushSettingsChange={(updates) => 
+              setBrushSettings(prev => ({ ...prev, ...updates }))
+            }
+            activeTool={activeTool as 'brush' | 'eraser'}
+            onToolChange={(tool) => setActiveTool(tool)}
+            className="w-64"
+          />
+        </div>
+      )}
+    </div>
   );
 };

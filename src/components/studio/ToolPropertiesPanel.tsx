@@ -1,6 +1,6 @@
 import React from 'react';
 import { useStudioStore } from '@/lib/studio/store';
-import { SimpleBrushSettings } from './SimpleBrushSettings';
+import { BrushSettings } from './BrushSettings';
 import { TextToolEnhanced } from './TextToolEnhanced';
 import { Button } from '@/components/ui/button';
 import { Hand, MousePointer2, Type, Square, Circle, PenTool, Eraser, Upload } from 'lucide-react';
@@ -25,7 +25,7 @@ export const ToolPropertiesPanel: React.FC = () => {
     switch (activeTool) {
       case 'brush':
         return (
-          <SimpleBrushSettings
+          <BrushSettings
             settings={brushSettings}
             onChange={(updates) => setBrushSettings(prev => ({ ...prev, ...updates } as any))}
           />
@@ -33,7 +33,7 @@ export const ToolPropertiesPanel: React.FC = () => {
       
       case 'eraser':
         return (
-          <SimpleBrushSettings
+          <BrushSettings
             settings={brushSettings}
             onChange={(updates) => setBrushSettings(prev => ({ ...prev, ...updates } as any))}
             isEraser={true}

@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useStudioStore } from '@/lib/studio/store';
 import { CanvasImageLoader } from './CanvasImageLoader';
-import { TSHIRT_COLORS } from './EnhancedColorSelector';
+import { TSHIRT_COLORS } from './ColorSelector';
 
 interface Enhanced2DMockupProps {
   className?: string;
