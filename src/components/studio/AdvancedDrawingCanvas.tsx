@@ -4,12 +4,15 @@ import { CommandStack, AddStrokeCommand } from '../../lib/studio/commandStack';
 import { useStudioStore } from '../../lib/studio/store';
 import { Vec2, BrushStrokeNode } from '../../lib/studio/types';
 import { cn } from '@/lib/utils';
+import { screenToCanvas as transformCoordinates } from '../../lib/studio/coordinateTransform';
+import { useUnifiedCoordinates } from './UnifiedCoordinateSystem';
+import { useUnifiedCursor } from './UnifiedCursorSystem';
 
 interface AdvancedDrawingCanvasProps {
   width: number;
   height: number;
   brushSettings: BrushSettings;
-  activeTool: 'brush' | 'eraser';
+  canvasTool: 'brush' | 'eraser';
   onStrokeComplete?: (stroke: BrushStroke) => void;
   className?: string;
   isInteractive?: boolean; // New prop to control interaction
@@ -19,7 +22,7 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
   width,
   height,
   brushSettings,
-  activeTool,
+  canvasTool,
   onStrokeComplete,
   className = "",
   isInteractive = true
@@ -33,16 +36,25 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
   const [currentStroke, setCurrentStroke] = useState<BrushStroke | null>(null);
   const [needsRedraw, setNeedsRedraw] = useState(0);
 
-  const { zoom, panOffset, addBrushStroke, getBrushStrokes, doc } = useStudioStore();
+  const { zoom, panOffset, addBrushStroke, getBrushStrokes, doc, activeTool } = useStudioStore();
+  const { screenToCanvas: unifiedScreenToCanvas, updateCanvasRect } = useUnifiedCoordinates();
+  const { updateCursorSettings, setDrawingState } = useUnifiedCursor();
 
-  // Initialize brush engine
+  // Initialize brush engine and update cursor
   useEffect(() => {
     if (!brushEngineRef.current) {
       brushEngineRef.current = new BrushEngine(brushSettings);
     } else {
       brushEngineRef.current.updateSettings(brushSettings);
     }
-  }, [brushSettings]);
+
+    // Update unified cursor with brush settings
+    updateCursorSettings({
+      size: brushSettings.size,
+      color: brushSettings.color,
+      tool: canvasTool
+    });
+  }, [brushSettings, canvasTool, updateCursorSettings]);
 
   // Redraw existing strokes when doc changes or tools switch
   const redrawStoredStrokes = useCallback(() => {
@@ -110,9 +122,9 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
   // Trigger redraw when doc changes or tool switches
   useEffect(() => {
     redrawStoredStrokes();
-  }, [redrawStoredStrokes, doc.nodes.length, activeTool, needsRedraw]);
+  }, [redrawStoredStrokes, doc.nodes.length, canvasTool, needsRedraw]);
 
-  // Set up canvases
+  // Set up canvases and update coordinate system
   useEffect(() => {
     const canvas = canvasRef.current;
     const previewCanvas = previewCanvasRef.current;
@@ -122,6 +134,10 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
       canvas.height = height;
       previewCanvas.width = width;
       previewCanvas.height = height;
+      
+      // Update unified coordinate system with canvas bounds
+      const rect = canvas.getBoundingClientRect();
+      updateCanvasRect(rect);
       
       // Set canvas context properties
       const ctx = canvas.getContext('2d');
@@ -137,24 +153,13 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
         previewCtx.imageSmoothingQuality = 'high';
       }
     }
-  }, [width, height]);
+  }, [width, height, updateCanvasRect]);
 
   // Convert screen coordinates to canvas coordinates with precision
   const screenToCanvas = useCallback((clientX: number, clientY: number): Vec2 => {
-    const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
-    
-    const rect = canvas.getBoundingClientRect();
-    
-    // Use the unified coordinate transformation
-    const { screenToCanvas: transform } = require('../../lib/studio/coordinateTransform');
-    return transform(
-      clientX, 
-      clientY, 
-      rect, 
-      { zoom, panOffset, canvasOffset: { x: 0, y: 0 } }
-    );
-  }, [zoom, panOffset]);
+    // Use unified coordinate system for consistency
+    return unifiedScreenToCanvas(clientX, clientY);
+  }, [unifiedScreenToCanvas]);
 
   // Get pressure from pointer event with enhanced MacBook trackpad support
   const getPressure = useCallback((e: PointerEvent): number => {
@@ -187,12 +192,13 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
     
     e.preventDefault();
     setIsDrawing(true);
+    setDrawingState(true); // Update unified cursor
     
     const point = screenToCanvas(e.clientX, e.clientY);
     const pressure = getPressure(e.nativeEvent);
     
     // Update brush settings for eraser
-    const currentSettings = activeTool === 'eraser' 
+    const currentSettings = canvasTool === 'eraser' 
       ? { ...brushSettings, type: 'eraser' as const, color: 'rgba(255,255,255,1)' }
       : brushSettings;
     
@@ -203,7 +209,7 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
     
     // Capture pointer for smooth drawing
     (e.target as Element).setPointerCapture(e.pointerId);
-  }, [isInteractive, brushSettings, activeTool, screenToCanvas, getPressure]);
+  }, [isInteractive, brushSettings, activeTool, screenToCanvas, getPressure, setDrawingState]);
 
   // Handle drawing movement - only when interactive
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
@@ -236,6 +242,7 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
     
     e.preventDefault();
     setIsDrawing(false);
+    setDrawingState(false); // Update unified cursor
     
     const completedStroke = brushEngineRef.current.endStroke();
     

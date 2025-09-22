@@ -20,6 +20,12 @@ import { KeyboardShortcuts } from './KeyboardShortcuts';
 import { HistoryIndicator } from './HistoryIndicator';
 import { ToolCursorProvider } from './ToolCursorManager';
 import { StageIntegration } from './StageIntegration';
+import { UnifiedCoordinateProvider } from './UnifiedCoordinateSystem';
+import { UnifiedCursorProvider } from './UnifiedCursorSystem';
+import { UnifiedPointerHandler } from './UnifiedPointerHandler';
+import { PerformanceOptimizer } from './PerformanceOptimizer';
+import { CursorDebugger } from './CursorDebugger';
+import { StudioDiagnostics } from './StudioDiagnostics';
 
 interface FunctionalCanvasStageProps {
   brushSettings?: BrushSettings;
@@ -382,9 +388,10 @@ export const FunctionalCanvasStage: React.FC<FunctionalCanvasStageProps> = ({
 
   // Enhanced shape creation with drag
   const handleStageMouseDown = useCallback((e: any) => {
-    if (e.target !== e.target.getStage()) return;
+    const stage = e.target.getStage();
+    if (!stage || e.target !== stage) return;
     
-    const pos = e.target.getStage().getPointerPosition();
+    const pos = stage.getPointerPosition();
     const localPos = {
       x: (pos.x - panOffset.x) / zoom,
       y: (pos.y - panOffset.y) / zoom
@@ -396,9 +403,10 @@ export const FunctionalCanvasStage: React.FC<FunctionalCanvasStageProps> = ({
   }, [activeTool, panOffset, zoom]);
 
   const handleStageMouseUp = useCallback((e: any) => {
-    if (e.target !== e.target.getStage()) return;
+    const stage = e.target.getStage();
+    if (!stage || e.target !== stage) return;
     
-    const pos = e.target.getStage().getPointerPosition();
+    const pos = stage.getPointerPosition();
     const localPos = {
       x: (pos.x - panOffset.x) / zoom,
       y: (pos.y - panOffset.y) / zoom
@@ -434,10 +442,11 @@ export const FunctionalCanvasStage: React.FC<FunctionalCanvasStageProps> = ({
 
   // Handle stage click for tool interactions
   const handleStageClick = useCallback((e: any) => {
-    if (e.target === e.target.getStage()) {
+    const stage = e.target.getStage();
+    if (stage && e.target === stage) {
       clearSelection();
       
-      const pos = e.target.getStage().getPointerPosition();
+      const pos = stage.getPointerPosition();
       const localPos = {
         x: (pos.x - panOffset.x) / zoom,
         y: (pos.y - panOffset.y) / zoom
@@ -473,8 +482,11 @@ export const FunctionalCanvasStage: React.FC<FunctionalCanvasStageProps> = ({
   }, [activeTool, panOffset, zoom, addNode, clearSelection, saveSnapshot]);
 
   return (
-    <ToolCursorProvider>
-      <div className="h-full bg-workspace text-foreground overflow-hidden">
+    <PerformanceOptimizer enableDebug={process.env.NODE_ENV === 'development'}>
+      <UnifiedCoordinateProvider>
+        <UnifiedCursorProvider>
+          <ToolCursorProvider>
+          <div className="h-full bg-workspace text-foreground overflow-hidden">
         <div className="flex flex-col h-full">
           {/* Top toolbar */}
           <div className="flex items-center justify-between p-3 border-b border-border bg-background">
@@ -749,13 +761,22 @@ export const FunctionalCanvasStage: React.FC<FunctionalCanvasStageProps> = ({
                 </Layer>
               </Stage>
 
+              {/* Unified Pointer Handler for coordinated input management */}
+              <UnifiedPointerHandler
+                containerRef={containerRef}
+                onPointerEvent={(event, type) => {
+                  // Handle drawing events here if needed
+                  console.log('Unified pointer event:', type, event);
+                }}
+              />
+
               {/* Drawing Canvas Layer - Always mounted to persist strokes */}
               <div className="absolute inset-0 pointer-events-none">
                 <AdvancedDrawingCanvas
                   width={stageSize.width}
                   height={stageSize.height}
                   brushSettings={brushSettings}
-                  activeTool={activeTool as 'brush' | 'eraser'}
+                  canvasTool={activeTool as 'brush' | 'eraser'}
                   onStrokeComplete={(stroke) => {
                     console.log('Stroke completed:', stroke);
                   }}
@@ -808,6 +829,10 @@ export const FunctionalCanvasStage: React.FC<FunctionalCanvasStageProps> = ({
 
           {/* History indicator */}
           <HistoryIndicator />
+
+          {/* Debug tools - only in development */}
+          <CursorDebugger enabled={process.env.NODE_ENV === 'development'} />
+          <StudioDiagnostics enabled={process.env.NODE_ENV === 'development'} />
           
           {/* Mobile drawing hints */}
           {canAcceptInput && (
@@ -818,5 +843,8 @@ export const FunctionalCanvasStage: React.FC<FunctionalCanvasStageProps> = ({
         </div>
       </div>
     </ToolCursorProvider>
+        </UnifiedCursorProvider>
+      </UnifiedCoordinateProvider>
+    </PerformanceOptimizer>
   );
 };
