@@ -6,7 +6,7 @@ import { toolManager } from './ToolManager';
 import { BrushTool } from './BrushTool';
 import { UnifiedKeyboardHandler } from './UnifiedKeyboardHandler';
 import { DesignToolsErrorBoundary } from './DesignToolsErrorBoundary';
-import { EnhancedCursorSystem } from './EnhancedCursorSystem';
+import { PrecisionCursorManager } from './PrecisionCursorManager';
 import { FloatingBrushControls } from './FloatingBrushControls';
 import { EnhancedGrid, Rulers } from './AdvancedGridSystem';
 import { SmartGuidesSystem } from './SmartGuidesSystem';
@@ -427,7 +427,7 @@ export const UnifiedCanvasStage = () => {
 
   return (
     <DesignToolsErrorBoundary>
-      <EnhancedCursorSystem>
+      <PrecisionCursorManager stageRef={stageRef} containerRef={containerRef}>
         <UnifiedKeyboardHandler />
         <div
           ref={containerRef}
@@ -538,7 +538,7 @@ export const UnifiedCanvasStage = () => {
         {/* Floating Brush Controls */}
         <FloatingBrushControls />
         </div>
-      </EnhancedCursorSystem>
-    </DesignToolsErrorBoundary>
+        </PrecisionCursorManager>
+      </DesignToolsErrorBoundary>
   );
 };
