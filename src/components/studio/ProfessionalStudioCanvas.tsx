@@ -8,6 +8,8 @@ export const ProfessionalStudioCanvas = () => {
   const stageRef = useRef<any>(null);
   const [garmentImage, setGarmentImage] = useState<HTMLImageElement | null>(null);
   const [stageSize, setStageSize] = useState({ width: 800, height: 600 });
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [currentStroke, setCurrentStroke] = useState<any>(null);
   
   const { 
     doc, 
@@ -74,6 +76,46 @@ export const ProfessionalStudioCanvas = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Brush drawing logic as requested by user
+  const handleBrushDraw = useCallback((e: any) => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    
+    const point = stage.getPointerPosition();
+    const transform = stage.getAbsoluteTransform().copy();
+    transform.invert();
+    const pos = transform.point(point);
+
+    if (isDrawing && currentStroke) {
+      const newPoints = [...currentStroke.points, pos.x, pos.y];
+      updateNode(currentStroke.id, { points: newPoints });
+    } else {
+      // Start a new stroke
+      const newStroke = {
+        id: `brush-${Date.now()}`,
+        type: 'path' as const,
+        name: 'Brush Stroke',
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+        rotation: 0,
+        opacity: 1,
+        points: [pos.x, pos.y],
+        stroke: { color: '#000000', width: 5 },
+        closed: false
+      };
+      addNode(newStroke);
+      setCurrentStroke(newStroke);
+      setIsDrawing(true);
+    }
+  }, [isDrawing, currentStroke, updateNode, addNode]);
+
+  const endBrushDraw = useCallback(() => {
+    setIsDrawing(false);
+    setCurrentStroke(null);
+  }, []);
+
   // Professional pointer event handling
   const handlePointerDown = useCallback((e: any) => {
     const pos = getRelativePointerPosition();
@@ -81,21 +123,7 @@ export const ProfessionalStudioCanvas = () => {
     // Handle different tools with persistent layer approach
     switch (activeTool) {
       case 'brush':
-        const brushNode: Node = {
-          id: `brush-${Date.now()}`,
-          type: 'path',
-          name: 'Brush Stroke',
-          x: 0,
-          y: 0,
-          width: 0,
-          height: 0,
-          rotation: 0,
-          opacity: 1,
-          points: [pos.x, pos.y],
-          stroke: { color: '#000000', width: 5 },
-          closed: false
-        };
-        addNode(brushNode);
+        handleBrushDraw(e);
         break;
         
       case 'text':
@@ -134,7 +162,22 @@ export const ProfessionalStudioCanvas = () => {
         }
         break;
     }
-  }, [activeTool, addNode, selectNode, clearSelection, getRelativePointerPosition]);
+  }, [activeTool, addNode, selectNode, clearSelection, getRelativePointerPosition, handleBrushDraw]);
+
+  // Handle pointer move for brush drawing
+  const handlePointerMove = useCallback((e: any) => {
+    if (activeTool === 'brush' && isDrawing) {
+      handleBrushDraw(e);
+    }
+  }, [activeTool, isDrawing, handleBrushDraw]);
+
+  // Handle pointer up for brush drawing
+  const handlePointerUp = useCallback((e: any) => {
+    if (activeTool === 'brush' && isDrawing) {
+      endBrushDraw();
+      saveSnapshot();
+    }
+  }, [activeTool, isDrawing, endBrushDraw, saveSnapshot]);
 
   // Render nodes with proper layer management
   const renderLayer = (layer: Node) => {
@@ -226,6 +269,8 @@ export const ProfessionalStudioCanvas = () => {
       x={panOffset.x}
       y={panOffset.y}
       onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
     >
       <Layer>
         {/* Garment template at 100% opacity - maintain template fidelity */}
