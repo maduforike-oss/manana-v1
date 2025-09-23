@@ -24,12 +24,14 @@ export interface SaveDesignData {
 }
 
 export async function saveDesign(designData: SaveDesignData): Promise<DesignDocument> {
+  const { data: { session } } = await supabase.auth.getSession();
+  
   const response = await fetch(
     `https://ajnbtevgzhkilokflntj.supabase.co/functions/v1/design-persistence`,
     {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbmJ0ZXZnemhraWxva2ZsbnRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTczNjE1MjMsImV4cCI6MjA3MjkzNzUyM30.oNvgUt_1PJRHNJ9NJa1T1duGq1rVw8C_6qudq1b1dMg`,
+        'Authorization': `Bearer ${session?.access_token || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbmJ0ZXZnemhraWxva2ZsbnRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTczNjE1MjMsImV4cCI6MjA3MjkzNzUyM30.oNvgUt_1PJRHNJ9NJa1T1duGq1rVw8C_6qudq1b1dMg'}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(designData),
@@ -46,12 +48,14 @@ export async function saveDesign(designData: SaveDesignData): Promise<DesignDocu
 }
 
 export async function updateDesign(id: string, designData: SaveDesignData): Promise<DesignDocument> {
+  const { data: { session } } = await supabase.auth.getSession();
+  
   const response = await fetch(
     `https://ajnbtevgzhkilokflntj.supabase.co/functions/v1/design-persistence/${id}`,
     {
       method: 'PUT',
       headers: {
-        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbmJ0ZXZnemhraWxva2ZsbnRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTczNjE1MjMsImV4cCI6MjA3MjkzNzUyM30.oNvgUt_1PJRHNJ9NJa1T1duGq1rVw8C_6qudq1b1dMg`,
+        'Authorization': `Bearer ${session?.access_token || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbmJ0ZXZnemhraWxva2ZsbnRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTczNjE1MjMsImV4cCI6MjA3MjkzNzUyM30.oNvgUt_1PJRHNJ9NJa1T1duGq1rVw8C_6qudq1b1dMg'}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(designData),
@@ -68,12 +72,14 @@ export async function updateDesign(id: string, designData: SaveDesignData): Prom
 }
 
 export async function loadDesign(id: string): Promise<DesignDocument> {
+  const { data: { session } } = await supabase.auth.getSession();
+  
   const response = await fetch(
     `https://ajnbtevgzhkilokflntj.supabase.co/functions/v1/design-persistence/${id}`,
     {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbmJ0ZXZnemhraWxva2ZsbnRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTczNjE1MjMsImV4cCI6MjA3MjkzNzUyM30.oNvgUt_1PJRHNJ9NJa1T1duGq1rVw8C_6qudq1b1dMg`,
+        'Authorization': `Bearer ${session?.access_token || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbmJ0ZXZnemhraWxva2ZsbnRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTczNjE1MjMsImV4cCI6MjA3MjkzNzUyM30.oNvgUt_1PJRHNJ9NJa1T1duGq1rVw8C_6qudq1b1dMg'}`,
         'Content-Type': 'application/json',
       },
     }
@@ -89,12 +95,14 @@ export async function loadDesign(id: string): Promise<DesignDocument> {
 }
 
 export async function deleteDesign(id: string): Promise<void> {
+  const { data: { session } } = await supabase.auth.getSession();
+  
   const response = await fetch(
     `https://ajnbtevgzhkilokflntj.supabase.co/functions/v1/design-persistence/${id}`,
     {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbmJ0ZXZnemhraWxva2ZsbnRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTczNjE1MjMsImV4cCI6MjA3MjkzNzUyM30.oNvgUt_1PJRHNJ9NJa1T1duGq1rVw8C_6qudq1b1dMg`,
+        'Authorization': `Bearer ${session?.access_token || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbmJ0ZXZnemhraWxva2ZsbnRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTczNjE1MjMsImV4cCI6MjA3MjkzNzUyM30.oNvgUt_1PJRHNJ9NJa1T1duGq1rVw8C_6qudq1b1dMg'}`,
         'Content-Type': 'application/json',
       },
     }
@@ -107,12 +115,14 @@ export async function deleteDesign(id: string): Promise<void> {
 }
 
 export async function listDesigns(): Promise<DesignDocument[]> {
+  const { data: { session } } = await supabase.auth.getSession();
+  
   const response = await fetch(
     `https://ajnbtevgzhkilokflntj.supabase.co/functions/v1/design-persistence`,
     {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbmJ0ZXZnemhraWxva2ZsbnRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTczNjE1MjMsImV4cCI6MjA3MjkzNzUyM30.oNvgUt_1PJRHNJ9NJa1T1duGq1rVw8C_6qudq1b1dMg`,
+        'Authorization': `Bearer ${session?.access_token || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbmJ0ZXZnemhraWxva2ZsbnRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTczNjE1MjMsImV4cCI6MjA3MjkzNzUyM30.oNvgUt_1PJRHNJ9NJa1T1duGq1rVw8C_6qudq1b1dMg'}`,
         'Content-Type': 'application/json',
       },
     }
