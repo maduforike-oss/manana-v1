@@ -7,6 +7,7 @@ import { ProfessionalToolbar } from './ProfessionalToolbar';
 import { ViewportSettingsPanel } from './ViewportSettingsPanel';
 import { StatusBar } from './StatusBar';
 import { MobileFloatingToolbar } from './MobileFloatingToolbar';
+import { EnhancedViewportSystem } from './EnhancedViewportSystem';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { 
   ResizableHandle, 
@@ -37,7 +38,9 @@ export const ProfessionalStudioShell = () => {
       <div className="h-screen w-screen flex flex-col bg-background">
         {/* Mobile Canvas with Floating Controls */}
         <div className="flex-1 relative bg-muted/20">
-          <UnifiedCanvasStage />
+          <EnhancedViewportSystem>
+            <UnifiedCanvasStage />
+          </EnhancedViewportSystem>
           <MobileFloatingToolbar />
         </div>
         
@@ -92,7 +95,9 @@ export const ProfessionalStudioShell = () => {
         {/* Center Panel - Canvas */}
         <ResizablePanel defaultSize={62} minSize={40}>
           <div className="h-full relative bg-muted/20">
-            <UnifiedCanvasStage />
+            <EnhancedViewportSystem>
+              <UnifiedCanvasStage />
+            </EnhancedViewportSystem>
           </div>
         </ResizablePanel>
         
