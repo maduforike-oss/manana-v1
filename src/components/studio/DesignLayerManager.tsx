@@ -50,11 +50,15 @@ export const DesignLayerManager: React.FC<DesignLayerManagerProps> = ({
 
     // Check if there's saved layer data in the store
     const savedLayerData = doc.canvas.designLayerData;
-    if (savedLayerData) {
+    if (savedLayerData && savedLayerData !== '') {
       const img = new Image();
       img.onload = () => {
         ctx.clearRect(0, 0, width, height);
         ctx.drawImage(img, 0, 0);
+        console.log('Design layer restored from store');
+      };
+      img.onerror = () => {
+        console.warn('Failed to load design layer data');
       };
       img.src = savedLayerData;
     }

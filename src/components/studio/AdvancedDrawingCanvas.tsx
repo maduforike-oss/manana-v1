@@ -90,7 +90,7 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
 
   // Handle drawing start
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    if (!brushEngineRef.current || !previewCanvasRef.current) return;
+    if (!brushEngineRef.current || !previewCanvasRef.current || !designLayerCanvas) return;
     
     e.preventDefault();
     setIsDrawing(true);
@@ -150,13 +150,18 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
       // Render final stroke to persistent design layer
       const designCtx = getDesignLayerContext();
       if (designCtx) {
+        const currentSettings = activeTool === 'eraser' 
+          ? { ...brushSettings, type: 'eraser' as const, color: 'transparent' }
+          : brushSettings;
+        
+        brushEngineRef.current.updateSettings(currentSettings);
         brushEngineRef.current.renderStroke(completedStroke, designCtx);
         
         // Save the design layer data to store for persistence
-        if (designLayerCanvas) {
-          const dataURL = designLayerCanvas.toDataURL('image/png');
+        requestAnimationFrame(() => {
+          const dataURL = designLayerCanvas!.toDataURL('image/png');
           updateCanvas({ designLayerData: dataURL });
-        }
+        });
       }
       
       // Clear preview canvas
