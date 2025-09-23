@@ -82,7 +82,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   zoom: 1,
   panOffset: { x: 0, y: 0 },
   snapEnabled: true,
-  mockup: { type: 'front', color: 'light', opacity: 0.8, garmentOpacity: 0.7 },
+  mockup: { type: 'front', color: 'light', opacity: 0.8, garmentOpacity: 1.0 },
   is3DMode: false,
   
   get canUndo() {
@@ -312,7 +312,8 @@ export const useStudioStore = create<StudioState>((set, get) => ({
     state.mockup = { 
       type: 'front', 
       color: garmentColor === 'white' || garmentColor === 'light' ? 'light' : 'dark', 
-      opacity: 0.8 
+      opacity: 0.8,
+      garmentOpacity: 1.0
     };
     get().saveSnapshot();
   })),
@@ -388,7 +389,8 @@ export const useStudioStore = create<StudioState>((set, get) => ({
                 state.mockup = canvasData.mockup || { 
                   type: 'front', 
                   color: 'light', 
-                  opacity: 0.8 
+                  opacity: 0.8,
+                  garmentOpacity: 1.0
                 };
               }));
             }

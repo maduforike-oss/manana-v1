@@ -36,17 +36,29 @@ export const MockupPreview = () => {
         </Select>
       </div>
 
-      <div>
-        <label className="text-sm font-medium">Opacity: {Math.round(mockup.opacity * 100)}%</label>
-        <Slider
-          value={[mockup.opacity]}
-          onValueChange={([value]) => setMockup({ opacity: value })}
-          min={0}
-          max={1}
-          step={0.1}
-          className="mt-2"
-        />
-      </div>
+        <div>
+          <label className="text-sm font-medium">Template Opacity: {Math.round((mockup.garmentOpacity || 1.0) * 100)}%</label>
+          <Slider
+            value={[mockup.garmentOpacity || 1.0]}
+            onValueChange={([value]) => setMockup({ garmentOpacity: value })}
+            min={0.1}
+            max={1}
+            step={0.1}
+            className="mt-2"
+          />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium">Design Preview Opacity: {Math.round(mockup.opacity * 100)}%</label>
+          <Slider
+            value={[mockup.opacity]}
+            onValueChange={([value]) => setMockup({ opacity: value })}
+            min={0}
+            max={1}
+            step={0.1}
+            className="mt-2"
+          />
+        </div>
     </div>
   );
 };

@@ -495,7 +495,7 @@ export const UnifiedCanvasStage = () => {
           {/* Grid */}
           {renderGrid()}
           
-          {/* Garment background */}
+          {/* Garment background at 100% opacity - Professional Template Fidelity */}
           {garmentImage && (
             <Image
               image={garmentImage}
@@ -503,14 +503,14 @@ export const UnifiedCanvasStage = () => {
               height={doc.canvas.height * 0.8}
               x={doc.canvas.width * 0.1}
               y={doc.canvas.height * 0.1}
-              opacity={mockup.garmentOpacity || 0.7}
+              opacity={mockup.garmentOpacity || 1.0}
               listening={false}
             />
           )}
         </Layer>
         
-        {/* Design layer with collective opacity */}
-        <Layer opacity={mockup.opacity}>
+        {/* Design layer - Individual element opacity preserved, no global opacity */}
+        <Layer>
           {doc.nodes.map(renderNode)}
           
           {/* Brush tool live preview */}
