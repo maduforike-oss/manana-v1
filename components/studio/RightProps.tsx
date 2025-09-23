@@ -1,7 +1,7 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LayersPanel } from './LayersPanel';
+import { EnhancedLayersPanel } from './EnhancedLayersPanel';
 import { PropertiesPanel } from './PropertiesPanel';
 import { CanvasPanel } from './CanvasPanel';
 
@@ -68,9 +68,7 @@ export const RightProps = ({
           value="layers" 
           className="flex-1 overflow-hidden animate-in fade-in-50 duration-300 slide-in-from-right-4"
         >
-          <div className="p-3">
-            <LayersPanel />
-          </div>
+          <EnhancedLayersPanel />
         </TabsContent>
         
         <TabsContent 
