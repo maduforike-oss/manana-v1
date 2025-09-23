@@ -108,8 +108,8 @@ export const PrecisionCursorManager: React.FC<PrecisionCursorManagerProps> = ({
     if (pointerPosition) {
       // Convert canvas coordinates to screen coordinates for cursor positioning
       const screenPosition = {
-        x: (pointerPosition.x * zoom) + containerRect.left,
-        y: (pointerPosition.y * zoom) + containerRect.top
+        x: pointerPosition.x + containerRect.left,
+        y: pointerPosition.y + containerRect.top
       };
       
       setCursorPosition(screenPosition);
