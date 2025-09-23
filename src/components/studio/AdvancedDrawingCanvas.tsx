@@ -11,7 +11,6 @@ interface AdvancedDrawingCanvasProps {
   activeTool: 'brush' | 'eraser';
   onStrokeComplete?: (stroke: BrushStroke) => void;
   className?: string;
-  designLayerCanvas?: HTMLCanvasElement | null;
 }
 
 export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
@@ -20,17 +19,18 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
   brushSettings,
   activeTool,
   onStrokeComplete,
-  className = "",
-  designLayerCanvas
+  className = ""
 }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const brushEngineRef = useRef<BrushEngine | null>(null);
   const commandStackRef = useRef<CommandStack>(new CommandStack());
   
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentStroke, setCurrentStroke] = useState<BrushStroke | null>(null);
+  const [needsRedraw, setNeedsRedraw] = useState(0);
 
-  const { updateCanvas, addBrushStroke } = useStudioStore();
+  const { zoom, panOffset, addBrushStroke, getBrushStrokes, doc } = useStudioStore();
 
   // Initialize brush engine
   useEffect(() => {
@@ -41,20 +41,94 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
     }
   }, [brushSettings]);
 
-  // Get the design layer canvas context for persistent drawing
-  const getDesignLayerContext = useCallback(() => {
-    return designLayerCanvas?.getContext('2d') || null;
-  }, [designLayerCanvas]);
+  // Redraw existing strokes when doc changes or tools switch
+  const redrawStoredStrokes = useCallback(() => {
+    if (!canvasRef.current) return;
+    
+    const ctx = canvasRef.current.getContext('2d');
+    if (!ctx) return;
+    
+    // Clear main canvas of brush strokes only
+    ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+    
+    // Redraw all stored brush strokes
+    const brushStrokes = getBrushStrokes();
+    brushStrokes.forEach((strokeNode: BrushStrokeNode) => {
+      const { strokeData } = strokeNode;
+      if (strokeData.points && strokeData.points.length > 0) {
+        // Recreate brush engine for this stroke
+        const strokeBrush = new BrushEngine({
+          color: strokeData.color,
+          size: strokeData.size,
+          opacity: strokeData.opacity,
+          hardness: strokeData.hardness || 1,
+          type: 'pencil',
+          flow: 1.0,
+          spacing: 0.1,
+          pressureSizeMultiplier: 0.5,
+          pressureOpacityMultiplier: 0.3,
+          smoothing: 0.5,
+          blendMode: 'normal'
+        });
+        
+        // Render the stroke directly to the canvas
+        const mockStroke: BrushStroke = {
+          id: strokeNode.id,
+          points: strokeData.points.map(p => ({ 
+            x: p.x, 
+            y: p.y, 
+            pressure: p.pressure || 0.5,
+            timestamp: Date.now()
+          })),
+          brush: {
+            color: strokeData.color,
+            size: strokeData.size,
+            opacity: strokeData.opacity,
+            hardness: strokeData.hardness || 1,
+            type: 'pencil',
+            flow: 1.0,
+            spacing: 0.1,
+            pressureSizeMultiplier: 0.5,
+            pressureOpacityMultiplier: 0.3,
+            smoothing: 0.5,
+            blendMode: 'normal'
+          },
+          pressure: strokeData.points.map(p => p.pressure || 0.5),
+          velocity: strokeData.points.map(() => 1.0),
+          timestamp: Date.now(),
+          completed: true
+        };
+        
+        strokeBrush.renderStroke(mockStroke, ctx);
+      }
+    });
+  }, [getBrushStrokes]);
 
-  // Set up preview canvas
+  // Trigger redraw when doc changes or tool switches
   useEffect(() => {
+    redrawStoredStrokes();
+  }, [redrawStoredStrokes, doc.nodes.length, activeTool, needsRedraw]);
+
+  // Set up canvases
+  useEffect(() => {
+    const canvas = canvasRef.current;
     const previewCanvas = previewCanvasRef.current;
     
-    if (previewCanvas) {
+    if (canvas && previewCanvas) {
+      canvas.width = width;
+      canvas.height = height;
       previewCanvas.width = width;
       previewCanvas.height = height;
       
+      // Set canvas context properties
+      const ctx = canvas.getContext('2d');
       const previewCtx = previewCanvas.getContext('2d');
+      
+      if (ctx) {
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+      }
+      
       if (previewCtx) {
         previewCtx.imageSmoothingEnabled = true;
         previewCtx.imageSmoothingQuality = 'high';
@@ -64,10 +138,11 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
 
   // Convert screen coordinates to canvas coordinates
   const screenToCanvas = useCallback((clientX: number, clientY: number): Vec2 => {
-    const canvas = previewCanvasRef.current;
+    const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
     
     const rect = canvas.getBoundingClientRect();
+    // Fix coordinate calculation to properly account for canvas position
     const x = clientX - rect.left;
     const y = clientY - rect.top;
     
@@ -90,7 +165,7 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
 
   // Handle drawing start
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    if (!brushEngineRef.current || !previewCanvasRef.current || !designLayerCanvas) return;
+    if (!brushEngineRef.current || !canvasRef.current) return;
     
     e.preventDefault();
     setIsDrawing(true);
@@ -146,22 +221,11 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
     
     const completedStroke = brushEngineRef.current.endStroke();
     
-    if (completedStroke) {
-      // Render final stroke to persistent design layer
-      const designCtx = getDesignLayerContext();
-      if (designCtx) {
-        const currentSettings = activeTool === 'eraser' 
-          ? { ...brushSettings, type: 'eraser' as const, color: 'transparent' }
-          : brushSettings;
-        
-        brushEngineRef.current.updateSettings(currentSettings);
-        brushEngineRef.current.renderStroke(completedStroke, designCtx);
-        
-        // Save the design layer data to store for persistence
-        requestAnimationFrame(() => {
-          const dataURL = designLayerCanvas!.toDataURL('image/png');
-          updateCanvas({ designLayerData: dataURL });
-        });
+    if (completedStroke && canvasRef.current) {
+      // Render final stroke to main canvas
+      const ctx = canvasRef.current.getContext('2d');
+      if (ctx) {
+        brushEngineRef.current.renderStroke(completedStroke, ctx);
       }
       
       // Clear preview canvas
@@ -173,7 +237,7 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
         }
       }
       
-      // Save stroke to store for undo/redo purposes
+      // Save stroke to store for persistence
       addBrushStroke({
         color: completedStroke.brush.color,
         size: completedStroke.brush.size,
@@ -182,12 +246,29 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
         points: completedStroke.points.map(p => ({ x: p.x, y: p.y, pressure: p.pressure }))
       });
       
+      // Add to command stack for undo/redo
+      const command = new AddStrokeCommand(
+        {
+          id: completedStroke.id,
+          color: completedStroke.brush.color,
+          size: completedStroke.brush.size,
+          opacity: completedStroke.brush.opacity,
+          points: completedStroke.points.map(p => ({ x: p.x, y: p.y, p: p.pressure, t: p.timestamp }))
+        },
+        canvasRef.current,
+        () => onStrokeComplete?.(completedStroke)
+      );
+      
+      commandStackRef.current.executeCommand(command);
       onStrokeComplete?.(completedStroke);
+      
+      // Trigger redraw to ensure consistency
+      setNeedsRedraw(prev => prev + 1);
     }
     
     setCurrentStroke(null);
     (e.target as Element).releasePointerCapture(e.pointerId);
-  }, [isDrawing, currentStroke, onStrokeComplete, getDesignLayerContext, designLayerCanvas, updateCanvas, addBrushStroke]);
+  }, [isDrawing, currentStroke, onStrokeComplete]);
 
   // Undo function
   const undo = useCallback(() => {
@@ -199,16 +280,18 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
     commandStackRef.current.redo();
   }, []);
 
-  // Clear design layer
+  // Clear canvas
   const clear = useCallback(() => {
-    const designCtx = getDesignLayerContext();
-    if (designCtx && designLayerCanvas) {
-      designCtx.clearRect(0, 0, designLayerCanvas.width, designLayerCanvas.height);
-      const dataURL = designLayerCanvas.toDataURL('image/png');
-      updateCanvas({ designLayerData: dataURL });
+    const canvas = canvasRef.current;
+    const previewCanvas = previewCanvasRef.current;
+    
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
     }
     
-    const previewCanvas = previewCanvasRef.current;
     if (previewCanvas) {
       const ctx = previewCanvas.getContext('2d');
       if (ctx) {
@@ -217,7 +300,7 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
     }
     
     commandStackRef.current.clear();
-  }, [getDesignLayerContext, designLayerCanvas, updateCanvas]);
+  }, []);
 
   // Expose functions via ref (if needed)
   React.useEffect(() => {
@@ -228,7 +311,14 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
   }, []);
 
   return (
-    <div className={`relative ${className}`} style={{ width, height }}>      
+    <div className={`relative ${className}`} style={{ width, height }}>
+      {/* Main drawing canvas */}
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 pointer-events-none"
+        style={{ mixBlendMode: 'normal' }}
+      />
+      
       {/* Preview canvas for live stroke preview */}
       <canvas
         ref={previewCanvasRef}
@@ -248,6 +338,7 @@ export const AdvancedDrawingCanvas: React.FC<AdvancedDrawingCanvasProps> = ({
         style={{ 
           touchAction: 'none',
           cursor: activeTool === 'eraser' ? 'crosshair' : 'crosshair',
+          // Ensure precise positioning
           position: 'absolute',
           left: 0,
           top: 0
