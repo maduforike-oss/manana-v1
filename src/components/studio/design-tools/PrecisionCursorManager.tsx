@@ -95,21 +95,26 @@ export const PrecisionCursorManager: React.FC<PrecisionCursorManagerProps> = ({
     }
   }, []);
 
-  // Professional cursor system using Konva's native methods
+  // Professional cursor system using proper Konva coordinate transformation
   const handleMouseMove = useCallback(() => {
     if (!stageRef.current || !containerRef.current) return;
     
     const stage = stageRef.current;
     const containerRect = containerRef.current.getBoundingClientRect();
     
-    // Use Konva's native getPointerPosition() - industry standard
+    // Get raw pointer position
     const pointerPosition = stage.getPointerPosition();
     
     if (pointerPosition) {
-      // Convert canvas coordinates to screen coordinates for cursor positioning
+      // Apply proper Konva coordinate transformation (like your StudioKonva example)
+      const transform = stage.getAbsoluteTransform().copy();
+      transform.invert();
+      const relativePos = transform.point(pointerPosition);
+      
+      // Convert transformed canvas coordinates to screen coordinates for cursor positioning
       const screenPosition = {
-        x: pointerPosition.x + containerRect.left,
-        y: pointerPosition.y + containerRect.top
+        x: relativePos.x + containerRect.left,
+        y: relativePos.y + containerRect.top
       };
       
       setCursorPosition(screenPosition);
