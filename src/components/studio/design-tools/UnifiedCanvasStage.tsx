@@ -1,9 +1,10 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { Stage, Layer, Rect, Circle, Text, Line, RegularPolygon, Transformer, Image } from 'react-konva';
 import { useStudioStore } from '@/lib/studio/store';
 import { Node, TextNode, ShapeNode, ImageNode, PathNode } from '@/lib/studio/types';
 import { toolManager } from './ToolManager';
 import { BrushTool } from './BrushTool';
+import { UnifiedKeyboardHandler } from './UnifiedKeyboardHandler';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -418,22 +419,24 @@ export const UnifiedCanvasStage = () => {
   };
 
   return (
-    <div 
-      ref={containerRef}
-      className={cn(
-        "w-full h-full relative overflow-hidden",
-        `cursor-${toolManager.getCurrentCursor()}`
-      )}
-      style={{ touchAction: toolManager.shouldPreventPanning() ? 'none' : 'auto' }}
-    >
-      <Stage
-        ref={stageRef}
-        width={stageSize.width}
-        height={stageSize.height}
-        scaleX={zoom}
-        scaleY={zoom}
-        x={panOffset.x}
-        y={panOffset.y}
+    <>
+      <UnifiedKeyboardHandler />
+      <div 
+        ref={containerRef}
+        className={cn(
+          "w-full h-full relative overflow-hidden",
+          `cursor-${toolManager.getCurrentCursor()}`
+        )}
+        style={{ touchAction: toolManager.shouldPreventPanning() ? 'none' : 'auto' }}
+      >
+        <Stage
+          ref={stageRef}
+          width={stageSize.width}
+          height={stageSize.height}
+          scaleX={zoom}
+          scaleY={zoom}
+          x={panOffset.x}
+          y={panOffset.y}
         onMouseDown={handlePointerDown}
         onMouseMove={handlePointerMove}
         onMouseUp={handlePointerUp}
@@ -487,6 +490,7 @@ export const UnifiedCanvasStage = () => {
           />
         </Layer>
       </Stage>
-    </div>
+      </div>
+    </>
   );
 };

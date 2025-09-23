@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { TopBar } from './TopBar';
-import { EnhancedLeftTools } from './EnhancedLeftTools';
+import { UnifiedLeftTools } from './design-tools/UnifiedLeftTools';
 import { RightProps } from './RightProps';
-import { SimplifiedCanvasStage } from './SimplifiedCanvasStage';
+import { UnifiedCanvasStage } from './design-tools/UnifiedCanvasStage';
 import { ColorSelector } from './ColorSelector';
 import { EnhancedBottomControls } from './EnhancedBottomControls';
 import { useSetActiveTool, useUndo, useRedo, useSetZoom, useSetPanOffset } from '../../lib/studio/storeSelectors';
@@ -42,33 +42,8 @@ export const StudioShell = () => {
         return;
       }
 
-      // Tool shortcuts
+      // Non-tool shortcuts (tools are handled by UnifiedKeyboardHandler)
       switch (e.key.toLowerCase()) {
-        case 'v':
-          setActiveTool('select');
-          break;
-        case 'h':
-          setActiveTool('hand');
-          break;
-        case 't':
-          setActiveTool('text');
-          break;
-        case 'r':
-          if (!e.shiftKey) setActiveTool('rect');
-          break;
-        case 'c':
-          setActiveTool('circle');
-          break;
-        case 'b':
-          if (!e.ctrlKey && !e.metaKey) {
-            setActiveTool('brush');
-          }
-          break;
-        case 'e':
-          if (!e.ctrlKey && !e.metaKey) {
-            setActiveTool('eraser');
-          }
-          break;
         case 'g':
           if (e.shiftKey) {
             toggleSnap();
@@ -127,7 +102,7 @@ export const StudioShell = () => {
             "transition-all duration-300 ease-in-out bg-card border-r border-workspace-border",
             leftPanelCollapsed ? "w-0 overflow-hidden" : "w-16"
           )}>
-            <EnhancedLeftTools collapsed={leftPanelCollapsed} />
+            <UnifiedLeftTools collapsed={leftPanelCollapsed} />
           </div>
 
           {/* Left Panel Toggle */}
@@ -149,7 +124,7 @@ export const StudioShell = () => {
           
           {/* Main Canvas Area */}
           <div className="flex-1 flex flex-col min-w-0 relative">
-            <SimplifiedCanvasStage />
+            <UnifiedCanvasStage />
             
             {/* Color Selector - Fixed Position */}
             <div className="absolute top-4 right-4 z-50 pointer-events-auto">

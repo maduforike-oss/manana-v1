@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { TopBar } from './TopBar';
-import { EnhancedLeftTools } from './EnhancedLeftTools';
+import { UnifiedLeftTools } from './design-tools/UnifiedLeftTools';
 import { RightProps } from './RightProps';
-import { FunctionalCanvasStage } from './FunctionalCanvasStage';
+import { UnifiedCanvasStage } from './design-tools/UnifiedCanvasStage';
 import { ColorSelector } from './ColorSelector';
 import { EnhancedBottomControls } from './EnhancedBottomControls';
 import { StudioHub } from './StudioHub';
@@ -120,33 +120,13 @@ export const UnifiedStudioShell = () => {
       return;
     }
 
-    // Tool shortcuts
+    // Non-tool shortcuts (tools are handled by UnifiedKeyboardHandler)
     switch (e.key.toLowerCase()) {
-      case 'v':
-        setActiveTool('select');
-        break;
-      case 'h':
-        setActiveTool('hand');
-        break;
-      case 't':
-        setActiveTool('text');
-        break;
       case 'r':
-        if (!e.shiftKey) {
-          setActiveTool('rect');
-        } else {
+        if (e.shiftKey) {
           vmToggleRulers();
           e.preventDefault();
         }
-        break;
-      case 'c':
-        setActiveTool('circle');
-        break;
-      case 'b':
-        setActiveTool('brush');
-        break;
-      case 'l':
-        setActiveTool('line');
         break;
       case 'z':
         if (e.ctrlKey || e.metaKey) {
@@ -270,7 +250,7 @@ export const UnifiedStudioShell = () => {
             "transition-all duration-300 ease-in-out bg-card border-r border-border",
             leftPanelCollapsed ? "w-0 overflow-hidden" : "w-16"
           )}>
-            <EnhancedLeftTools collapsed={leftPanelCollapsed} />
+            <UnifiedLeftTools collapsed={leftPanelCollapsed} />
           </div>
 
           {/* Left Panel Toggle */}
@@ -293,7 +273,7 @@ export const UnifiedStudioShell = () => {
           {/* Main Canvas Area with Enhanced Features */}
           <div className="flex-1 flex flex-col min-w-0 relative">
             {/* Main Functional Canvas */}
-            <FunctionalCanvasStage />
+            <UnifiedCanvasStage />
             
             {/* Floating Help Button */}
             <Button
