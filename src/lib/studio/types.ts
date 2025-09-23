@@ -102,6 +102,8 @@ export type CanvasConfig = {
   showGuides: boolean;
   safeAreaPct: number;
   bleedMm: number;
+  snapToGrid?: boolean;
+  magneticGuides?: boolean;
   garmentType?: string;
   garmentColor?: string;
   activeSurface?: string;

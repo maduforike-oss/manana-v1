@@ -5,9 +5,11 @@ import { Node, TextNode, ShapeNode, ImageNode, PathNode } from '@/lib/studio/typ
 import { toolManager } from './ToolManager';
 import { BrushTool } from './BrushTool';
 import { UnifiedKeyboardHandler } from './UnifiedKeyboardHandler';
-import { UnifiedCursorManager } from './UnifiedCursorManager';
-import { FloatingBrushControls } from './FloatingBrushControls';
 import { DesignToolsErrorBoundary } from './DesignToolsErrorBoundary';
+import { EnhancedCursorSystem } from './EnhancedCursorSystem';
+import { FloatingBrushControls } from './FloatingBrushControls';
+import { EnhancedGrid, Rulers } from './AdvancedGridSystem';
+import { SmartGuidesSystem } from './SmartGuidesSystem';
 import { performanceMonitor } from './PerformanceMonitor';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -425,16 +427,46 @@ export const UnifiedCanvasStage = () => {
 
   return (
     <DesignToolsErrorBoundary>
-      <UnifiedCursorManager>
-      <UnifiedKeyboardHandler />
-      <div
-        ref={containerRef}
-        className={cn(
-          "w-full h-full relative overflow-hidden"
-        )}
-        style={{ touchAction: toolManager.shouldPreventPanning() ? 'none' : 'auto' }}
-        data-cursor-managed="true"
-      >
+      <EnhancedCursorSystem>
+        <UnifiedKeyboardHandler />
+        <div
+          ref={containerRef}
+          className={cn(
+            "w-full h-full relative overflow-hidden"
+          )}
+          style={{ touchAction: toolManager.shouldPreventPanning() ? 'none' : 'auto' }}
+          data-cursor-managed="true"
+        >
+        {/* Enhanced Grid System */}
+        <EnhancedGrid
+          zoom={zoom}
+          panOffset={panOffset}
+          showGrid={doc.canvas.showGrid}
+          gridSize={doc.canvas.gridSize}
+          unit={doc.canvas.unit}
+          canvasWidth={stageSize.width}
+          canvasHeight={stageSize.height}
+        />
+        
+        {/* Rulers */}
+        <Rulers
+          zoom={zoom}
+          panOffset={panOffset}
+          showRulers={doc.canvas.showRulers}
+          gridSize={doc.canvas.gridSize}
+          unit={doc.canvas.unit}
+          canvasWidth={stageSize.width}
+          canvasHeight={stageSize.height}
+        />
+        
+        {/* Smart Guides */}
+        <SmartGuidesSystem
+          canvasWidth={doc.canvas.width}
+          canvasHeight={doc.canvas.height}
+          zoom={zoom}
+          panOffset={panOffset}
+        />
+
         <Stage
           ref={stageRef}
           width={stageSize.width}
@@ -443,21 +475,21 @@ export const UnifiedCanvasStage = () => {
           scaleY={zoom}
           x={panOffset.x}
           y={panOffset.y}
-        onMouseDown={handlePointerDown}
-        onMouseMove={handlePointerMove}
-        onMouseUp={handlePointerUp}
-        onTouchStart={handlePointerDown}
-        onTouchMove={handlePointerMove}
-        onTouchEnd={handlePointerUp}
-        onClick={handleStageClick}
-        onWheel={handleWheel}
-        draggable={toolManager.getCurrentToolId() === 'hand'}
-        onDragEnd={(e) => {
-          if (toolManager.getCurrentToolId() === 'hand') {
-            setPanOffset({ x: e.target.x(), y: e.target.y() });
-          }
-        }}
-      >
+          onMouseDown={handlePointerDown}
+          onMouseMove={handlePointerMove}
+          onMouseUp={handlePointerUp}
+          onTouchStart={handlePointerDown}
+          onTouchMove={handlePointerMove}
+          onTouchEnd={handlePointerUp}
+          onClick={handleStageClick}
+          onWheel={handleWheel}
+          draggable={toolManager.getCurrentToolId() === 'hand'}
+          onDragEnd={(e) => {
+            if (toolManager.getCurrentToolId() === 'hand') {
+              setPanOffset({ x: e.target.x(), y: e.target.y() });
+            }
+          }}
+        >
         <Layer>
           {/* Grid */}
           {renderGrid()}
@@ -503,10 +535,10 @@ export const UnifiedCanvasStage = () => {
         </Layer>
       </Stage>
       
-      {/* Floating Brush Controls */}
-      <FloatingBrushControls />
-    </div>
-    </UnifiedCursorManager>
+        {/* Floating Brush Controls */}
+        <FloatingBrushControls />
+        </div>
+      </EnhancedCursorSystem>
     </DesignToolsErrorBoundary>
   );
 };

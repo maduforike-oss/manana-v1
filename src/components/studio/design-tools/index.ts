@@ -1,4 +1,3 @@
-// Core Design Tools System
 export { toolManager, ToolManager } from './ToolManager';
 export { BaseDesignTool } from './types';
 export type { 
@@ -23,7 +22,9 @@ export { UnifiedCanvasStage } from './UnifiedCanvasStage';
 export { UnifiedLeftTools } from './UnifiedLeftTools';
 export { UnifiedKeyboardHandler } from './UnifiedKeyboardHandler';
 export { UnifiedBrushPanel } from './UnifiedBrushPanel';
-export { UnifiedCursorManager } from './UnifiedCursorManager';
+export { EnhancedCursorSystem } from './EnhancedCursorSystem';
 export { FloatingBrushControls } from './FloatingBrushControls';
 export { DesignToolsErrorBoundary } from './DesignToolsErrorBoundary';
 export { performanceMonitor } from './PerformanceMonitor';
+export { AdvancedGridSystem, EnhancedGrid, Rulers } from './AdvancedGridSystem';
+export { SmartGuidesSystem } from './SmartGuidesSystem';

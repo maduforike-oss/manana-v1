@@ -8,6 +8,7 @@ import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { exportPNG, exportSVG, exportPrintReady } from '@/lib/studio/export';
 import { useToast } from '@/hooks/use-toast';
 import { DesignSaveDialog } from './DesignSaveDialog';
+import { AdvancedGridSystem } from './design-tools/AdvancedGridSystem';
 
 export const TopBar = () => {
   const { doc, undo, redo, canUndo, canRedo, is3DMode, toggle3DMode, getCanvasElement } = useStudioStore();
@@ -140,7 +141,12 @@ export const TopBar = () => {
           3D
         </Button>
 
-        {/* Settings and Theme */}
+        <div className="w-px h-6 bg-border/40 mx-2" />
+
+        {/* Advanced Grid System */}
+        <AdvancedGridSystem />
+
+        <div className="w-px h-6 bg-border/40 mx-2" />
         <div className="flex items-center gap-1">
           <ThemeToggle />
           <Button
