@@ -1,66 +1,101 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { Layer } from 'react-konva';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useStudioStore } from '@/lib/studio/store';
-import { LayerSystem } from '@/lib/studio/layerSystem';
 
 interface DesignLayerManagerProps {
-  children: React.ReactNode;
-  garmentWidth: number;
-  garmentHeight: number;
-  printArea: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  };
+  width: number;
+  height: number;
+  className?: string;
+  onLayerReady?: (canvas: HTMLCanvasElement) => void;
 }
 
 export const DesignLayerManager: React.FC<DesignLayerManagerProps> = ({
-  children,
-  garmentWidth,
-  garmentHeight,
-  printArea
+  width,
+  height,
+  className = "",
+  onLayerReady
 }) => {
-  const layerRef = useRef<any>(null);
-  const [layerSystem, setLayerSystem] = useState<LayerSystem | null>(null);
-  const { doc, updateNode, addNode } = useStudioStore();
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isLayerReady, setIsLayerReady] = useState(false);
+  const { doc } = useStudioStore();
 
-  // Initialize layer system
+  // Initialize the persistent design layer canvas
   useEffect(() => {
-    const system = new LayerSystem(printArea.width, printArea.height);
-    setLayerSystem(system);
+    if (!canvasRef.current) return;
 
-    return () => {
-      system.dispose();
-    };
-  }, [printArea.width, printArea.height]);
+    const canvas = canvasRef.current;
+    canvas.width = width;
+    canvas.height = height;
 
-  // Update layer system when nodes change
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Set high-quality rendering
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
+    // Clear canvas with transparent background
+    ctx.clearRect(0, 0, width, height);
+
+    setIsLayerReady(true);
+    onLayerReady?.(canvas);
+  }, [width, height, onLayerReady]);
+
+  // Load existing design layer data from store  
   useEffect(() => {
-    if (!layerSystem) return;
+    if (!isLayerReady || !canvasRef.current) return;
 
-    // Clear existing layers except background
-    const layers = layerSystem.getLayersInOrder();
-    layers.forEach(layer => {
-      if (layer.id !== 'background') {
-        layerSystem.deleteLayer(layer.id);
-      }
-    });
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-    // Add nodes as layers
-    doc.nodes.forEach(node => {
-      const layer = layerSystem.createLayer(node.id, node.name || node.type);
-      // Update layer properties based on node
-      layerSystem.updateLayerProperty(layer.id, 'visible', !node.hidden);
-      layerSystem.updateLayerProperty(layer.id, 'opacity', node.opacity);
-      layerSystem.updateLayerProperty(layer.id, 'locked', !!node.locked);
-    });
-  }, [doc.nodes, layerSystem]);
+    // Check if there's saved layer data in the store
+    const savedLayerData = doc.canvas.designLayerData;
+    if (savedLayerData) {
+      const img = new Image();
+      img.onload = () => {
+        ctx.clearRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0);
+      };
+      img.src = savedLayerData;
+    }
+  }, [isLayerReady, doc.canvas.designLayerData, width, height]);
+
+  // Save layer data to store using updateCanvas instead of updateNode
+  const saveLayerData = useCallback(() => {
+    if (!canvasRef.current) return;
+
+    const canvas = canvasRef.current;
+    const dataURL = canvas.toDataURL('image/png');
+    
+    // Use proper store method to update canvas config
+    const { updateCanvas } = useStudioStore.getState();
+    updateCanvas({ designLayerData: dataURL });
+  }, []);
+
+  // Expose canvas for external painting
+  const getCanvas = useCallback(() => canvasRef.current, []);
+  const getContext = useCallback(() => canvasRef.current?.getContext('2d') || null, []);
+
+  // Provide methods for external access
+  const clearLayer = useCallback(() => {
+    if (!canvasRef.current) return;
+    const ctx = canvasRef.current.getContext('2d');
+    if (ctx) {
+      ctx.clearRect(0, 0, width, height);
+      saveLayerData();
+    }
+  }, [width, height, saveLayerData]);
 
   return (
-    <Layer ref={layerRef}>
-      {/* Design area boundary visualization */}
-      {children}
-    </Layer>
+    <div className={`absolute inset-0 ${className}`} style={{ width, height }}>
+      {/* Persistent design layer canvas */}
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          mixBlendMode: 'normal'
+        }}
+      />
+    </div>
   );
 };

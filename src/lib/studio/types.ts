@@ -106,6 +106,7 @@ export type CanvasConfig = {
   garmentColor?: string;
   activeSurface?: string;
   printSurfaces?: PrintSurface[];
+  designLayerData?: string; // Base64 image data of the design layer
   // Legacy support - remove after migration
   printArea?: {
     x: number;

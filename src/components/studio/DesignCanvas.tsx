@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Stage, Layer, Rect, Circle, Text, Image, Line } from 'react-konva';
 import { useStudioStore } from '@/lib/studio/store';
 import { EnhancedBrushTool } from './EnhancedBrushTool';
-import { DesignLayerManager } from './DesignLayerManager';
+import { PersistentBrushLayer } from './PersistentBrushLayer';
 import { generateId } from '@/lib/utils';
 import { UnifiedCursorSystem } from './UnifiedCursorSystem';
 import { FloatingBrushPanel } from './FloatingBrushPanel';
@@ -317,25 +317,28 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
         />
       </Layer>
 
-      {/* Design Layer Manager */}
-      <DesignLayerManager
-        garmentWidth={garmentWidth}
-        garmentHeight={garmentHeight}
-        printArea={actualPrintArea}
-      >
+      {/* Design Node Layer */}
+      <Layer>
         {/* Render design nodes */}
         {doc.nodes.map(renderDesignNode)}
-        
-        {/* Brush Tool */}
-        <EnhancedBrushTool
-          isActive={activeTool === 'brush'}
-          brushSettings={brushSettings}
-          onStrokeComplete={(stroke) => {
-            console.log('Brush stroke completed:', stroke);
-          }}
-        />
-      </DesignLayerManager>
+      </Layer>
       </Stage>
+
+      {/* Persistent Brush Layer - positioned outside Konva */}
+      <div className="absolute inset-0" style={{ 
+        left: panOffset.x, 
+        top: panOffset.y,
+        transform: `scale(${zoom})`,
+        transformOrigin: '0 0',
+        pointerEvents: activeTool === 'brush' || activeTool === 'eraser' ? 'auto' : 'none'
+      }}>
+        <PersistentBrushLayer
+          width={stageSize.width}
+          height={stageSize.height}
+          activeTool={activeTool}
+          brushSettings={brushSettings}
+        />
+      </div>
     </div>
   );
 };
