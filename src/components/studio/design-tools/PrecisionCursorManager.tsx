@@ -1,13 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { toolManager } from './ToolManager';
 import { useStudioStore } from '@/lib/studio/store';
-import { optimizeCursorUpdates, useCursorPerformanceMonitor } from './CursorPerformanceMonitor';
-
-interface CanvasCoordinates {
-  screen: { x: number; y: number };
-  canvas: { x: number; y: number };
-  world: { x: number; y: number };
-}
 
 interface CursorConfig {
   size: number;
@@ -18,48 +11,6 @@ interface CursorConfig {
   showCrosshair: boolean;
   minSize: number;
   maxSize: number;
-}
-
-class CanvasCoordinateTransform {
-  constructor(
-    private zoom: number,
-    private panOffset: { x: number; y: number },
-    private containerRect: DOMRect
-  ) {}
-
-  screenToCanvas(screenX: number, screenY: number): { x: number; y: number } {
-    return {
-      x: screenX - this.containerRect.left,
-      y: screenY - this.containerRect.top
-    };
-  }
-
-  canvasToWorld(canvasX: number, canvasY: number): { x: number; y: number } {
-    return {
-      x: (canvasX - this.panOffset.x) / this.zoom,
-      y: (canvasY - this.panOffset.y) / this.zoom
-    };
-  }
-
-  screenToWorld(screenX: number, screenY: number): { x: number; y: number } {
-    const canvas = this.screenToCanvas(screenX, screenY);
-    return this.canvasToWorld(canvas.x, canvas.y);
-  }
-
-  worldToCanvas(worldX: number, worldY: number): { x: number; y: number } {
-    return {
-      x: worldX * this.zoom + this.panOffset.x,
-      y: worldY * this.zoom + this.panOffset.y
-    };
-  }
-
-  worldToScreen(worldX: number, worldY: number): { x: number; y: number } {
-    const canvas = this.worldToCanvas(worldX, worldY);
-    return {
-      x: canvas.x + this.containerRect.left,
-      y: canvas.y + this.containerRect.top
-    };
-  }
 }
 
 export interface PrecisionCursorManagerProps {
@@ -73,14 +24,10 @@ export const PrecisionCursorManager: React.FC<PrecisionCursorManagerProps> = ({
   stageRef, 
   containerRef 
 }) => {
-  const { zoom, panOffset } = useStudioStore();
+  const { zoom } = useStudioStore();
   const [cursorPosition, setCursorPosition] = useState<{ x: number; y: number } | null>(null);
   const [isOverCanvas, setIsOverCanvas] = useState(false);
-  const coordinateTransformRef = useRef<CanvasCoordinateTransform | null>(null);
   
-  // Performance monitoring (only in development)
-  useCursorPerformanceMonitor(process.env.NODE_ENV === 'development');
-
   // Get tool-specific cursor configuration
   const getCursorConfig = useCallback((): CursorConfig => {
     const currentToolId = toolManager.getCurrentToolId();
@@ -148,61 +95,59 @@ export const PrecisionCursorManager: React.FC<PrecisionCursorManagerProps> = ({
     }
   }, []);
 
-  // Update coordinate transform when dependencies change
-  useEffect(() => {
-    if (!containerRef.current) return;
+  // Professional cursor system using Konva's native methods
+  const handleMouseMove = useCallback(() => {
+    if (!stageRef.current || !containerRef.current) return;
     
-    const rect = containerRef.current.getBoundingClientRect();
-    coordinateTransformRef.current = new CanvasCoordinateTransform(zoom, panOffset, rect);
-  }, [zoom, panOffset, containerRef]);
-
-  // Handle mouse movement with accurate coordinate calculation and performance optimization
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    optimizeCursorUpdates.throttleUpdate(() => {
-      if (!coordinateTransformRef.current || !containerRef.current) return;
-
-      // Check if mouse is over canvas container
-      const rect = containerRef.current.getBoundingClientRect();
-      const isOver = e.clientX >= rect.left && 
-                    e.clientX <= rect.right && 
-                    e.clientY >= rect.top && 
-                    e.clientY <= rect.bottom;
+    const stage = stageRef.current;
+    const containerRect = containerRef.current.getBoundingClientRect();
+    
+    // Use Konva's native getPointerPosition() - industry standard
+    const pointerPosition = stage.getPointerPosition();
+    
+    if (pointerPosition) {
+      // Convert canvas coordinates to screen coordinates for cursor positioning
+      const screenPosition = {
+        x: (pointerPosition.x * zoom) + containerRect.left,
+        y: (pointerPosition.y * zoom) + containerRect.top
+      };
       
-      setIsOverCanvas(isOver);
-
-      if (isOver) {
-        // Use direct screen coordinates for perfect alignment
-        setCursorPosition({
-          x: e.clientX,
-          y: e.clientY
-        });
-      } else {
-        setCursorPosition(null);
-      }
-    });
-  }, []);
+      setCursorPosition(screenPosition);
+      setIsOverCanvas(true);
+    } else {
+      setIsOverCanvas(false);
+      setCursorPosition(null);
+    }
+  }, [zoom]);
 
   const handleMouseLeave = useCallback(() => {
     setIsOverCanvas(false);
     setCursorPosition(null);
   }, []);
 
-  // Event listeners with proper cleanup
+  // Event-driven updates using Konva's stage events (professional approach)
   useEffect(() => {
-    document.addEventListener('mousemove', handleMouseMove, { passive: true });
-    document.addEventListener('mouseleave', handleMouseLeave);
+    if (!stageRef.current) return;
+    
+    const stage = stageRef.current;
+    
+    // Hook into Konva's native mouse events for perfect synchronization
+    stage.on('mousemove', handleMouseMove);
+    stage.on('mouseleave', handleMouseLeave);
+    stage.on('mouseout', handleMouseLeave);
     
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseleave', handleMouseLeave);
+      stage.off('mousemove', handleMouseMove);
+      stage.off('mouseleave', handleMouseLeave);
+      stage.off('mouseout', handleMouseLeave);
     };
-  }, [handleMouseMove, handleMouseLeave]);
+  }, [handleMouseMove, handleMouseLeave, stageRef.current]);
 
   // Apply CSS cursor to canvas elements
   useEffect(() => {
     const currentToolId = toolManager.getCurrentToolId();
     const needsCustomCursor = ['brush', 'eraser'].includes(currentToolId);
-    const csscursor = needsCustomCursor ? 'none' : 
+    const cssCursor = needsCustomCursor ? 'none' : 
                      currentToolId === 'hand' ? 'grab' :
                      currentToolId === 'text' ? 'text' :
                      ['rect', 'circle', 'line', 'triangle', 'star'].includes(currentToolId) ? 'crosshair' :
@@ -211,20 +156,18 @@ export const PrecisionCursorManager: React.FC<PrecisionCursorManagerProps> = ({
     const updateCursor = () => {
       const canvasElements = document.querySelectorAll('canvas, .konvajs-content, [data-cursor-managed="true"]');
       canvasElements.forEach((element) => {
-        (element as HTMLElement).style.cursor = csscursor;
+        (element as HTMLElement).style.cursor = cssCursor;
       });
     };
 
     updateCursor();
     
-    // No more polling - just update when tool changes
-    const checkTool = () => {
+    // Minimal polling just for tool changes detection
+    const interval = setInterval(() => {
       if (toolManager.getCurrentToolId() !== currentToolId) {
         updateCursor();
       }
-    };
-    
-    const interval = setInterval(checkTool, 50); // Minimal polling just for tool changes
+    }, 100);
     
     return () => {
       clearInterval(interval);
@@ -245,18 +188,18 @@ export const PrecisionCursorManager: React.FC<PrecisionCursorManagerProps> = ({
     if (!needsCustomCursor) return null;
 
     const config = getCursorConfig();
-    const scaledSize = config.size * zoom;
     
-    // Clamp size for visibility
+    // Zoom-aware sizing with proper constraints
+    const scaledSize = config.size * zoom;
     const finalSize = Math.max(config.minSize, Math.min(config.maxSize, scaledSize));
 
     return (
       <div
-        className="fixed pointer-events-none z-50 transition-all duration-75"
+        className="fixed pointer-events-none z-50 transition-none"
         style={{
           left: cursorPosition.x,
           top: cursorPosition.y,
-          transform: 'translate(-50%, -50%)', // Single, correct transform
+          transform: 'translate(-50%, -50%)',
         }}
       >
         {/* Main cursor shape */}

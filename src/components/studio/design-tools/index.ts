@@ -23,7 +23,6 @@ export { UnifiedLeftTools } from './UnifiedLeftTools';
 export { UnifiedKeyboardHandler } from './UnifiedKeyboardHandler';
 export { UnifiedBrushPanel } from './UnifiedBrushPanel';
 export { PrecisionCursorManager } from './PrecisionCursorManager';
-export { useCursorPerformanceMonitor, optimizeCursorUpdates } from './CursorPerformanceMonitor';
 export { FloatingBrushControls } from './FloatingBrushControls';
 export { DesignToolsErrorBoundary } from './DesignToolsErrorBoundary';
 export { performanceMonitor } from './PerformanceMonitor';
