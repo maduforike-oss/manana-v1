@@ -68,7 +68,9 @@ export type BrushStrokeNode = BaseNode & {
     size: number;
     opacity: number;
     hardness: number;
-    points: { x: number; y: number; pressure?: number }[];
+    type?: string;
+    isEraser?: boolean;
+    points: { x: number; y: number; pressure?: number; timestamp?: number }[];
   };
   imageData?: string; // Base64 encoded image for fast rendering
 };

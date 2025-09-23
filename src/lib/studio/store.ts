@@ -14,6 +14,9 @@ interface StudioState {
   mockup: MockupConfig;
   is3DMode: boolean;
   
+  // Live drawing state
+  liveStroke: BrushStrokeNode | null;
+  
   // Brush settings
   activeColor: string;
   brushSize: number;
@@ -68,6 +71,11 @@ interface StudioState {
   getCanvasElement: () => HTMLCanvasElement | null;
   // Phase 2 additions
   loadStudioFromAppDesign: (design: any) => Promise<void>;
+  // Live drawing methods
+  startLiveStroke: (x: number, y: number) => void;
+  extendLiveStroke: (x: number, y: number) => void;
+  commitLiveStroke: () => void;
+  cancelLiveStroke: () => void;
   // Brush stroke persistence
   addBrushStroke: (strokeData: any) => void;
   getBrushStrokes: () => BrushStrokeNode[];
@@ -100,6 +108,9 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   snapEnabled: true,
   mockup: { type: 'front', color: 'light', opacity: 0.8, garmentOpacity: 1.0 },
   is3DMode: false,
+  
+  // Live drawing initial state
+  liveStroke: null,
   
   // Brush settings initial state
   activeColor: '#000000',
@@ -388,6 +399,72 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   getCanvasElement: () => {
     return document.querySelector('canvas') as HTMLCanvasElement;
   },
+
+  // Live drawing methods
+  startLiveStroke: (x, y) => set(produce((state) => {
+    const { activeColor, brushSize, brushOpacity, brushHardness, brushType, isEraser } = state;
+    
+    state.liveStroke = {
+      id: `live-stroke-${Date.now()}`,
+      type: 'brush-stroke',
+      name: 'Live Stroke',
+      x: x - brushSize / 2,
+      y: y - brushSize / 2,
+      width: brushSize,
+      height: brushSize,
+      rotation: 0,
+      opacity: brushOpacity,
+      strokeData: {
+        color: isEraser ? 'transparent' : activeColor,
+        size: brushSize,
+        opacity: brushOpacity,
+        hardness: brushHardness,
+        type: brushType,
+        points: [{ x, y, pressure: 1, timestamp: Date.now() }],
+        isEraser
+      }
+    };
+  })),
+
+  extendLiveStroke: (x, y) => set(produce((state) => {
+    if (!state.liveStroke) return;
+    
+    const points = state.liveStroke.strokeData.points;
+    points.push({ x, y, pressure: 1, timestamp: Date.now() });
+    
+    // Update bounding box
+    const xs = points.map(p => p.x);
+    const ys = points.map(p => p.y);
+    const size = state.liveStroke.strokeData.size;
+    
+    state.liveStroke.x = Math.min(...xs) - size / 2;
+    state.liveStroke.y = Math.min(...ys) - size / 2;
+    state.liveStroke.width = Math.max(...xs) - Math.min(...xs) + size;
+    state.liveStroke.height = Math.max(...ys) - Math.min(...ys) + size;
+  })),
+
+  commitLiveStroke: () => set(produce((state) => {
+    if (!state.liveStroke) return;
+    
+    // Only commit if stroke has meaningful content
+    if (state.liveStroke.strokeData.points.length < 2) {
+      state.liveStroke = null;
+      return;
+    }
+    
+    // Move live stroke to permanent nodes
+    const strokeNode = { ...state.liveStroke };
+    state.doc.nodes.push(strokeNode);
+    state.doc.selectedIds = [strokeNode.id];
+    state.liveStroke = null;
+    
+    // Save snapshot for undo/redo
+    get().saveSnapshot();
+  })),
+
+  cancelLiveStroke: () => set(produce((state) => {
+    state.liveStroke = null;
+  })),
 
   // Phase 2: Enhanced loading from app store design
   loadStudioFromAppDesign: async (design: any) => {
