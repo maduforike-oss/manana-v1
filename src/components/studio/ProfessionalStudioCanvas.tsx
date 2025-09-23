@@ -14,15 +14,16 @@ export const ProfessionalStudioCanvas = () => {
   const { 
     doc, 
     activeTool, 
-    zoom,
-    panOffset,
+    zoom, 
+    panOffset, 
     addNode, 
     updateNode, 
-    selectNode,
+    selectNode, 
     clearSelection,
-    setZoom,
-    setPanOffset,
-    saveSnapshot
+    saveSnapshot,
+    activeColor,
+    brushSize,
+    brushOpacity
   } = useStudioStore();
 
   // Professional coordinate transformation using Konva's native methods
@@ -76,7 +77,7 @@ export const ProfessionalStudioCanvas = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Brush drawing logic as requested by user
+  // Enhanced brush drawing logic using store settings
   const handleBrushDraw = useCallback((e: any) => {
     const stage = stageRef.current;
     if (!stage) return;
@@ -90,7 +91,7 @@ export const ProfessionalStudioCanvas = () => {
       const newPoints = [...currentStroke.points, pos.x, pos.y];
       updateNode(currentStroke.id, { points: newPoints });
     } else {
-      // Start a new stroke
+      // Start a new stroke with current brush settings
       const newStroke = {
         id: `brush-${Date.now()}`,
         type: 'path' as const,
@@ -100,16 +101,16 @@ export const ProfessionalStudioCanvas = () => {
         width: 0,
         height: 0,
         rotation: 0,
-        opacity: 1,
+        opacity: brushOpacity,
         points: [pos.x, pos.y],
-        stroke: { color: '#000000', width: 5 },
+        stroke: { color: activeColor, width: brushSize },
         closed: false
       };
       addNode(newStroke);
       setCurrentStroke(newStroke);
       setIsDrawing(true);
     }
-  }, [isDrawing, currentStroke, updateNode, addNode]);
+  }, [isDrawing, currentStroke, updateNode, addNode, activeColor, brushSize, brushOpacity]);
 
   const endBrushDraw = useCallback(() => {
     setIsDrawing(false);

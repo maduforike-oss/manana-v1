@@ -14,6 +14,14 @@ interface StudioState {
   mockup: MockupConfig;
   is3DMode: boolean;
   
+  // Brush settings
+  activeColor: string;
+  brushSize: number;
+  brushOpacity: number;
+  brushHardness: number;
+  brushType: string;
+  isEraser: boolean;
+  
   // Computed properties
   canUndo: boolean;
   canRedo: boolean;
@@ -64,6 +72,14 @@ interface StudioState {
   addBrushStroke: (strokeData: any) => void;
   getBrushStrokes: () => BrushStrokeNode[];
   clearBrushCanvas: () => void;
+  // Brush settings actions
+  setActiveColor: (color: string) => void;
+  setBrushSize: (size: number) => void;
+  setBrushOpacity: (opacity: number) => void;
+  setBrushHardness: (hardness: number) => void;
+  setBrushType: (type: string) => void;
+  toggleEraser: () => void;
+  setBrushSettings: (settings: Partial<{ color: string; size: number; opacity: number; hardness: number; type: string; isEraser: boolean }>) => void;
 }
 
 const createInitialDoc = (garmentType?: string): DesignDoc => ({
@@ -84,6 +100,14 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   snapEnabled: true,
   mockup: { type: 'front', color: 'light', opacity: 0.8, garmentOpacity: 1.0 },
   is3DMode: false,
+  
+  // Brush settings initial state
+  activeColor: '#000000',
+  brushSize: 10,
+  brushOpacity: 1,
+  brushHardness: 0.8,
+  brushType: 'pencil',
+  isEraser: false,
   
   get canUndo() {
     return get().history.length > 1;
@@ -460,6 +484,40 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   clearBrushCanvas: () => {
     // This will be called to notify canvas to clear and redraw from nodes
   },
+
+  // Brush settings actions
+  setActiveColor: (color) => set(produce((state) => {
+    state.activeColor = color;
+  })),
+
+  setBrushSize: (size) => set(produce((state) => {
+    state.brushSize = Math.max(1, Math.min(100, size));
+  })),
+
+  setBrushOpacity: (opacity) => set(produce((state) => {
+    state.brushOpacity = Math.max(0, Math.min(1, opacity));
+  })),
+
+  setBrushHardness: (hardness) => set(produce((state) => {
+    state.brushHardness = Math.max(0, Math.min(1, hardness));
+  })),
+
+  setBrushType: (type) => set(produce((state) => {
+    state.brushType = type;
+  })),
+
+  toggleEraser: () => set(produce((state) => {
+    state.isEraser = !state.isEraser;
+  })),
+
+  setBrushSettings: (settings) => set(produce((state) => {
+    if (settings.color !== undefined) state.activeColor = settings.color;
+    if (settings.size !== undefined) state.brushSize = Math.max(1, Math.min(100, settings.size));
+    if (settings.opacity !== undefined) state.brushOpacity = Math.max(0, Math.min(1, settings.opacity));
+    if (settings.hardness !== undefined) state.brushHardness = Math.max(0, Math.min(1, settings.hardness));
+    if (settings.type !== undefined) state.brushType = settings.type;
+    if (settings.isEraser !== undefined) state.isEraser = settings.isEraser;
+  })),
 }));
 
 // Debounced autosave with change detection
