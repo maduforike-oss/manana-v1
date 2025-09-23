@@ -14,6 +14,8 @@ import { ChevronLeft, ChevronRight, Layers, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useGlobalPanelState } from '@/hooks/useGlobalPanelState';
 import { useSupabaseDesignPersistence } from '@/hooks/useSupabaseDesignPersistence';
+import { CoordinateManagerProvider } from './CoordinateManager';
+import { ToolFeedbackSystem, QuickToolSwitcher } from './ToolFeedbackSystem';
 
 export const StudioShell = () => {
   const setActiveTool = useSetActiveTool();
@@ -115,7 +117,8 @@ export const StudioShell = () => {
     return () => clearInterval(interval);
   }, [autoSave]);
   return (
-    <div className="h-screen flex flex-col bg-background text-foreground">
+    <CoordinateManagerProvider>
+      <div className="h-screen flex flex-col bg-background text-foreground">
         <TopBar />
         
         <div className="flex-1 flex overflow-hidden">
@@ -221,6 +224,11 @@ export const StudioShell = () => {
             </div>
           )}
         </div>
+        
+        {/* Enhanced Tool Feedback */}
+        <ToolFeedbackSystem />
+        <QuickToolSwitcher />
       </div>
+    </CoordinateManagerProvider>
   );
 };

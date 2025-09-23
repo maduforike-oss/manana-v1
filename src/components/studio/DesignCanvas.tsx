@@ -4,6 +4,10 @@ import { useStudioStore } from '@/lib/studio/store';
 import { EnhancedBrushTool } from './EnhancedBrushTool';
 import { DesignLayerManager } from './DesignLayerManager';
 import { generateId } from '@/lib/utils';
+import { UnifiedCursorSystem } from './UnifiedCursorSystem';
+import { FloatingBrushPanel } from './FloatingBrushPanel';
+import { PreciseCanvasDetector } from './PreciseCanvasDetector';
+import { useCoordinateManager } from './CoordinateManager';
 
 interface DesignCanvasProps {
   garmentImage: HTMLImageElement | null;
@@ -26,13 +30,27 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
   garmentDimensions
 }) => {
   const stageRef = useRef<any>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [showBrushPanel, setShowBrushPanel] = useState(false);
   const [brushSettings, setBrushSettings] = useState({
     size: 5,
     opacity: 1,
     color: '#000000',
     hardness: 0.8,
-    type: 'pencil' as const
+    type: 'pencil' as const,
+    flow: 1.0,
+    spacing: 0.1,
+    pressureSizeMultiplier: 0.5,
+    pressureOpacityMultiplier: 0.3,
+    smoothing: 0.5,
+    blendMode: 'normal' as const
   });
+
+  const handleBrushSettingsChange = useCallback((newSettings: any) => {
+    setBrushSettings(prev => ({ ...prev, ...newSettings }));
+  }, []);
+  
+  const { registerCanvas, unregisterCanvas } = useCoordinateManager();
   
   const {
     doc,
@@ -46,6 +64,19 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
     setZoom,
     setPanOffset
   } = useStudioStore();
+
+  // Register canvas for coordinate management
+  useEffect(() => {
+    if (stageRef.current) {
+      registerCanvas(stageRef.current.container());
+    }
+    return () => unregisterCanvas();
+  }, [registerCanvas, unregisterCanvas]);
+
+  // Show brush panel when brush/eraser tools are active
+  useEffect(() => {
+    setShowBrushPanel(activeTool === 'brush' || activeTool === 'eraser');
+  }, [activeTool]);
 
   const { width: garmentWidth, height: garmentHeight, printArea } = garmentDimensions;
   
@@ -209,7 +240,30 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
   }, [doc, actualPrintArea, zoom, activeTool, selectNode, updateNode]);
 
   return (
-    <Stage
+    <div ref={containerRef} className="relative w-full h-full">
+      {/* Precise Canvas Detection */}
+      <PreciseCanvasDetector 
+        containerRef={containerRef}
+        onPointerEnter={() => console.log('Entered canvas area')}
+        onPointerLeave={() => console.log('Left canvas area')}
+      />
+
+      {/* Unified Cursor System */}
+      <UnifiedCursorSystem
+        containerRef={containerRef}
+        canvasRef={stageRef}
+        isActive={true}
+      />
+
+      {/* Floating Brush Panel */}
+      <FloatingBrushPanel
+        isVisible={showBrushPanel}
+        brushSettings={brushSettings}
+        onBrushSettingsChange={handleBrushSettingsChange}
+        onClose={() => setShowBrushPanel(false)}
+      />
+
+      <Stage
       ref={stageRef}
       width={stageSize.width}
       height={stageSize.height}
@@ -281,6 +335,7 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
           }}
         />
       </DesignLayerManager>
-    </Stage>
+      </Stage>
+    </div>
   );
 };
