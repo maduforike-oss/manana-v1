@@ -135,6 +135,7 @@ export type MockupConfig = {
   type: "front" | "back" | "side" | "worn";
   color: "light" | "dark" | "studio";
   opacity: number;
+  garmentOpacity?: number;
   showGrid?: boolean;
   showPrintArea?: boolean;
 };

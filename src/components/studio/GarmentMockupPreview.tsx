@@ -174,6 +174,25 @@ export const GarmentMockupPreview: React.FC<GarmentMockupPreviewProps> = ({ clas
                   className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer slider"
                 />
               </div>
+              
+              {/* Garment Visibility Control */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-medium">Garment Visibility</label>
+                  <span className="text-xs text-muted-foreground">
+                    {Math.round((mockup.garmentOpacity || 0.7) * 100)}%
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={mockup.garmentOpacity || 0.7}
+                  onChange={(e) => setMockup({ garmentOpacity: parseFloat(e.target.value) })}
+                  className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer slider"
+                />
+              </div>
             </div>
           </TabsContent>
         </Tabs>

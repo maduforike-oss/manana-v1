@@ -82,7 +82,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   zoom: 1,
   panOffset: { x: 0, y: 0 },
   snapEnabled: true,
-  mockup: { type: 'front', color: 'light', opacity: 0.8 },
+  mockup: { type: 'front', color: 'light', opacity: 0.8, garmentOpacity: 0.7 },
   is3DMode: false,
   
   get canUndo() {

@@ -30,6 +30,7 @@ export const UnifiedCanvasStage = () => {
     doc, 
     zoom, 
     panOffset, 
+    mockup,
     addNode, 
     updateNode, 
     removeNode,
@@ -465,20 +466,26 @@ export const UnifiedCanvasStage = () => {
           {garmentImage && (
             <Image
               image={garmentImage}
-              width={doc.canvas.width}
-              height={doc.canvas.height}
-              opacity={0.3}
+              width={doc.canvas.width * 0.8}
+              height={doc.canvas.height * 0.8}
+              x={doc.canvas.width * 0.1}
+              y={doc.canvas.height * 0.1}
+              opacity={mockup.garmentOpacity || 0.7}
               listening={false}
             />
           )}
-          
-          {/* Design nodes */}
+        </Layer>
+        
+        {/* Design layer with collective opacity */}
+        <Layer opacity={mockup.opacity}>
           {doc.nodes.map(renderNode)}
           
           {/* Brush tool live preview */}
           {renderBrushPreview()}
-          
-          {/* Transformer for selection */}
+        </Layer>
+        
+        {/* Selection layer - always fully visible */}
+        <Layer>
           <Transformer
             ref={transformerRef}
             boundBoxFunc={(oldBox, newBox) => {
