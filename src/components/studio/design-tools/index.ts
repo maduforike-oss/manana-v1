@@ -22,3 +22,6 @@ export { ImageTool } from './ImageTool';
 export { UnifiedCanvasStage } from './UnifiedCanvasStage';
 export { UnifiedLeftTools } from './UnifiedLeftTools';
 export { UnifiedKeyboardHandler } from './UnifiedKeyboardHandler';
+export { UnifiedBrushPanel } from './UnifiedBrushPanel';
+export { UnifiedCursorManager } from './UnifiedCursorManager';
+export { FloatingBrushControls } from './FloatingBrushControls';

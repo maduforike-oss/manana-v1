@@ -6,6 +6,7 @@ import { OptimizedPropertiesPanel } from './OptimizedPropertiesPanel';
 import { OptimizedMaterialSelector } from './OptimizedMaterialSelector';
 import { OptimizedPricingEngine } from './OptimizedPricingEngine';
 import { OptimizedPreviewPanel } from './OptimizedPreviewPanel';
+import { UnifiedBrushPanel } from './design-tools/UnifiedBrushPanel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface RightPropsProps {
@@ -33,7 +34,7 @@ export const RightProps = ({
       >
         <div className="relative">
           {/* Enhanced Tab List */}
-          <TabsList className="grid w-full grid-cols-5 m-4 glass-panel neon-border bg-studio-surface/50">
+          <TabsList className="grid w-full grid-cols-6 m-4 glass-panel neon-border bg-studio-surface/50">
             <TabsTrigger 
               value="design" 
               className="studio-tool data-[state=active]:studio-tool data-[state=active]:active px-2 py-2 text-xs"
@@ -57,6 +58,12 @@ export const RightProps = ({
               className="studio-tool data-[state=active]:studio-tool data-[state=active]:active px-2 py-2 text-xs"
             >
               Preview
+            </TabsTrigger>
+            <TabsTrigger 
+              value="brush"
+              className="studio-tool data-[state=active]:studio-tool data-[state=active]:active px-2 py-2 text-xs"
+            >
+              Brush
             </TabsTrigger>
             <TabsTrigger 
               value="pricing"
@@ -96,6 +103,18 @@ export const RightProps = ({
           className="flex-1 overflow-hidden animate-in fade-in-50 duration-300 slide-in-from-right-4"
         >
           <OptimizedPreviewPanel />
+        </TabsContent>
+        
+        <TabsContent 
+          value="brush" 
+          className="flex-1 overflow-hidden animate-in fade-in-50 duration-300 slide-in-from-right-4"
+        >
+          <div className="p-4">
+            <UnifiedBrushPanel 
+              isVisible={true}
+              className="w-full border-none shadow-none bg-transparent"
+            />
+          </div>
         </TabsContent>
         
         <TabsContent 

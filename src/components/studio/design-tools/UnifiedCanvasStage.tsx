@@ -5,6 +5,8 @@ import { Node, TextNode, ShapeNode, ImageNode, PathNode } from '@/lib/studio/typ
 import { toolManager } from './ToolManager';
 import { BrushTool } from './BrushTool';
 import { UnifiedKeyboardHandler } from './UnifiedKeyboardHandler';
+import { UnifiedCursorManager } from './UnifiedCursorManager';
+import { FloatingBrushControls } from './FloatingBrushControls';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -419,15 +421,15 @@ export const UnifiedCanvasStage = () => {
   };
 
   return (
-    <>
+    <UnifiedCursorManager>
       <UnifiedKeyboardHandler />
-      <div 
+      <div
         ref={containerRef}
         className={cn(
-          "w-full h-full relative overflow-hidden",
-          `cursor-${toolManager.getCurrentCursor()}`
+          "w-full h-full relative overflow-hidden"
         )}
         style={{ touchAction: toolManager.shouldPreventPanning() ? 'none' : 'auto' }}
+        data-cursor-managed="true"
       >
         <Stage
           ref={stageRef}
@@ -490,7 +492,10 @@ export const UnifiedCanvasStage = () => {
           />
         </Layer>
       </Stage>
-      </div>
-    </>
+      
+      {/* Floating Brush Controls */}
+      <FloatingBrushControls />
+    </div>
+    </UnifiedCursorManager>
   );
 };
