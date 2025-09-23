@@ -171,11 +171,10 @@ export const PrecisionCursorManager: React.FC<PrecisionCursorManagerProps> = ({
       setIsOverCanvas(isOver);
 
       if (isOver) {
-        // Use canvas-relative coordinates for precision
-        const canvasCoords = coordinateTransformRef.current.screenToCanvas(e.clientX, e.clientY);
+        // Use direct screen coordinates for perfect alignment
         setCursorPosition({
-          x: canvasCoords.x + rect.left, // Convert back to screen for rendering
-          y: canvasCoords.y + rect.top
+          x: e.clientX,
+          y: e.clientY
         });
       } else {
         setCursorPosition(null);

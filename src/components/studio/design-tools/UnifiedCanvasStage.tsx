@@ -295,9 +295,10 @@ export const UnifiedCanvasStage = () => {
             image={konvaImage}
             width={imageNode.width}
             height={imageNode.height}
-            filters={imageNode.filters ? [
-              // Apply filters if needed
-            ] : undefined}
+            opacity={imageNode.opacity}
+            brightness={imageNode.filters?.brightness}
+            contrast={imageNode.filters?.contrast}
+            saturation={imageNode.filters?.saturation}
           />
         );
       }

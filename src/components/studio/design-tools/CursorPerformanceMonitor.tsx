@@ -28,10 +28,13 @@ class CursorPerformanceTracker {
 
   public getMetrics(): PerformanceMetrics {
     const now = performance.now();
-    const elapsed = (now - this.startTime) / 1000;
     
-    // Calculate FPS
-    const fps = elapsed > 0 ? this.frameCount / elapsed : 0;
+    // Calculate FPS from recent samples only
+    let fps = 0;
+    if (this.updateTimes.length > 1) {
+      const timeSpan = (this.updateTimes[this.updateTimes.length - 1] - this.updateTimes[0]) / 1000;
+      fps = timeSpan > 0 ? (this.updateTimes.length - 1) / timeSpan : 0;
+    }
     
     // Calculate average latency between updates
     let latency = 0;
@@ -82,24 +85,19 @@ export const useCursorPerformanceMonitor = (enabled: boolean = false) => {
       const metrics = cursorPerformanceTracker.getMetrics();
       metricsRef.current = metrics;
       
-      // Log performance warnings
+      // Only log performance warnings when issues occur
       if (metrics.fps < 30) {
         console.warn(`[Cursor Performance] Low FPS detected: ${metrics.fps}fps`);
       }
       
-      if (metrics.latency > 32) { // Above ~30fps threshold
+      if (metrics.latency > 32) {
         console.warn(`[Cursor Performance] High latency detected: ${metrics.latency}ms`);
-      }
-      
-      // Debug log (only in development)
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`[Cursor Performance] FPS: ${metrics.fps}, Latency: ${metrics.latency}ms, Memory: ${metrics.memoryUsage}MB`);
       }
     };
 
     // Start tracking
     rafId = requestAnimationFrame(trackFrame);
-    logInterval = setInterval(logMetrics, 5000); // Log every 5 seconds
+    logInterval = setInterval(logMetrics, 30000); // Log every 30 seconds, only if there are issues
 
     return () => {
       cancelAnimationFrame(rafId);
