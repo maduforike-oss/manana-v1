@@ -7,6 +7,8 @@ import { BrushTool } from './BrushTool';
 import { UnifiedKeyboardHandler } from './UnifiedKeyboardHandler';
 import { UnifiedCursorManager } from './UnifiedCursorManager';
 import { FloatingBrushControls } from './FloatingBrushControls';
+import { DesignToolsErrorBoundary } from './DesignToolsErrorBoundary';
+import { performanceMonitor } from './PerformanceMonitor';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -421,7 +423,8 @@ export const UnifiedCanvasStage = () => {
   };
 
   return (
-    <UnifiedCursorManager>
+    <DesignToolsErrorBoundary>
+      <UnifiedCursorManager>
       <UnifiedKeyboardHandler />
       <div
         ref={containerRef}
@@ -497,5 +500,6 @@ export const UnifiedCanvasStage = () => {
       <FloatingBrushControls />
     </div>
     </UnifiedCursorManager>
+    </DesignToolsErrorBoundary>
   );
 };

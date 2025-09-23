@@ -25,3 +25,5 @@ export { UnifiedKeyboardHandler } from './UnifiedKeyboardHandler';
 export { UnifiedBrushPanel } from './UnifiedBrushPanel';
 export { UnifiedCursorManager } from './UnifiedCursorManager';
 export { FloatingBrushControls } from './FloatingBrushControls';
+export { DesignToolsErrorBoundary } from './DesignToolsErrorBoundary';
+export { performanceMonitor } from './PerformanceMonitor';

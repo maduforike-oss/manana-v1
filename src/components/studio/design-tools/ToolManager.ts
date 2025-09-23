@@ -1,4 +1,5 @@
 import { Tool } from '@/lib/studio/types';
+import { performanceMonitor } from './PerformanceMonitor';
 import { BaseDesignTool, ToolRegistry, CanvasCoordinates, PointerEvent } from './types';
 import { SelectTool } from './SelectTool';
 import { BrushTool } from './BrushTool';
@@ -50,6 +51,9 @@ export class ToolManager {
       return false;
     }
 
+    // Track performance
+    const endTracking = performanceMonitor.trackToolSwitch(this.currentToolId, toolId);
+
     // Deactivate current tool
     if (this.activeTool) {
       this.activeTool.deactivate();
@@ -61,6 +65,9 @@ export class ToolManager {
     this.currentToolId = toolId;
     this.activeTool.state.isActive = true;
     this.activeTool.activate();
+
+    // End performance tracking
+    endTracking();
 
     return true;
   }
