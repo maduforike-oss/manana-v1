@@ -138,10 +138,10 @@ export class BrushTool extends BaseDesignTool {
     const store = useStudioStore.getState();
     const settings = this.getSettings() as BrushSettings;
     
-    // Convert stroke points to flat array for Konva
+    // Convert stroke points to flat array for Konva (keep raw coordinates)
     const points = stroke.points.flatMap(p => [p.x, p.y]);
     
-    // Calculate bounding box
+    // Calculate bounding box for width/height only
     const xs = stroke.points.map(p => p.x);
     const ys = stroke.points.map(p => p.y);
     const minX = Math.min(...xs);
@@ -153,13 +153,13 @@ export class BrushTool extends BaseDesignTool {
       id: generateId(),
       type: 'path' as const,
       name: settings.isEraser ? 'Eraser Stroke' : 'Brush Stroke',
-      x: minX,
-      y: minY,
+      x: 0, // Set to 0 to prevent double offset
+      y: 0, // Set to 0 to prevent double offset
       width: maxX - minX,
       height: maxY - minY,
       rotation: 0,
       opacity: stroke.brush.opacity,
-      points,
+      points, // Use raw coordinates (same as live preview)
       stroke: {
         color: stroke.brush.color,
         width: stroke.brush.size
