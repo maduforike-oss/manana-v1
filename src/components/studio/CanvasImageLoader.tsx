@@ -32,20 +32,48 @@ export const CanvasImageLoader: React.FC<CanvasImageLoaderProps> = ({
   fallbackSrc,
   children,
 }) => {
-  const [imageSrc, setImageSrc] = useState<string | null>(fallbackSrc || null);
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
   
   useEffect(() => {
     let mounted = true;
+    setIsLoading(true);
+    setHasError(false);
+    
     const loadImage = async () => {
       try {
         const resolvedImage = await getGarmentImage(garmentId, orientation, color);
         if (mounted) {
-          setImageSrc(resolvedImage || fallbackSrc || null);
+          if (resolvedImage) {
+            // Validate image before setting
+            const testImg = new window.Image();
+            testImg.onload = () => {
+              if (mounted) {
+                setImageSrc(resolvedImage);
+                setIsLoading(false);
+              }
+            };
+            testImg.onerror = () => {
+              if (mounted) {
+                console.warn('Image failed to load:', resolvedImage);
+                setImageSrc(fallbackSrc || null);
+                setHasError(true);
+                setIsLoading(false);
+              }
+            };
+            testImg.src = resolvedImage;
+          } else {
+            setImageSrc(fallbackSrc || null);
+            setIsLoading(false);
+          }
         }
       } catch (error) {
         console.warn('Failed to load garment image:', error);
         if (mounted) {
           setImageSrc(fallbackSrc || null);
+          setHasError(true);
+          setIsLoading(false);
         }
       }
     };
@@ -54,13 +82,23 @@ export const CanvasImageLoader: React.FC<CanvasImageLoaderProps> = ({
     return () => { mounted = false; };
   }, [garmentId, orientation, color, fallbackSrc]);
 
+  if (isLoading) {
+    return (
+      <div className={`bg-muted/30 flex items-center justify-center ${className || ''}`} style={style}>
+        <div className="text-muted-foreground text-sm animate-pulse">
+          Loading garment...
+        </div>
+      </div>
+    );
+  }
+
   if (!imageSrc) {
     // No image available - render placeholder or children
     return (
       <div className={`bg-muted/30 flex items-center justify-center ${className || ''}`} style={style}>
         {children || (
           <div className="text-muted-foreground text-sm">
-            No image available
+            {hasError ? 'Failed to load image' : 'No image available'}
           </div>
         )}
       </div>
@@ -73,8 +111,16 @@ export const CanvasImageLoader: React.FC<CanvasImageLoaderProps> = ({
       alt={`${garmentId} ${orientation} view`}
       className={className}
       style={style}
-      onLoad={onLoad}
-      onError={onError}
+      onLoad={() => {
+        console.log('Garment image loaded successfully:', imageSrc);
+        onLoad?.();
+      }}
+      onError={(e) => {
+        console.error('Garment image failed to render:', imageSrc, e);
+        setHasError(true);
+        setImageSrc(fallbackSrc || null);
+        onError?.();
+      }}
     />
   );
 };

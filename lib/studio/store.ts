@@ -44,13 +44,29 @@ interface StudioState {
   initializeFromGarment: (garmentType: string, garmentColor: string) => void;
 }
 
-const createInitialDoc = (garmentType?: string): DesignDoc => ({
-  id: `design-${Date.now()}`,
-  title: 'Untitled Design',
-  nodes: [],
-  canvas: { ...CANVAS_PRESETS[garmentType as keyof typeof CANVAS_PRESETS] || CANVAS_PRESETS['T-Shirt'] },
-  selectedIds: [],
-});
+const createInitialDoc = (garmentType?: string): DesignDoc => {
+  // Ensure we have a valid canvas configuration
+  const defaultCanvas = CANVAS_PRESETS['T-Shirt'];
+  let canvas = defaultCanvas;
+  
+  if (garmentType && CANVAS_PRESETS[garmentType]) {
+    canvas = CANVAS_PRESETS[garmentType];
+  }
+  
+  // Validate canvas dimensions to prevent NaN issues
+  if (!canvas || typeof canvas.width !== 'number' || typeof canvas.height !== 'number') {
+    console.warn('Invalid canvas configuration, using T-Shirt defaults');
+    canvas = defaultCanvas;
+  }
+  
+  return {
+    id: `design-${Date.now()}`,
+    title: 'Untitled Design',
+    nodes: [],
+    canvas: { ...canvas },
+    selectedIds: [],
+  };
+};
 
 export const useStudioStore = create<StudioState>((set, get) => ({
   doc: createInitialDoc(),
