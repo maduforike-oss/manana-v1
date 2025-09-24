@@ -31,14 +31,28 @@ export const TemplateSelector = ({
 
   useEffect(() => {
     const loadGarmentTypes = async () => {
+      console.log('🔄 TemplateSelector: Loading garment types...');
+      
       try {
         const types = await getAvailableGarmentTypes();
-        setGarmentTypes(types);
-        if (!selectedType && types.length > 0) {
-          setSelectedType(types[0]);
+        console.log('✅ TemplateSelector: Loaded garment types:', types);
+        
+        if (!types || types.length === 0) {
+          console.error('❌ TemplateSelector: No garment types returned');
+          // Set fallback types for mobile
+          setGarmentTypes(['t-shirt', 'hoodie', 'sweatshirt']);
+          setSelectedType('t-shirt');
+        } else {
+          setGarmentTypes(types);
+          if (!selectedType && types.length > 0) {
+            setSelectedType(types[0]);
+          }
         }
       } catch (error) {
-        console.error('Failed to load garment types:', error);
+        console.error('❌ TemplateSelector: Failed to load garment types:', error);
+        // Set fallback types on error
+        setGarmentTypes(['t-shirt', 'hoodie', 'sweatshirt']);
+        setSelectedType('t-shirt');
       } finally {
         setLoading(false);
       }
@@ -50,12 +64,21 @@ export const TemplateSelector = ({
   useEffect(() => {
     if (selectedType) {
       const loadTemplates = async () => {
+        console.log(`🔄 TemplateSelector: Loading templates for ${selectedType}...`);
         setTemplatesLoading(true);
+        
         try {
           const garmentTemplates = await getTemplatesForGarment(selectedType);
+          console.log(`✅ TemplateSelector: Loaded ${garmentTemplates.length} templates for ${selectedType}`);
+          
+          if (!garmentTemplates || garmentTemplates.length === 0) {
+            console.warn(`⚠️ TemplateSelector: No templates found for ${selectedType}`);
+          }
+          
           setTemplates(garmentTemplates);
         } catch (error) {
-          console.error('Failed to load templates:', error);
+          console.error(`❌ TemplateSelector: Failed to load templates for ${selectedType}:`, error);
+          setTemplates([]); // Clear templates on error
         } finally {
           setTemplatesLoading(false);
         }
@@ -75,9 +98,23 @@ export const TemplateSelector = ({
   if (loading) {
     return (
       <Card className={className}>
-        <CardContent className="flex items-center justify-center p-8">
-          <Loader2 className="w-6 h-6 animate-spin" />
-          <span className="ml-2">Loading templates...</span>
+        <CardContent className="flex flex-col items-center justify-center p-8 min-h-[200px]">
+          <Loader2 className="w-8 h-8 animate-spin mb-3" />
+          <span className="text-sm text-center">Loading garment templates...</span>
+          <span className="text-xs text-muted-foreground mt-1">This may take a moment on mobile</span>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (garmentTypes.length === 0) {
+    return (
+      <Card className={className}>
+        <CardContent className="flex flex-col items-center justify-center p-8 min-h-[200px]">
+          <div className="text-center">
+            <p className="text-sm font-medium text-muted-foreground mb-2">No templates available</p>
+            <p className="text-xs text-muted-foreground">Please check your connection and try again</p>
+          </div>
         </CardContent>
       </Card>
     );

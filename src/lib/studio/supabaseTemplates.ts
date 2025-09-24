@@ -110,44 +110,123 @@ const templateCache = new TemplateCache();
 export async function fetchSupabaseTemplates(): Promise<SupabaseTemplate[]> {
   const cacheKey = 'all-templates';
   const cached = templateCache.get(cacheKey);
-  if (cached) return cached;
+  if (cached) {
+    console.log('✅ Using cached templates:', cached.length);
+    return cached;
+  }
 
-  try {
-    const { data: files, error } = await supabase.storage
-      .from('design-templates')
-      .list('', { limit: 100 });
+  console.log('🔄 Fetching templates from Supabase...');
 
-    if (error) {
-      console.error('Error fetching templates:', error);
-      return [];
-    }
+  // Retry logic for mobile connections
+  const maxRetries = 3;
+  let lastError: any = null;
 
-    const templates: SupabaseTemplate[] = [];
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`📡 Attempt ${attempt}/${maxRetries} - Fetching template list...`);
+      
+      // Add timeout for mobile connections
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
-    for (const file of files || []) {
-      const mapping = TEMPLATE_MAPPING[file.name];
-      if (mapping) {
-        const { data: urlData } = supabase.storage
-          .from('design-templates')
-          .getPublicUrl(file.name);
-
-        templates.push({
-          name: file.name,
-          url: urlData.publicUrl,
-          garmentType: mapping.garmentType,
-          view: mapping.view as any,
-          color: mapping.color,
-          metadata: file.metadata
+      const { data: files, error } = await supabase.storage
+        .from('design-templates')
+        .list('', { 
+          limit: 100,
         });
+
+      clearTimeout(timeoutId);
+
+      if (error) {
+        console.error(`❌ Supabase error on attempt ${attempt}:`, error);
+        lastError = error;
+        
+        if (attempt < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, attempt * 1000)); // Exponential backoff
+          continue;
+        }
+        
+        // Return fallback templates if all attempts fail
+        return getFallbackTemplates();
+      }
+
+      console.log(`✅ Found ${files?.length || 0} files in storage`);
+      
+      if (!files || files.length === 0) {
+        console.warn('⚠️ No files found in storage, using fallback');
+        return getFallbackTemplates();
+      }
+
+      const templates: SupabaseTemplate[] = [];
+
+      for (const file of files) {
+        const mapping = TEMPLATE_MAPPING[file.name];
+        if (mapping) {
+          const { data: urlData } = supabase.storage
+            .from('design-templates')
+            .getPublicUrl(file.name);
+
+          templates.push({
+            name: file.name,
+            url: urlData.publicUrl,
+            garmentType: mapping.garmentType,
+            view: mapping.view as any,
+            color: mapping.color,
+            metadata: file.metadata
+          });
+        } else {
+          console.log(`⚠️ No mapping found for file: ${file.name}`);
+        }
+      }
+
+      console.log(`✅ Successfully processed ${templates.length} templates`);
+      templateCache.set(cacheKey, templates);
+      return templates;
+
+    } catch (error) {
+      console.error(`❌ Network error on attempt ${attempt}:`, error);
+      lastError = error;
+      
+      if (attempt < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+        continue;
       }
     }
-
-    templateCache.set(cacheKey, templates);
-    return templates;
-  } catch (error) {
-    console.error('Error in fetchSupabaseTemplates:', error);
-    return [];
   }
+
+  console.error('❌ All attempts failed, using fallback templates');
+  return getFallbackTemplates();
+}
+
+// Fallback templates for when API fails
+function getFallbackTemplates(): SupabaseTemplate[] {
+  console.log('🔄 Using fallback template list...');
+  
+  const fallbackTemplates: SupabaseTemplate[] = [
+    {
+      name: 'White Short-sleeve crewneck T-shirt front.png',
+      url: 'https://ajnbtevgzhkilokflntj.supabase.co/storage/v1/object/public/design-templates/White%20Short-sleeve%20crewneck%20T-shirt%20front.png',
+      garmentType: 't-shirt',
+      view: 'front',
+      color: 'white'
+    },
+    {
+      name: 'White Hoodie Front_.png',
+      url: 'https://ajnbtevgzhkilokflntj.supabase.co/storage/v1/object/public/design-templates/White%20Hoodie%20Front_.png',
+      garmentType: 'hoodie',
+      view: 'front',
+      color: 'white'
+    },
+    {
+      name: 'White Sweatshirt Front.png',
+      url: 'https://ajnbtevgzhkilokflntj.supabase.co/storage/v1/object/public/design-templates/White%20Sweatshirt%20Front.png',
+      garmentType: 'sweatshirt',
+      view: 'front',
+      color: 'white'
+    }
+  ];
+  
+  return fallbackTemplates;
 }
 
 /**
@@ -174,9 +253,24 @@ export async function getTemplate(
  * Get all available garment types from templates
  */
 export async function getAvailableGarmentTypes(): Promise<string[]> {
-  const allTemplates = await fetchSupabaseTemplates();
-  const types = new Set(allTemplates.map(t => t.garmentType));
-  return Array.from(types).sort();
+  try {
+    console.log('🔄 Getting available garment types...');
+    const allTemplates = await fetchSupabaseTemplates();
+    
+    if (!allTemplates || allTemplates.length === 0) {
+      console.warn('⚠️ No templates found, returning fallback garment types');
+      return ['t-shirt', 'hoodie', 'sweatshirt']; // Fallback types
+    }
+    
+    const types = new Set(allTemplates.map(t => t.garmentType));
+    const sortedTypes = Array.from(types).sort();
+    
+    console.log(`✅ Found ${sortedTypes.length} garment types:`, sortedTypes);
+    return sortedTypes;
+  } catch (error) {
+    console.error('❌ Error getting garment types:', error);
+    return ['t-shirt', 'hoodie', 'sweatshirt']; // Fallback types
+  }
 }
 
 /**
