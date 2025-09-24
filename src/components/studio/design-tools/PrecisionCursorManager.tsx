@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { toolManager } from './ToolManager';
 import { useStudioStore } from '@/lib/studio/store';
-import { getSmartPointer, getSmartPointerFromEvent } from '@/utils/konvaCoords';
+import { getSmartPointer } from '@/utils/konvaCoords';
 
 interface CursorConfig {
   size: number;
@@ -115,24 +115,20 @@ export const PrecisionCursorManager: React.FC<PrecisionCursorManagerProps> = ({
   }, []);
 
   // Enhanced cursor system using exact same coordinate logic as brush tool
-  const handleMouseMove = useCallback((e: any) => {
+  const handleMouseMove = useCallback(() => {
     if (!stageRef.current || !containerRef.current) return;
     
     const stage = stageRef.current;
     const containerRect = containerRef.current.getBoundingClientRect();
     
-    // Use the same coordinate transformation as the brush tool
-    const worldCoords = getSmartPointerFromEvent(stage, e);
+    // Use pointer position directly - this is screen coordinates relative to stage
+    const pointerPosition = stage.getPointerPosition();
     
-    if (worldCoords) {
-      // Convert world coordinates back to screen coordinates for cursor overlay
-      const transform = stage.getAbsoluteTransform();
-      const screenPoint = transform.point({ x: worldCoords.x, y: worldCoords.y });
-      
-      // Convert to absolute screen coordinates
+    if (pointerPosition) {
+      // Convert stage pointer position to absolute screen coordinates
       const screenPosition = {
-        x: screenPoint.x + containerRect.left,
-        y: screenPoint.y + containerRect.top
+        x: pointerPosition.x + containerRect.left,
+        y: pointerPosition.y + containerRect.top
       };
       
       setCursorPosition(screenPosition);
