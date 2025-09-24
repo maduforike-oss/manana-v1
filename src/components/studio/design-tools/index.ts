@@ -26,5 +26,5 @@ export { PrecisionCursorManager } from './PrecisionCursorManager';
 export { FloatingBrushControls } from './FloatingBrushControls';
 export { DesignToolsErrorBoundary } from './DesignToolsErrorBoundary';
 export { performanceMonitor } from './PerformanceMonitor';
-export { AdvancedGridSystem, EnhancedGrid, Rulers } from './AdvancedGridSystem';
+export { AdvancedGridSystem, EnhancedGrid } from './AdvancedGridSystem';
 export { SmartGuidesSystem } from './SmartGuidesSystem';

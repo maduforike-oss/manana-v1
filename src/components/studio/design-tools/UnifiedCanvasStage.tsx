@@ -10,7 +10,7 @@ import { UnifiedKeyboardHandler } from './UnifiedKeyboardHandler';
 import { DesignToolsErrorBoundary } from './DesignToolsErrorBoundary';
 import { PrecisionCursorManager } from './PrecisionCursorManager';
 import { FloatingBrushControls } from './FloatingBrushControls';
-import { EnhancedGrid, Rulers } from './AdvancedGridSystem';
+import { EnhancedGrid } from './AdvancedGridSystem';
 import { SmartGuidesSystem } from './SmartGuidesSystem';
 import { performanceMonitor } from './PerformanceMonitor';
 import { cn } from '@/lib/utils';
@@ -73,73 +73,60 @@ export const UnifiedCanvasStage = () => {
     };
   }, []);
 
-  // Load garment background with robust fallback chain
+  // Stable garment loading with caching and proper cleanup
+  const [garmentLoading, setGarmentLoading] = useState(false);
+  const garmentCacheRef = useRef<Map<string, HTMLImageElement>>(new Map());
+
   useEffect(() => {
     const loadGarmentBackground = async () => {
       const garmentType = doc.canvas.garmentType || 't-shirt';
       const garmentColor = doc.canvas.garmentColor || 'white';
+      const cacheKey = `${garmentType}-${garmentColor}`;
       
+      // Check cache first
+      if (garmentCacheRef.current.has(cacheKey)) {
+        setGarmentImage(garmentCacheRef.current.get(cacheKey) || null);
+        return;
+      }
+      
+      setGarmentLoading(true);
       console.log(`🎽 Loading garment: ${garmentType} (${garmentColor})`);
       
       try {
-        // Try primary path: Edge Function
-        const { getGarmentView } = await import('@/lib/api/garments');
-        const garmentView = await Promise.race([
-          getGarmentView(garmentType, 'front', garmentColor),
-          new Promise<any>((_, reject) => 
-            setTimeout(() => reject(new Error('Timeout')), 3000)
-          )
-        ]);
-        
-        if (garmentView?.url) {
-          console.log('✅ Garment loaded from edge function');
-          const img = new window.Image();
-          img.crossOrigin = 'anonymous';
-          img.onload = () => setGarmentImage(img);
-          img.src = garmentView.url;
-          return;
-        }
-      } catch (error) {
-        console.warn('⚠️ Edge function failed, trying Supabase Storage:', error);
-      }
-
-      try {
-        // Fallback 1: Supabase Storage
-        const { getTemplate } = await import('@/lib/studio/supabaseTemplates');
-        const template = await getTemplate(garmentType, 'front', garmentColor);
-        if (template?.url) {
-          console.log('✅ Garment loaded from Supabase Storage');
-          const img = new window.Image();
-          img.crossOrigin = 'anonymous';
-          img.onload = () => setGarmentImage(img);
-          img.src = template.url;
-          return;
-        }
-      } catch (error) {
-        console.warn('⚠️ Supabase Storage failed, using static assets:', error);
-      }
-
-      // Fallback 2: Static assets
-      try {
+        // Simplified single-path loading for stability
         const { GARMENT_TYPES } = await import('@/lib/studio/garments');
         const staticGarment = GARMENT_TYPES.find(g => g.id === garmentType);
+        
         if (staticGarment?.images?.front) {
-          console.log('✅ Using static garment asset');
           const img = new window.Image();
           img.crossOrigin = 'anonymous';
-          img.onload = () => setGarmentImage(img);
-          img.src = staticGarment.images.front;
-          return;
+          
+          await new Promise<void>((resolve, reject) => {
+            img.onload = () => {
+              // Cache the loaded image
+              garmentCacheRef.current.set(cacheKey, img);
+              setGarmentImage(img);
+              console.log('✅ Garment loaded and cached');
+              resolve();
+            };
+            img.onerror = reject;
+            img.src = staticGarment.images.front;
+          });
+        } else {
+          console.warn('⚠️ No garment image available');
+          setGarmentImage(null);
         }
       } catch (error) {
-        console.error('❌ All garment loading methods failed:', error);
+        console.error('❌ Garment loading failed:', error);
+        setGarmentImage(null);
+      } finally {
+        setGarmentLoading(false);
       }
-
-      console.warn('⚠️ No garment image available, canvas will be blank');
-      setGarmentImage(null);
     };
 
-    loadGarmentBackground();
+    // Debounce garment changes to prevent rapid reloading
+    const timeoutId = setTimeout(loadGarmentBackground, 100);
+    return () => clearTimeout(timeoutId);
   }, [doc.canvas.garmentType, doc.canvas.garmentColor]);
 
   // TODO(lovable): removed legacy coord math; now using getSmartPointer()
@@ -545,16 +532,7 @@ export const UnifiedCanvasStage = () => {
           canvasHeight={stageSize.height}
         />
         
-        {/* Rulers */}
-        <Rulers
-          zoom={zoom}
-          panOffset={panOffset}
-          showRulers={doc.canvas.showRulers}
-          gridSize={doc.canvas.gridSize}
-          unit={doc.canvas.unit}
-          canvasWidth={stageSize.width}
-          canvasHeight={stageSize.height}
-        />
+        {/* Rulers functionality now handled by PrecisionRulers in EnhancedViewportSystem */}
         
         {/* Smart Guides */}
         <SmartGuidesSystem
