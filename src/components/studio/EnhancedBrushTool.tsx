@@ -3,7 +3,9 @@ import { Stage, Layer, Line, Image as KonvaImage } from 'react-konva';
 import { useStudioStore } from '@/lib/studio/store';
 import { BrushEngine, BRUSH_PRESETS } from '@/lib/studio/brushEngine';
 import { generateId } from '@/lib/utils';
+import { attachBrush, getSmartPointer } from '@/utils/konvaPointer';
 import type { Node } from '@/lib/studio/types';
+import type { SmartPointerEvent } from '@/utils/konvaPointer';
 
 interface EnhancedBrushToolProps {
   width: number;
@@ -38,6 +40,7 @@ export const EnhancedBrushTool: React.FC<EnhancedBrushToolProps> = ({
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentStroke, setCurrentStroke] = useState<any>(null);
   const brushEngineRef = useRef<BrushEngine | null>(null);
+  const detachBrushRef = useRef<(() => void) | null>(null);
 
   // Initialize brush engine with current settings
   useEffect(() => {
@@ -52,25 +55,37 @@ export const EnhancedBrushTool: React.FC<EnhancedBrushToolProps> = ({
     });
   }, [activeColor, brushSize, brushOpacity, brushHardness, brushType, isEraser]);
 
-  // Get pointer position with proper coordinate transformation
-  const getRelativePointerPosition = useCallback(() => {
+  // Initialize brush attachment with smart pointer handling
+  useEffect(() => {
     const stage = stageRef.current;
-    if (!stage) return { x: 0, y: 0 };
-    
-    const point = stage.getPointerPosition();
-    const transform = stage.getAbsoluteTransform().copy();
-    transform.invert();
-    return transform.point(point);
-  }, [stageRef]);
+    if (!stage) return;
 
-  const startDrawing = useCallback((e: any) => {
+    // Detach previous brush if exists
+    if (detachBrushRef.current) {
+      detachBrushRef.current();
+    }
+
+    // Attach new brush with smart pointer handling
+    detachBrushRef.current = attachBrush(stage, stage.getLayers()[0], {
+      onStrokeStart: handleStrokeStart,
+      onStrokeMove: handleStrokeMove,
+      onStrokeEnd: handleStrokeEnd,
+      preventPanning: true,
+    });
+
+    return () => {
+      if (detachBrushRef.current) {
+        detachBrushRef.current();
+        detachBrushRef.current = null;
+      }
+    };
+  }, [stageRef.current]);
+
+  const handleStrokeStart = useCallback((pointer: SmartPointerEvent) => {
     if (!brushEngineRef.current) return;
 
-    const pos = getRelativePointerPosition();
-    const pressure = e.evt?.pressure || 1;
-
     // Start new brush stroke
-    const stroke = brushEngineRef.current.startStroke(pos, pressure);
+    const stroke = brushEngineRef.current.startStroke(pointer, pointer.pressure || 1);
     
     if (stroke) {
       // Create initial node for the stroke
@@ -78,19 +93,18 @@ export const EnhancedBrushTool: React.FC<EnhancedBrushToolProps> = ({
         id: generateId(),
         type: 'path',
         name: isEraser ? 'Eraser Stroke' : 'Brush Stroke',
-        x: pos.x,
-        y: pos.y,
+        x: pointer.x,
+        y: pointer.y,
         width: 0,
         height: 0,
         rotation: 0,
         opacity: brushOpacity,
-        points: [pos.x, pos.y],
+        points: [pointer.x, pointer.y],
         stroke: { 
           color: isEraser ? 'transparent' : activeColor, 
           width: brushSize 
         },
         closed: false
-        // Note: globalCompositeOperation handled by canvas renderer
       };
 
       addNode(newStroke);
@@ -98,20 +112,17 @@ export const EnhancedBrushTool: React.FC<EnhancedBrushToolProps> = ({
       setIsDrawing(true);
       onDrawingStateChange?.(true);
     }
-  }, [getRelativePointerPosition, brushOpacity, activeColor, brushSize, isEraser, addNode, onDrawingStateChange]);
+  }, [brushOpacity, activeColor, brushSize, isEraser, addNode, onDrawingStateChange]);
 
-  const draw = useCallback((e: any) => {
+  const handleStrokeMove = useCallback((pointer: SmartPointerEvent) => {
     if (!isDrawing || !currentStroke || !brushEngineRef.current) return;
 
-    const pos = getRelativePointerPosition();
-    const pressure = e.evt?.pressure || 1;
-
     // Add point to brush engine
-    brushEngineRef.current.addPoint(pos, pressure);
+    brushEngineRef.current.addPoint(pointer, pointer.pressure || 1);
     
     // Update the current stroke node with new points
     const currentPoints = currentStroke.points || [];
-    const newPoints = [...currentPoints, pos.x, pos.y];
+    const newPoints = [...currentPoints, pointer.x, pointer.y];
     
     // Calculate bounding box
     const xs = [];
@@ -133,9 +144,9 @@ export const EnhancedBrushTool: React.FC<EnhancedBrushToolProps> = ({
       width: maxX - minX + brushSize,
       height: maxY - minY + brushSize
     });
-  }, [isDrawing, currentStroke, getRelativePointerPosition, updateNode, brushSize]);
+  }, [isDrawing, currentStroke, updateNode, brushSize]);
 
-  const endDrawing = useCallback(() => {
+  const handleStrokeEnd = useCallback((pointer: SmartPointerEvent) => {
     if (!isDrawing || !brushEngineRef.current) return;
 
     // End the stroke in the brush engine
@@ -149,22 +160,6 @@ export const EnhancedBrushTool: React.FC<EnhancedBrushToolProps> = ({
     saveSnapshot();
   }, [isDrawing, onDrawingStateChange, saveSnapshot]);
 
-  // Touch event handlers for mobile support
-  const handleTouchStart = useCallback((e: any) => {
-    e.evt.preventDefault();
-    startDrawing(e);
-  }, [startDrawing]);
-
-  const handleTouchMove = useCallback((e: any) => {
-    e.evt.preventDefault();
-    draw(e);
-  }, [draw]);
-
-  const handleTouchEnd = useCallback((e: any) => {
-    e.evt.preventDefault();
-    endDrawing();
-  }, [endDrawing]);
-
   return (
     <Stage
       ref={stageRef}
@@ -174,13 +169,7 @@ export const EnhancedBrushTool: React.FC<EnhancedBrushToolProps> = ({
       scaleY={zoom}
       x={panOffset.x}
       y={panOffset.y}
-      onMouseDown={startDrawing}
-      onMousemove={draw}
-      onMouseup={endDrawing}
-      onMouseleave={endDrawing}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
+      // Event handling now managed by attachBrush utility
     >
       <Layer>
         {/* Garment template */}
