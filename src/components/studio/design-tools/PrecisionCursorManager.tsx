@@ -121,18 +121,14 @@ export const PrecisionCursorManager: React.FC<PrecisionCursorManagerProps> = ({
     const stage = stageRef.current;
     const containerRect = containerRef.current.getBoundingClientRect();
     
-    // Use exact same coordinate logic as brush tool (getSmartPointer)
-    const stagePos = getSmartPointer(stage);
+    // Use pointer position directly - this is screen coordinates relative to stage
     const pointerPosition = stage.getPointerPosition();
     
-    if (pointerPosition && stagePos) {
-      // Convert stage coordinates to screen coordinates for cursor overlay
-      const transform = stage.getAbsoluteTransform();
-      const screenPoint = transform.point(stagePos);
-      
+    if (pointerPosition) {
+      // Convert stage pointer position to absolute screen coordinates
       const screenPosition = {
-        x: screenPoint.x + containerRect.left,
-        y: screenPoint.y + containerRect.top
+        x: pointerPosition.x + containerRect.left,
+        y: pointerPosition.y + containerRect.top
       };
       
       setCursorPosition(screenPosition);
