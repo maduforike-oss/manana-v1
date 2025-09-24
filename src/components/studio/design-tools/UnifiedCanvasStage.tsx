@@ -2,6 +2,8 @@ import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react'
 import { Stage, Layer, Rect, Circle, Text, Line, RegularPolygon, Transformer, Image } from 'react-konva';
 import { useStudioStore } from '@/lib/studio/store';
 import { Node, TextNode, ShapeNode, ImageNode, PathNode } from '@/lib/studio/types';
+import { getSmartPointerFromEvent, fitStageToContainer } from '@/utils/konvaCoords';
+import Konva from 'konva';
 import { toolManager } from './ToolManager';
 import { BrushTool } from './BrushTool';
 import { UnifiedKeyboardHandler } from './UnifiedKeyboardHandler';
@@ -44,21 +46,31 @@ export const UnifiedCanvasStage = () => {
     saveSnapshot
   } = useStudioStore();
 
-  // Handle window resize
+  // Handle window resize with container sync
   useEffect(() => {
-    const updateStageSize = () => {
+    if (!stageRef.current) return;
+    const stage = stageRef.current;
+
+    const onResize = () => {
+      fitStageToContainer(stage);
       if (containerRef.current) {
         const { clientWidth, clientHeight } = containerRef.current;
         setStageSize({ width: clientWidth, height: clientHeight });
       }
     };
-
-    const observer = new ResizeObserver(updateStageSize);
+    
+    const ro = new ResizeObserver(onResize);
     if (containerRef.current) {
-      observer.observe(containerRef.current);
+      ro.observe(containerRef.current);
     }
+    window.addEventListener("resize", onResize, { passive: true });
 
-    return () => observer.disconnect();
+    onResize(); // initial
+
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", onResize);
+    };
   }, []);
 
   // Load garment background
@@ -84,20 +96,19 @@ export const UnifiedCanvasStage = () => {
     loadGarmentBackground();
   }, [doc.canvas.garmentType]);
 
+  // TODO(lovable): removed legacy coord math; now using getSmartPointer()
   // Convert coordinates between different spaces
   const getCoordinates = useCallback((e: any): CanvasCoordinates => {
     const stage = e.target.getStage();
-    const pointerPosition = stage.getPointerPosition();
+    const smartPointer = getSmartPointerFromEvent(stage, e);
+    if (!smartPointer) return { screen: {x:0,y:0}, canvas: {x:0,y:0}, world: {x:0,y:0} };
     
     return {
-      screen: { x: pointerPosition.x, y: pointerPosition.y },
-      canvas: { x: pointerPosition.x, y: pointerPosition.y },
-      world: {
-        x: (pointerPosition.x - panOffset.x) / zoom,
-        y: (pointerPosition.y - panOffset.y) / zoom
-      }
+      screen: { x: smartPointer.x, y: smartPointer.y },
+      canvas: { x: smartPointer.x, y: smartPointer.y },
+      world: { x: smartPointer.x, y: smartPointer.y } // Already in world coords
     };
-  }, [panOffset, zoom]);
+  }, []);
 
   // Grid rendering
   const renderGrid = () => {
@@ -403,6 +414,33 @@ export const UnifiedCanvasStage = () => {
     }
   }, [doc.selectedIds, toolManager.getCurrentToolId()]);
 
+  // Dev-only crosshair for pointer verification
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "production" && stageRef.current) {
+      const stage = stageRef.current;
+      const crossLayer = new Konva.Layer({ listening: false });
+      const h = new Konva.Line({ points: [0,0,0,0], stroke: "rgba(255,0,0,0.5)", strokeWidth: 1 });
+      const v = new Konva.Line({ points: [0,0,0,0], stroke: "rgba(255,0,0,0.5)", strokeWidth: 1 });
+      crossLayer.add(h, v);
+      stage.add(crossLayer);
+
+      const handleCross = (e: any) => {
+        const p = getSmartPointerFromEvent(stage, e);
+        if (!p) return;
+        h.points([0, p.y, stage.width(), p.y]);
+        v.points([p.x, 0, p.x, stage.height()]);
+        crossLayer.batchDraw();
+      };
+
+      stage.on("pointermove.__cross", handleCross);
+
+      return () => {
+        stage.off("pointermove.__cross");
+        crossLayer.destroy();
+      };
+    }
+  }, [stageRef.current]);
+
   // Render brush tool preview
   const renderBrushPreview = () => {
     const currentTool = toolManager.getCurrentTool();
@@ -476,12 +514,9 @@ export const UnifiedCanvasStage = () => {
           scaleY={zoom}
           x={panOffset.x}
           y={panOffset.y}
-          onMouseDown={handlePointerDown}
-          onMouseMove={handlePointerMove}
-          onMouseUp={handlePointerUp}
-          onTouchStart={handlePointerDown}
-          onTouchMove={handlePointerMove}
-          onTouchEnd={handlePointerUp}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
           onClick={handleStageClick}
           onWheel={handleWheel}
           draggable={toolManager.getCurrentToolId() === 'hand'}

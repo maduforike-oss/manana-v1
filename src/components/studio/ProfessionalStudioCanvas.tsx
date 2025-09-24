@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Stage, Layer, Line, Text, Image as KonvaImage, Rect, Circle } from 'react-konva';
 import { useStudioStore } from '@/lib/studio/store';
 import { Node } from '@/lib/studio/types';
+import { getSmartPointer, getSmartPointerFromEvent, fitStageToContainer } from '@/utils/konvaCoords';
 
 // Professional layer-based design studio following the user's architecture pattern
 export const ProfessionalStudioCanvas = () => {
@@ -26,15 +27,13 @@ export const ProfessionalStudioCanvas = () => {
     brushOpacity
   } = useStudioStore();
 
-  // Professional coordinate transformation using Konva's native methods
+  // TODO(lovable): removed legacy coord math; now using getSmartPointer()
+  // Professional coordinate transformation using transform-safe helpers
   const getRelativePointerPosition = useCallback(() => {
     const stage = stageRef.current;
     if (!stage) return { x: 0, y: 0 };
     
-    const pointerPos = stage.getPointerPosition();
-    const transform = stage.getAbsoluteTransform().copy();
-    transform.invert();
-    return transform.point(pointerPos);
+    return getSmartPointer(stage) || { x: 0, y: 0 };
   }, []);
 
   // Load garment template with 100% fidelity
@@ -60,21 +59,27 @@ export const ProfessionalStudioCanvas = () => {
     loadGarmentTemplate();
   }, [doc.canvas.garmentType]);
 
-  // Handle stage resize
+  // Handle stage resize with container sync
   useEffect(() => {
-    const handleResize = () => {
-      if (stageRef.current?.container()) {
-        const container = stageRef.current.container().parentElement;
-        setStageSize({
-          width: container.clientWidth,
-          height: container.clientHeight
-        });
-      }
-    };
+    if (!stageRef.current) return;
+    const stage = stageRef.current;
 
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    const onResize = () => {
+      fitStageToContainer(stage);
+      const rect = stage.container().getBoundingClientRect();
+      setStageSize({ width: rect.width, height: rect.height });
+    };
+    
+    const ro = new ResizeObserver(onResize);
+    ro.observe(stage.container());
+    window.addEventListener("resize", onResize, { passive: true });
+
+    onResize(); // initial
+
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", onResize);
+    };
   }, []);
 
   // Enhanced brush drawing logic using store settings
@@ -82,10 +87,9 @@ export const ProfessionalStudioCanvas = () => {
     const stage = stageRef.current;
     if (!stage) return;
     
-    const point = stage.getPointerPosition();
-    const transform = stage.getAbsoluteTransform().copy();
-    transform.invert();
-    const pos = transform.point(point);
+    // TODO(lovable): removed legacy coord math; now using getSmartPointer()
+    const pos = getSmartPointer(stage);
+    if (!pos) return;
 
     if (isDrawing && currentStroke) {
       const newPoints = [...currentStroke.points, pos.x, pos.y];

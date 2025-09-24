@@ -98,6 +98,7 @@ export const CanvasStage = () => {
     const oldScale = stage.scaleX();
     const pointer = stage.getPointerPosition();
 
+    // TODO(lovable): Legacy zoom calc - should use getSmartPointer but keeping for compatibility
     const mousePointTo = {
       x: (pointer.x - stage.x()) / oldScale,
       y: (pointer.y - stage.y()) / oldScale,

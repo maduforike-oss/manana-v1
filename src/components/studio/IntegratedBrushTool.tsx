@@ -3,6 +3,7 @@ import { Stage, Layer, Line, Rect } from 'react-konva';
 import { useStudioStore } from '@/lib/studio/store';
 import { generateId } from '@/lib/utils';
 import type { Node, PathNode } from '@/lib/studio/types';
+import { getSmartPointer, fitStageToContainer } from '@/utils/konvaCoords';
 
 const IntegratedBrushTool = () => {
   const stageRef = useRef(null);
@@ -25,12 +26,9 @@ const IntegratedBrushTool = () => {
     const stage = stageRef.current;
     if (!stage) return;
     
-    const pos = (stage as any).getPointerPosition();
-    
-    // Apply coordinate transformation
-    const transform = (stage as any).getAbsoluteTransform().copy();
-    transform.invert();
-    const transformedPos = transform.point(pos);
+    // TODO(lovable): removed legacy coord math; now using getSmartPointer()
+    const transformedPos = getSmartPointer(stage);
+    if (!transformedPos) return;
 
     const newStroke: PathNode = {
       id: generateId(),
@@ -58,10 +56,9 @@ const IntegratedBrushTool = () => {
     const stage = stageRef.current;
     if (!stage) return;
     
-    const pos = (stage as any).getPointerPosition();
-    const transform = (stage as any).getAbsoluteTransform().copy();
-    transform.invert();
-    const transformedPos = transform.point(pos);
+    // TODO(lovable): removed legacy coord math; now using getSmartPointer()
+    const transformedPos = getSmartPointer(stage);
+    if (!transformedPos) return;
     
     const newPoints = [...((currentStroke as any).points || []), transformedPos.x, transformedPos.y];
     
