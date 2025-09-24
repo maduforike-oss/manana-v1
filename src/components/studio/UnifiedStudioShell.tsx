@@ -16,6 +16,7 @@ import { PurchasedDesignLoader } from './PurchasedDesignLoader';
 import { AutoSaveIndicator } from './AutoSaveIndicator';
 import { PricingCalculator } from './PricingCalculator';
 import { PrintMethodValidator } from './PrintMethodValidator';
+import { EnhancedViewportSystem } from './EnhancedViewportSystem';
 import { CanvasGrid } from './CanvasGrid';
 import { CanvasRulers } from './CanvasRulers';
 import { Button } from '@/components/ui/button';
@@ -272,8 +273,10 @@ export const UnifiedStudioShell = () => {
           
           {/* Main Canvas Area with Enhanced Features */}
           <div className="flex-1 flex flex-col min-w-0 relative">
-            {/* Main Functional Canvas */}
-            <UnifiedCanvasStage />
+            {/* Main Functional Canvas with Enhanced Viewport */}
+            <EnhancedViewportSystem className="flex-1">
+              <UnifiedCanvasStage />
+            </EnhancedViewportSystem>
             
             {/* Floating Help Button */}
             <Button

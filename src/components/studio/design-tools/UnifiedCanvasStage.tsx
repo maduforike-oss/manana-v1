@@ -73,63 +73,76 @@ export const UnifiedCanvasStage = () => {
     };
   }, []);
 
-  // Stable garment loading with caching and proper cleanup
-  const [garmentLoading, setGarmentLoading] = useState(false);
-  const garmentCacheRef = useRef<Map<string, HTMLImageElement>>(new Map());
-
+  // Enhanced garment loading with caching and permanent visibility
   useEffect(() => {
-    const loadGarmentBackground = async () => {
-      const garmentType = doc.canvas.garmentType || 't-shirt';
-      const garmentColor = doc.canvas.garmentColor || 'white';
-      const cacheKey = `${garmentType}-${garmentColor}`;
+    const loadGarment = async () => {
+      // Always default to t-shirt if no garment type
+      const garmentType = doc?.canvas?.garmentType || 't-shirt';
+      const garmentColor = doc?.canvas?.garmentColor || 'black';
       
-      // Check cache first
-      if (garmentCacheRef.current.has(cacheKey)) {
-        setGarmentImage(garmentCacheRef.current.get(cacheKey) || null);
-        return;
-      }
-      
-      setGarmentLoading(true);
-      console.log(`🎽 Loading garment: ${garmentType} (${garmentColor})`);
-      
+      setIsLoadingGarment(true);
       try {
-        // Simplified single-path loading for stability
         const { GARMENT_TYPES } = await import('@/lib/studio/garments');
-        const staticGarment = GARMENT_TYPES.find(g => g.id === garmentType);
+        let staticGarment = GARMENT_TYPES.find(g => g.id === garmentType);
+        
+        // Fallback to t-shirt if garment type not found
+        if (!staticGarment) {
+          console.warn(`Garment type ${garmentType} not found, falling back to t-shirt`);
+          staticGarment = GARMENT_TYPES.find(g => g.id === 't-shirt');
+        }
         
         if (staticGarment?.images?.front) {
           const img = new window.Image();
           img.crossOrigin = 'anonymous';
-          
-          await new Promise<void>((resolve, reject) => {
-            img.onload = () => {
-              // Cache the loaded image
-              garmentCacheRef.current.set(cacheKey, img);
-              setGarmentImage(img);
-              console.log('✅ Garment loaded and cached');
-              resolve();
-            };
-            img.onerror = reject;
-            img.src = staticGarment.images.front;
-          });
+          img.onload = () => {
+            setGarmentImage(img);
+            setIsLoadingGarment(false);
+          };
+          img.onerror = () => {
+            console.warn(`Failed to load garment image for ${garmentType}`);
+            setGarmentImage(null);
+            setIsLoadingGarment(false);
+          };
+          img.src = staticGarment.images.front;
         } else {
-          console.warn('⚠️ No garment image available');
           setGarmentImage(null);
+          setIsLoadingGarment(false);
         }
       } catch (error) {
-        console.error('❌ Garment loading failed:', error);
+        console.error('Error loading garment:', error);
         setGarmentImage(null);
-      } finally {
-        setGarmentLoading(false);
+        setIsLoadingGarment(false);
       }
     };
 
-    // Debounce garment changes to prevent rapid reloading
-    const timeoutId = setTimeout(loadGarmentBackground, 100);
+    // Debounce garment loading to prevent rapid switches
+    const timeoutId = setTimeout(loadGarment, 200);
     return () => clearTimeout(timeoutId);
-  }, [doc.canvas.garmentType, doc.canvas.garmentColor]);
+  }, [doc?.canvas?.garmentType, doc?.canvas?.garmentColor]);
 
-  // TODO(lovable): removed legacy coord math; now using getSmartPointer()
+  // Auto-fit to screen with permanent garment visibility
+  const hasAutoFit = useRef(false);
+  const [isLoadingGarment, setIsLoadingGarment] = useState(false);
+  
+  useEffect(() => {
+    if (!stageSize.width || !stageSize.height || !doc?.canvas) return;
+    
+    // Auto-fit the canvas to screen on first load only
+    if (!hasAutoFit.current) {
+      const scaleX = stageSize.width / doc.canvas.width;
+      const scaleY = stageSize.height / doc.canvas.height;
+      const newZoom = Math.min(scaleX, scaleY) * 0.85; // 85% of available space
+      
+      const newPanOffset = {
+        x: (stageSize.width - doc.canvas.width * newZoom) / 2,
+        y: (stageSize.height - doc.canvas.height * newZoom) / 2
+      };
+      
+      setZoom(newZoom);
+      setPanOffset(newPanOffset);
+      hasAutoFit.current = true;
+    }
+  }, [stageSize, doc?.canvas, setZoom, setPanOffset]);
   // Convert coordinates between different spaces
   const getCoordinates = useCallback((e: any): CanvasCoordinates => {
     const stage = e.target.getStage();
@@ -415,34 +428,55 @@ export const UnifiedCanvasStage = () => {
     }
   }, [clearSelection]);
 
-  // Handle wheel zoom
+  // Enhanced wheel zoom with bounds and garment visibility constraints
   const handleWheel = useCallback((e: any) => {
     if (toolManager.shouldPreventPanning()) return;
     
     e.evt.preventDefault();
     
-    const scaleBy = 1.1;
     const stage = e.target.getStage();
-    const oldScale = stage.scaleX();
+    if (!stage) return;
+
     const pointer = stage.getPointerPosition();
-    
-    const newScale = e.evt.deltaY > 0 ? oldScale / scaleBy : oldScale * scaleBy;
-    const clampedScale = Math.max(0.1, Math.min(5, newScale));
-    
-    setZoom(clampedScale);
-    
-    const mousePointTo = {
-      x: (pointer.x - panOffset.x) / oldScale,
-      y: (pointer.y - panOffset.y) / oldScale,
-    };
-    
-    const newPos = {
-      x: pointer.x - mousePointTo.x * clampedScale,
-      y: pointer.y - mousePointTo.y * clampedScale,
-    };
-    
-    setPanOffset(newPos);
-  }, [panOffset, setZoom, setPanOffset]);
+    if (!pointer) return;
+
+    const scaleBy = 1.05;
+    const oldZoom = zoom;
+    const newZoom = e.evt.deltaY > 0 ? oldZoom / scaleBy : oldZoom * scaleBy;
+    const clampedZoom = Math.max(0.1, Math.min(5, newZoom));
+
+    if (clampedZoom !== oldZoom) {
+      const mousePointTo = {
+        x: (pointer.x - panOffset.x) / oldZoom,
+        y: (pointer.y - panOffset.y) / oldZoom,
+      };
+
+      let newPanOffset = {
+        x: pointer.x - mousePointTo.x * clampedZoom,
+        y: pointer.y - mousePointTo.y * clampedZoom,
+      };
+
+      // Clamp pan offset to keep canvas reasonably in view
+      if (doc?.canvas && stageSize.width && stageSize.height) {
+        const canvasWidth = doc.canvas.width * clampedZoom;
+        const canvasHeight = doc.canvas.height * clampedZoom;
+        
+        // Allow panning but keep at least 100px of canvas visible
+        const margin = 100;
+        newPanOffset.x = Math.max(
+          -canvasWidth + margin,
+          Math.min(stageSize.width - margin, newPanOffset.x)
+        );
+        newPanOffset.y = Math.max(
+          -canvasHeight + margin,
+          Math.min(stageSize.height - margin, newPanOffset.y)
+        );
+      }
+
+      setZoom(clampedZoom);
+      setPanOffset(newPanOffset);
+    }
+  }, [zoom, panOffset, setZoom, setPanOffset, doc?.canvas, stageSize]);
 
   // Update transformer
   useEffect(() => {
@@ -566,18 +600,30 @@ export const UnifiedCanvasStage = () => {
           {/* Grid */}
           {renderGrid()}
           
-          {/* Garment background at 100% opacity - Professional Template Fidelity */}
+          {/* Permanent Garment Background - Always Centered */}
           {garmentImage && (
             <Image
               image={garmentImage}
-              width={doc.canvas.width * 0.8}
-              height={doc.canvas.height * 0.8}
-              x={doc.canvas.width * 0.1}
-              y={doc.canvas.height * 0.1}
-              opacity={mockup.garmentOpacity || 1.0}
+              x={(doc.canvas.width - (garmentImage.width * (doc.canvas.height / garmentImage.height))) / 2}
+              y={0}
+              width={garmentImage.width * (doc.canvas.height / garmentImage.height)}
+              height={doc.canvas.height}
+              opacity={0.15}
               listening={false}
             />
           )}
+          
+          {/* Canvas Border for Reference */}
+          <Rect
+            x={0}
+            y={0}
+            width={doc.canvas.width}
+            height={doc.canvas.height}
+            stroke="hsl(var(--border))"
+            strokeWidth={2 / zoom}
+            opacity={0.3}
+            listening={false}
+          />
         </Layer>
         
         {/* Design layer - Individual element opacity preserved, no global opacity */}

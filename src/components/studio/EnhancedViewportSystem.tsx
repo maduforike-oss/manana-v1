@@ -30,6 +30,11 @@ export const EnhancedViewportSystem: React.FC<EnhancedViewportSystemProps> = ({
     distributeNodes
   } = useAdvancedViewport();
 
+  // Sync viewport state with store - use store values when available
+  const showRulers = doc.canvas.showRulers ?? viewportState.showRulers;
+  const showGrid = doc.canvas.showGrid ?? viewportState.showGrid;
+  const unit = doc.canvas.unit ?? viewportState.unit;
+
   const containerRef = useRef<HTMLDivElement>(null);
   const selectedNodes = doc.nodes.filter(node => doc.selectedIds.includes(node.id));
 
@@ -52,8 +57,8 @@ export const EnhancedViewportSystem: React.FC<EnhancedViewportSystemProps> = ({
       <PrecisionRulers
         zoom={zoom}
         panOffset={panOffset}
-        showRulers={viewportState.showRulers}
-        unit={viewportState.unit}
+        showRulers={showRulers}
+        unit={unit}
         canvasWidth={doc.canvas.width}
         canvasHeight={doc.canvas.height}
         mousePosition={viewportState.mousePosition}
@@ -63,15 +68,15 @@ export const EnhancedViewportSystem: React.FC<EnhancedViewportSystemProps> = ({
       <div 
         className="absolute inset-0"
         style={{ 
-          marginTop: viewportState.showRulers ? '24px' : '0',
-          marginLeft: viewportState.showRulers ? '24px' : '0'
+          marginTop: showRulers ? '24px' : '0',
+          marginLeft: showRulers ? '24px' : '0'
         }}
       >
         {/* Canvas Grid */}
         <CanvasGrid
           zoom={zoom}
           panOffset={panOffset}
-          showGrid={viewportState.showGrid}
+          showGrid={showGrid}
           gridSize={viewportState.gridSize}
         />
 
