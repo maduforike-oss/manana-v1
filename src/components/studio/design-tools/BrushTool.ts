@@ -83,6 +83,7 @@ export class BrushTool extends BaseDesignTool {
     this.state.isDrawing = true;
     
     const pressure = e.pressure || 1;
+    // Use grid-centered coordinates for brush strokes
     this.currentStroke = this.brushEngine.startStroke(coords.world, pressure);
   }
 
@@ -90,6 +91,7 @@ export class BrushTool extends BaseDesignTool {
     if (!this.isDrawing || !this.brushEngine || !this.currentStroke) return;
 
     const pressure = e.pressure || 1;
+    // Use grid-centered coordinates for brush strokes
     this.brushEngine.addPoint(coords.world, pressure);
   }
 

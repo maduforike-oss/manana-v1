@@ -56,6 +56,7 @@ export class TextTool extends BaseDesignTool {
   }
 
   private handlePointerDown(e: PointerEvent, coords: CanvasCoordinates): void {
+    // Use grid-centered coordinates for text placement
     this.createTextNode(coords.world);
   }
 

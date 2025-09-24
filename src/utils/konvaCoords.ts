@@ -36,13 +36,15 @@ export function getSmartPointer(stage: Konva.Stage, canvasConfig?: { width: numb
   const inv = stage.getAbsoluteTransform().copy().invert();
   const p = inv.point(pos);
   
-  // If canvas config provided, return grid-centered coordinates
+  // Always return grid-centered coordinates by default
   if (canvasConfig) {
     const gridCenter = getGridCenter(canvasConfig.width, canvasConfig.height);
     return screenToGridCoords(p.x, p.y, gridCenter);
   }
   
-  return { x: p.x, y: p.y };
+  // Default canvas size if not provided - grid-centered by default
+  const defaultGridCenter = getGridCenter(800, 600);
+  return screenToGridCoords(p.x, p.y, defaultGridCenter);
 }
 
 export function getSmartPointerFromEvent(
@@ -55,14 +57,17 @@ export function getSmartPointerFromEvent(
   const inv = stage.getAbsoluteTransform().copy().invert();
   const p = inv.point(pos);
   
-  // If canvas config provided, return grid-centered coordinates
+  // Always return grid-centered coordinates by default
   if (canvasConfig) {
     const gridCenter = getGridCenter(canvasConfig.width, canvasConfig.height);
     const gridCoords = screenToGridCoords(p.x, p.y, gridCenter);
     return { x: gridCoords.x, y: gridCoords.y, evt: e.evt as PointerEvent };
   }
   
-  return { x: p.x, y: p.y, evt: e.evt as PointerEvent };
+  // Default canvas size if not provided - grid-centered by default
+  const defaultGridCenter = getGridCenter(800, 600);
+  const gridCoords = screenToGridCoords(p.x, p.y, defaultGridCenter);
+  return { x: gridCoords.x, y: gridCoords.y, evt: e.evt as PointerEvent };
 }
 
 export function fitStageToContainer(stage: Konva.Stage) {

@@ -599,15 +599,12 @@ export const useStudioStore = create<StudioState>((set, get) => ({
 
   centerDesignOnGrid: () => {
     set(produce((state: StudioState) => {
-      const { canvas } = state.doc;
-      const gridCenter = { x: canvas.width / 2, y: canvas.height / 2 };
-      
       // Calculate bounding box of all nodes
       if (state.doc.nodes.length > 0) {
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
         
         state.doc.nodes.forEach(node => {
-          // Convert current coordinates to grid-centered if needed
+          // Use existing grid coordinates
           const nodeX = node.x;
           const nodeY = node.y;
           const nodeRight = nodeX + (node.width || 0);
@@ -623,18 +620,18 @@ export const useStudioStore = create<StudioState>((set, get) => ({
         const designCenterX = (minX + maxX) / 2;
         const designCenterY = (minY + maxY) / 2;
         
-        // Calculate offset to center on grid
+        // Calculate offset to center on grid origin (0,0)
         const offsetX = -designCenterX;
         const offsetY = -designCenterY;
         
-        // Apply offset to all nodes
+        // Apply offset to all nodes to center them at grid origin
         state.doc.nodes.forEach(node => {
           node.x += offsetX;
           node.y += offsetY;
         });
       }
       
-      // Reset view to grid center
+      // Reset view to show grid center in viewport center
       state.panOffset = { x: 0, y: 0 };
       state.zoom = 1;
     }));
