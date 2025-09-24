@@ -10,7 +10,7 @@ import { UnifiedKeyboardHandler } from './UnifiedKeyboardHandler';
 import { DesignToolsErrorBoundary } from './DesignToolsErrorBoundary';
 import { PrecisionCursorManager } from './PrecisionCursorManager';
 import { FloatingBrushControls } from './FloatingBrushControls';
-import { EnhancedGrid } from './AdvancedGridSystem';
+import { EnhancedGrid, Rulers } from './AdvancedGridSystem';
 import { SmartGuidesSystem } from './SmartGuidesSystem';
 import { performanceMonitor } from './PerformanceMonitor';
 import { cn } from '@/lib/utils';
@@ -73,76 +73,76 @@ export const UnifiedCanvasStage = () => {
     };
   }, []);
 
-  // Enhanced garment loading with caching and permanent visibility
+  // Load garment background with robust fallback chain
   useEffect(() => {
-    const loadGarment = async () => {
-      // Always default to t-shirt if no garment type
-      const garmentType = doc?.canvas?.garmentType || 't-shirt';
-      const garmentColor = doc?.canvas?.garmentColor || 'black';
+    const loadGarmentBackground = async () => {
+      const garmentType = doc.canvas.garmentType || 't-shirt';
+      const garmentColor = doc.canvas.garmentColor || 'white';
       
-      setIsLoadingGarment(true);
+      console.log(`🎽 Loading garment: ${garmentType} (${garmentColor})`);
+      
       try {
-        const { GARMENT_TYPES } = await import('@/lib/studio/garments');
-        let staticGarment = GARMENT_TYPES.find(g => g.id === garmentType);
+        // Try primary path: Edge Function
+        const { getGarmentView } = await import('@/lib/api/garments');
+        const garmentView = await Promise.race([
+          getGarmentView(garmentType, 'front', garmentColor),
+          new Promise<any>((_, reject) => 
+            setTimeout(() => reject(new Error('Timeout')), 3000)
+          )
+        ]);
         
-        // Fallback to t-shirt if garment type not found
-        if (!staticGarment) {
-          console.warn(`Garment type ${garmentType} not found, falling back to t-shirt`);
-          staticGarment = GARMENT_TYPES.find(g => g.id === 't-shirt');
-        }
-        
-        if (staticGarment?.images?.front) {
+        if (garmentView?.url) {
+          console.log('✅ Garment loaded from edge function');
           const img = new window.Image();
           img.crossOrigin = 'anonymous';
-          img.onload = () => {
-            setGarmentImage(img);
-            setIsLoadingGarment(false);
-          };
-          img.onerror = () => {
-            console.warn(`Failed to load garment image for ${garmentType}`);
-            setGarmentImage(null);
-            setIsLoadingGarment(false);
-          };
-          img.src = staticGarment.images.front;
-        } else {
-          setGarmentImage(null);
-          setIsLoadingGarment(false);
+          img.onload = () => setGarmentImage(img);
+          img.src = garmentView.url;
+          return;
         }
       } catch (error) {
-        console.error('Error loading garment:', error);
-        setGarmentImage(null);
-        setIsLoadingGarment(false);
+        console.warn('⚠️ Edge function failed, trying Supabase Storage:', error);
       }
+
+      try {
+        // Fallback 1: Supabase Storage
+        const { getTemplate } = await import('@/lib/studio/supabaseTemplates');
+        const template = await getTemplate(garmentType, 'front', garmentColor);
+        if (template?.url) {
+          console.log('✅ Garment loaded from Supabase Storage');
+          const img = new window.Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => setGarmentImage(img);
+          img.src = template.url;
+          return;
+        }
+      } catch (error) {
+        console.warn('⚠️ Supabase Storage failed, using static assets:', error);
+      }
+
+      // Fallback 2: Static assets
+      try {
+        const { GARMENT_TYPES } = await import('@/lib/studio/garments');
+        const staticGarment = GARMENT_TYPES.find(g => g.id === garmentType);
+        if (staticGarment?.images?.front) {
+          console.log('✅ Using static garment asset');
+          const img = new window.Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => setGarmentImage(img);
+          img.src = staticGarment.images.front;
+          return;
+        }
+      } catch (error) {
+        console.error('❌ All garment loading methods failed:', error);
+      }
+
+      console.warn('⚠️ No garment image available, canvas will be blank');
+      setGarmentImage(null);
     };
 
-    // Debounce garment loading to prevent rapid switches
-    const timeoutId = setTimeout(loadGarment, 200);
-    return () => clearTimeout(timeoutId);
-  }, [doc?.canvas?.garmentType, doc?.canvas?.garmentColor]);
+    loadGarmentBackground();
+  }, [doc.canvas.garmentType, doc.canvas.garmentColor]);
 
-  // Auto-fit to screen with permanent garment visibility
-  const hasAutoFit = useRef(false);
-  const [isLoadingGarment, setIsLoadingGarment] = useState(false);
-  
-  useEffect(() => {
-    if (!stageSize.width || !stageSize.height || !doc?.canvas) return;
-    
-    // Auto-fit the canvas to screen on first load only
-    if (!hasAutoFit.current) {
-      const scaleX = stageSize.width / doc.canvas.width;
-      const scaleY = stageSize.height / doc.canvas.height;
-      const newZoom = Math.min(scaleX, scaleY) * 0.85; // 85% of available space
-      
-      const newPanOffset = {
-        x: (stageSize.width - doc.canvas.width * newZoom) / 2,
-        y: (stageSize.height - doc.canvas.height * newZoom) / 2
-      };
-      
-      setZoom(newZoom);
-      setPanOffset(newPanOffset);
-      hasAutoFit.current = true;
-    }
-  }, [stageSize, doc?.canvas, setZoom, setPanOffset]);
+  // TODO(lovable): removed legacy coord math; now using getSmartPointer()
   // Convert coordinates between different spaces
   const getCoordinates = useCallback((e: any): CanvasCoordinates => {
     const stage = e.target.getStage();
@@ -428,55 +428,34 @@ export const UnifiedCanvasStage = () => {
     }
   }, [clearSelection]);
 
-  // Enhanced wheel zoom with bounds and garment visibility constraints
+  // Handle wheel zoom
   const handleWheel = useCallback((e: any) => {
     if (toolManager.shouldPreventPanning()) return;
     
     e.evt.preventDefault();
     
+    const scaleBy = 1.1;
     const stage = e.target.getStage();
-    if (!stage) return;
-
+    const oldScale = stage.scaleX();
     const pointer = stage.getPointerPosition();
-    if (!pointer) return;
-
-    const scaleBy = 1.05;
-    const oldZoom = zoom;
-    const newZoom = e.evt.deltaY > 0 ? oldZoom / scaleBy : oldZoom * scaleBy;
-    const clampedZoom = Math.max(0.1, Math.min(5, newZoom));
-
-    if (clampedZoom !== oldZoom) {
-      const mousePointTo = {
-        x: (pointer.x - panOffset.x) / oldZoom,
-        y: (pointer.y - panOffset.y) / oldZoom,
-      };
-
-      let newPanOffset = {
-        x: pointer.x - mousePointTo.x * clampedZoom,
-        y: pointer.y - mousePointTo.y * clampedZoom,
-      };
-
-      // Clamp pan offset to keep canvas reasonably in view
-      if (doc?.canvas && stageSize.width && stageSize.height) {
-        const canvasWidth = doc.canvas.width * clampedZoom;
-        const canvasHeight = doc.canvas.height * clampedZoom;
-        
-        // Allow panning but keep at least 100px of canvas visible
-        const margin = 100;
-        newPanOffset.x = Math.max(
-          -canvasWidth + margin,
-          Math.min(stageSize.width - margin, newPanOffset.x)
-        );
-        newPanOffset.y = Math.max(
-          -canvasHeight + margin,
-          Math.min(stageSize.height - margin, newPanOffset.y)
-        );
-      }
-
-      setZoom(clampedZoom);
-      setPanOffset(newPanOffset);
-    }
-  }, [zoom, panOffset, setZoom, setPanOffset, doc?.canvas, stageSize]);
+    
+    const newScale = e.evt.deltaY > 0 ? oldScale / scaleBy : oldScale * scaleBy;
+    const clampedScale = Math.max(0.1, Math.min(5, newScale));
+    
+    setZoom(clampedScale);
+    
+    const mousePointTo = {
+      x: (pointer.x - panOffset.x) / oldScale,
+      y: (pointer.y - panOffset.y) / oldScale,
+    };
+    
+    const newPos = {
+      x: pointer.x - mousePointTo.x * clampedScale,
+      y: pointer.y - mousePointTo.y * clampedScale,
+    };
+    
+    setPanOffset(newPos);
+  }, [panOffset, setZoom, setPanOffset]);
 
   // Update transformer
   useEffect(() => {
@@ -566,7 +545,16 @@ export const UnifiedCanvasStage = () => {
           canvasHeight={stageSize.height}
         />
         
-        {/* Rulers functionality now handled by PrecisionRulers in EnhancedViewportSystem */}
+        {/* Rulers */}
+        <Rulers
+          zoom={zoom}
+          panOffset={panOffset}
+          showRulers={doc.canvas.showRulers}
+          gridSize={doc.canvas.gridSize}
+          unit={doc.canvas.unit}
+          canvasWidth={stageSize.width}
+          canvasHeight={stageSize.height}
+        />
         
         {/* Smart Guides */}
         <SmartGuidesSystem
@@ -600,30 +588,18 @@ export const UnifiedCanvasStage = () => {
           {/* Grid */}
           {renderGrid()}
           
-          {/* Permanent Garment Background - Always Centered */}
+          {/* Garment background at 100% opacity - Professional Template Fidelity */}
           {garmentImage && (
             <Image
               image={garmentImage}
-              x={(doc.canvas.width - (garmentImage.width * (doc.canvas.height / garmentImage.height))) / 2}
-              y={0}
-              width={garmentImage.width * (doc.canvas.height / garmentImage.height)}
-              height={doc.canvas.height}
-              opacity={0.15}
+              width={doc.canvas.width * 0.8}
+              height={doc.canvas.height * 0.8}
+              x={doc.canvas.width * 0.1}
+              y={doc.canvas.height * 0.1}
+              opacity={mockup.garmentOpacity || 1.0}
               listening={false}
             />
           )}
-          
-          {/* Canvas Border for Reference */}
-          <Rect
-            x={0}
-            y={0}
-            width={doc.canvas.width}
-            height={doc.canvas.height}
-            stroke="hsl(var(--border))"
-            strokeWidth={2 / zoom}
-            opacity={0.3}
-            listening={false}
-          />
         </Layer>
         
         {/* Design layer - Individual element opacity preserved, no global opacity */}

@@ -30,22 +30,19 @@ export const PrecisionRulers: React.FC<PrecisionRulersProps> = ({
   };
 
   const pixelsPerUnit = unitConverters[unit];
-  const stepSize = Math.max(1, Math.min(100, Math.floor(50 / (zoom * pixelsPerUnit)))) * pixelsPerUnit;
+  const stepSize = Math.max(1, Math.floor(50 / (zoom * pixelsPerUnit))) * pixelsPerUnit;
   
   const generateTicks = (length: number, isHorizontal: boolean) => {
     const ticks = [];
     const startOffset = isHorizontal ? panOffset.x : panOffset.y;
     const firstTick = Math.floor(-startOffset / (stepSize * zoom)) * stepSize;
-    const maxTicks = 100; // Prevent excessive tick generation
-    const tickCount = Math.min(maxTicks, Math.ceil((length + Math.abs(startOffset)) / (stepSize * zoom)) + 2);
+    const tickCount = Math.ceil((length + Math.abs(startOffset)) / (stepSize * zoom)) + 2;
 
     for (let i = 0; i < tickCount; i++) {
       const value = firstTick + (i * stepSize);
       const position = (value * zoom) + startOffset;
       
-      // Stricter bounds checking to prevent overflow
-      if (position >= -stepSize * zoom && position <= length + stepSize * zoom && 
-          position >= -1000 && position <= length + 1000) {
+      if (position >= -stepSize * zoom && position <= length + stepSize * zoom) {
         const label = (value / pixelsPerUnit).toFixed(value % pixelsPerUnit === 0 ? 0 : 1);
         ticks.push({
           position,

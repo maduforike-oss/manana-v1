@@ -192,5 +192,122 @@ export const EnhancedGrid = ({
   );
 };
 
-// Note: Rulers implementation removed to prevent conflicts with PrecisionRulers.
-// All ruler functionality is now handled by PrecisionRulers component.
+// Rulers Component
+interface RulersProps {
+  zoom: number;
+  panOffset: { x: number; y: number };
+  showRulers: boolean;
+  gridSize: number;
+  unit: 'px' | 'mm';
+  canvasWidth: number;
+  canvasHeight: number;
+}
+
+export const Rulers = ({ 
+  zoom, 
+  panOffset, 
+  showRulers, 
+  gridSize, 
+  unit,
+  canvasWidth,
+  canvasHeight 
+}: RulersProps) => {
+  if (!showRulers) return null;
+
+  const rulerHeight = 20;
+  const rulerWidth = 20;
+  
+  // Calculate tick marks based on zoom level
+  const getTickInterval = () => {
+    if (zoom > 2) return gridSize / 4;
+    if (zoom > 1) return gridSize / 2;
+    if (zoom > 0.5) return gridSize;
+    return gridSize * 2;
+  };
+
+  const tickInterval = getTickInterval();
+  const adjustedTickInterval = tickInterval * zoom;
+
+  // Generate tick marks for horizontal ruler
+  const generateHorizontalTicks = () => {
+    const ticks = [];
+    const startX = Math.floor(-panOffset.x / adjustedTickInterval) * adjustedTickInterval;
+    
+    for (let x = startX; x < canvasWidth + Math.abs(panOffset.x); x += adjustedTickInterval) {
+      const position = x + panOffset.x;
+      if (position >= 0 && position <= canvasWidth) {
+        const value = Math.round(x / zoom);
+        ticks.push(
+          <div
+            key={x}
+            className="absolute text-xs text-muted-foreground"
+            style={{
+              left: position,
+              top: 2,
+              transform: 'translateX(-50%)',
+              fontSize: '10px'
+            }}
+          >
+            {value}{unit}
+          </div>
+        );
+      }
+    }
+    return ticks;
+  };
+
+  // Generate tick marks for vertical ruler
+  const generateVerticalTicks = () => {
+    const ticks = [];
+    const startY = Math.floor(-panOffset.y / adjustedTickInterval) * adjustedTickInterval;
+    
+    for (let y = startY; y < canvasHeight + Math.abs(panOffset.y); y += adjustedTickInterval) {
+      const position = y + panOffset.y;
+      if (position >= 0 && position <= canvasHeight) {
+        const value = Math.round(y / zoom);
+        ticks.push(
+          <div
+            key={y}
+            className="absolute text-xs text-muted-foreground"
+            style={{
+              left: 2,
+              top: position,
+              transform: 'translateY(-50%) rotate(-90deg)',
+              transformOrigin: 'left center',
+              fontSize: '10px'
+            }}
+          >
+            {value}{unit}
+          </div>
+        );
+      }
+    }
+    return ticks;
+  };
+
+  return (
+    <>
+      {/* Horizontal Ruler */}
+      <div
+        className="absolute top-0 left-0 right-0 bg-background/90 border-b border-border pointer-events-none"
+        style={{ height: rulerHeight, marginLeft: rulerWidth }}
+      >
+        {generateHorizontalTicks()}
+      </div>
+
+      {/* Vertical Ruler */}
+      <div
+        className="absolute top-0 left-0 bottom-0 bg-background/90 border-r border-border pointer-events-none"
+        style={{ width: rulerWidth, marginTop: rulerHeight }}
+      >
+        {generateVerticalTicks()}
+      </div>
+
+      {/* Corner */}
+      <div
+        className="absolute top-0 left-0 bg-background border-r border-b border-border pointer-events-none"
+        style={{ width: rulerWidth, height: rulerHeight }}
+      />
+    </>
+  );
+};
