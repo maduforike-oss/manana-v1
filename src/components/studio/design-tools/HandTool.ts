@@ -42,14 +42,14 @@ export class HandTool extends BaseDesignTool {
     document.body.style.cursor = 'grabbing';
   }
 
-  private handlePointerMove(e: PointerEvent, coords: CanvasCoordinates): void {
+  private async handlePointerMove(e: PointerEvent, coords: CanvasCoordinates): Promise<void> {
     if (!this.isPanning || !this.lastPanPosition) return;
 
     const deltaX = coords.screen.x - this.lastPanPosition.x;
     const deltaY = coords.screen.y - this.lastPanPosition.y;
 
     // Update pan offset through store
-    const { useStudioStore } = require('@/lib/studio/store');
+    const { useStudioStore } = await import('@/lib/studio/store');
     const store = useStudioStore.getState();
     
     store.setPanOffset({

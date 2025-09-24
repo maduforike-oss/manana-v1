@@ -73,28 +73,74 @@ export const UnifiedCanvasStage = () => {
     };
   }, []);
 
-  // Load garment background
+  // Load garment background with robust fallback chain
   useEffect(() => {
     const loadGarmentBackground = async () => {
-      if (!doc.canvas.garmentType) return;
+      const garmentType = doc.canvas.garmentType || 't-shirt';
+      const garmentColor = doc.canvas.garmentColor || 'white';
+      
+      console.log(`🎽 Loading garment: ${garmentType} (${garmentColor})`);
       
       try {
+        // Try primary path: Edge Function
         const { getGarmentView } = await import('@/lib/api/garments');
-        const garmentView = await getGarmentView(doc.canvas.garmentType, 'front', 'white');
+        const garmentView = await Promise.race([
+          getGarmentView(garmentType, 'front', garmentColor),
+          new Promise<any>((_, reject) => 
+            setTimeout(() => reject(new Error('Timeout')), 3000)
+          )
+        ]);
         
         if (garmentView?.url) {
+          console.log('✅ Garment loaded from edge function');
           const img = new window.Image();
           img.crossOrigin = 'anonymous';
           img.onload = () => setGarmentImage(img);
           img.src = garmentView.url;
+          return;
         }
       } catch (error) {
-        console.warn('Failed to load garment background:', error);
+        console.warn('⚠️ Edge function failed, trying Supabase Storage:', error);
       }
+
+      try {
+        // Fallback 1: Supabase Storage
+        const { getTemplate } = await import('@/lib/studio/supabaseTemplates');
+        const template = await getTemplate(garmentType, 'front', garmentColor);
+        if (template?.url) {
+          console.log('✅ Garment loaded from Supabase Storage');
+          const img = new window.Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => setGarmentImage(img);
+          img.src = template.url;
+          return;
+        }
+      } catch (error) {
+        console.warn('⚠️ Supabase Storage failed, using static assets:', error);
+      }
+
+      // Fallback 2: Static assets
+      try {
+        const { GARMENT_TYPES } = await import('@/lib/studio/garments');
+        const staticGarment = GARMENT_TYPES.find(g => g.id === garmentType);
+        if (staticGarment?.images?.front) {
+          console.log('✅ Using static garment asset');
+          const img = new window.Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => setGarmentImage(img);
+          img.src = staticGarment.images.front;
+          return;
+        }
+      } catch (error) {
+        console.error('❌ All garment loading methods failed:', error);
+      }
+
+      console.warn('⚠️ No garment image available, canvas will be blank');
+      setGarmentImage(null);
     };
 
     loadGarmentBackground();
-  }, [doc.canvas.garmentType]);
+  }, [doc.canvas.garmentType, doc.canvas.garmentColor]);
 
   // TODO(lovable): removed legacy coord math; now using getSmartPointer()
   // Convert coordinates between different spaces

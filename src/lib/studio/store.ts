@@ -94,7 +94,7 @@ const createInitialDoc = (garmentType?: string): DesignDoc => ({
   id: `design-${Date.now()}`,
   title: 'Untitled Design',
   nodes: [],
-  canvas: { ...CANVAS_PRESETS[garmentType as keyof typeof CANVAS_PRESETS] || CANVAS_PRESETS['T-Shirt'] },
+  canvas: { ...CANVAS_PRESETS[garmentType as keyof typeof CANVAS_PRESETS] || CANVAS_PRESETS['t-shirt'] },
   selectedIds: [],
 });
 

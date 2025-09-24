@@ -79,7 +79,7 @@ export class ShapeTool extends BaseDesignTool {
     this.createShapeNode(coords.world);
   }
 
-  private createShapeNode(position: { x: number; y: number }): void {
+  private async createShapeNode(position: { x: number; y: number }): Promise<void> {
     const store = useStudioStore.getState();
     const settings = this.getSettings() as ShapeSettings;
 
@@ -108,7 +108,7 @@ export class ShapeTool extends BaseDesignTool {
     store.saveSnapshot();
 
     // Switch back to select tool after creating shape
-    const { toolManager } = require('./ToolManager');
+    const { toolManager } = await import('./ToolManager');
     toolManager.activateTool('select');
   }
 

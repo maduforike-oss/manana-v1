@@ -54,20 +54,20 @@ export class ImageTool extends BaseDesignTool {
     input.accept = 'image/*';
     input.multiple = false;
 
-    input.onchange = (event) => {
+    input.onchange = async (event) => {
       const file = (event.target as HTMLInputElement).files?.[0];
       if (file) {
         this.handleImageFile(file);
       }
       
       // Switch back to select tool after handling file
-      const { toolManager } = require('./ToolManager');
+      const { toolManager } = await import('./ToolManager');
       toolManager.activateTool('select');
     };
 
-    input.oncancel = () => {
+    input.oncancel = async () => {
       // Switch back to select tool if dialog is cancelled
-      const { toolManager } = require('./ToolManager');
+      const { toolManager } = await import('./ToolManager');
       toolManager.activateTool('select');
     };
 

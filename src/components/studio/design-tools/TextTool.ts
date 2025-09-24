@@ -59,7 +59,7 @@ export class TextTool extends BaseDesignTool {
     this.createTextNode(coords.world);
   }
 
-  private createTextNode(position: { x: number; y: number }): void {
+  private async createTextNode(position: { x: number; y: number }): Promise<void> {
     const store = useStudioStore.getState();
     const settings = this.getSettings() as TextSettings;
 
@@ -88,7 +88,7 @@ export class TextTool extends BaseDesignTool {
     store.saveSnapshot();
 
     // Switch back to select tool after creating text
-    const { toolManager } = require('./ToolManager');
+    const { toolManager } = await import('./ToolManager');
     toolManager.activateTool('select');
   }
 
