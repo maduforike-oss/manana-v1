@@ -7,6 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { GridCenterButton } from '../GridCenterButton';
 
 export const AdvancedGridSystem = () => {
   const { doc, zoom, panOffset, updateCanvas } = useStudioStore();
@@ -122,6 +123,9 @@ export const AdvancedGridSystem = () => {
       >
         <Magnet className="h-4 w-4" />
       </Button>
+
+      {/* Grid Center Button */}
+      <GridCenterButton />
     </div>
   );
 };
@@ -186,6 +190,45 @@ export const EnhancedGrid = ({
           backgroundSize: `${adjustedGridSize}px ${adjustedGridSize}px`,
           backgroundPosition: `${offsetX}px ${offsetY}px`,
           opacity: Math.min(0.6, zoom * 0.4)
+        }}
+      />
+      
+      {/* Grid center crosshair */}
+      <div
+        style={{
+          position: 'absolute',
+          left: `${canvasWidth / 2 + panOffset.x}px`,
+          top: `${canvasHeight / 2 + panOffset.y}px`,
+          width: '2px',
+          height: '2px',
+          backgroundColor: 'hsl(var(--primary))',
+          transform: 'translate(-50%, -50%)',
+          opacity: 0.6,
+          zIndex: 10
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          left: `${canvasWidth / 2 + panOffset.x}px`,
+          top: `${canvasHeight / 2 + panOffset.y}px`,
+          width: '20px',
+          height: '1px',
+          backgroundColor: 'hsl(var(--primary))',
+          transform: 'translate(-50%, -50%)',
+          opacity: 0.4
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          left: `${canvasWidth / 2 + panOffset.x}px`,
+          top: `${canvasHeight / 2 + panOffset.y}px`,
+          width: '1px',
+          height: '20px',
+          backgroundColor: 'hsl(var(--primary))',
+          transform: 'translate(-50%, -50%)',
+          opacity: 0.4
         }}
       />
     </div>
