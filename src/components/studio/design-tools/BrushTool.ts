@@ -3,6 +3,8 @@ import { BaseDesignTool, ToolConfig, PointerEvent, CanvasCoordinates } from './t
 import { BrushEngine, BRUSH_PRESETS, BrushStroke } from '@/lib/studio/brushEngine';
 import { useStudioStore } from '@/lib/studio/store';
 import { generateId } from '@/lib/utils';
+import { getSmartPointerFromEvent } from '@/utils/konvaCoords';
+import Konva from 'konva';
 
 export interface BrushSettings {
   size: number;
@@ -72,28 +74,53 @@ export class BrushTool extends BaseDesignTool {
     this.setEventHandlers({
       onPointerDown: this.handlePointerDown.bind(this),
       onPointerMove: this.handlePointerMove.bind(this),
-      onPointerUp: this.handlePointerUp.bind(this)
+      onPointerUp: this.handlePointerUp.bind(this),
+      onRawPointerDown: this.handleRawPointerDown.bind(this),
+      onRawPointerMove: this.handleRawPointerMove.bind(this),
+      onRawPointerUp: this.handleRawPointerUp.bind(this)
     });
   }
 
+  // Legacy handlers for compatibility
   private handlePointerDown(e: PointerEvent, coords: CanvasCoordinates): void {
+    // Legacy - use raw handlers instead
+  }
+
+  private handlePointerMove(e: PointerEvent, coords: CanvasCoordinates): void {
+    // Legacy - use raw handlers instead
+  }
+
+  private handlePointerUp(e: PointerEvent, coords: CanvasCoordinates): void {
+    // Legacy - use raw handlers instead
+  }
+
+  // New handlers that use the same coordinate calculation as the crosshair
+  private handleRawPointerDown(e: any): void {
     if (!this.brushEngine) return;
+
+    const stage = e.target.getStage();
+    const coords = getSmartPointerFromEvent(stage, e);
+    if (!coords) return;
 
     this.isDrawing = true;
     this.state.isDrawing = true;
     
-    const pressure = e.pressure || 1;
-    this.currentStroke = this.brushEngine.startStroke(coords.world, pressure);
+    const pressure = (coords.evt as any)?.pressure || 1;
+    this.currentStroke = this.brushEngine.startStroke({ x: coords.x, y: coords.y }, pressure);
   }
 
-  private handlePointerMove(e: PointerEvent, coords: CanvasCoordinates): void {
+  private handleRawPointerMove(e: any): void {
     if (!this.isDrawing || !this.brushEngine || !this.currentStroke) return;
 
-    const pressure = e.pressure || 1;
-    this.brushEngine.addPoint(coords.world, pressure);
+    const stage = e.target.getStage();
+    const coords = getSmartPointerFromEvent(stage, e);
+    if (!coords) return;
+
+    const pressure = (coords.evt as any)?.pressure || 1;
+    this.brushEngine.addPoint({ x: coords.x, y: coords.y }, pressure);
   }
 
-  private handlePointerUp(e: PointerEvent, coords: CanvasCoordinates): void {
+  private handleRawPointerUp(e: any): void {
     if (!this.isDrawing || !this.brushEngine) return;
 
     this.isDrawing = false;

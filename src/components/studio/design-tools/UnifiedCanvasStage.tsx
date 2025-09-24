@@ -320,6 +320,10 @@ export const UnifiedCanvasStage = () => {
 
   // Handle pointer events through tool manager
   const handlePointerDown = useCallback((e: any) => {
+    // First try raw event handling for brush tool alignment
+    toolManager.handleRawPointerDown(e);
+    
+    // Then fallback to legacy coordinate handling for other tools
     const coords = getCoordinates(e);
     const pointerEvent = {
       x: coords.world.x,
@@ -334,6 +338,10 @@ export const UnifiedCanvasStage = () => {
   }, [getCoordinates]);
 
   const handlePointerMove = useCallback((e: any) => {
+    // First try raw event handling for brush tool alignment
+    toolManager.handleRawPointerMove(e);
+    
+    // Then fallback to legacy coordinate handling for other tools
     const coords = getCoordinates(e);
     const pointerEvent = {
       x: coords.world.x,
@@ -348,6 +356,10 @@ export const UnifiedCanvasStage = () => {
   }, [getCoordinates]);
 
   const handlePointerUp = useCallback((e: any) => {
+    // First try raw event handling for brush tool alignment
+    toolManager.handleRawPointerUp(e);
+    
+    // Then fallback to legacy coordinate handling for other tools
     const coords = getCoordinates(e);
     const pointerEvent = {
       x: coords.world.x,

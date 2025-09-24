@@ -101,6 +101,19 @@ export class ToolManager {
     this.activeTool?.eventHandlers.onPointerUp?.(e, coords);
   }
 
+  // Raw event delegation for brush tool alignment
+  handleRawPointerDown(e: any): void {
+    this.activeTool?.eventHandlers.onRawPointerDown?.(e);
+  }
+
+  handleRawPointerMove(e: any): void {
+    this.activeTool?.eventHandlers.onRawPointerMove?.(e);
+  }
+
+  handleRawPointerUp(e: any): void {
+    this.activeTool?.eventHandlers.onRawPointerUp?.(e);
+  }
+
   handleKeyDown(e: KeyboardEvent): void {
     this.activeTool?.eventHandlers.onKeyDown?.(e);
   }

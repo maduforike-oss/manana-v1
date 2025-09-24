@@ -36,6 +36,9 @@ export interface ToolEventHandlers {
   onPointerDown?: (e: PointerEvent, coords: CanvasCoordinates) => void;
   onPointerMove?: (e: PointerEvent, coords: CanvasCoordinates) => void;
   onPointerUp?: (e: PointerEvent, coords: CanvasCoordinates) => void;
+  onRawPointerDown?: (e: any) => void;
+  onRawPointerMove?: (e: any) => void;
+  onRawPointerUp?: (e: any) => void;
   onKeyDown?: (e: KeyboardEvent) => void;
   onKeyUp?: (e: KeyboardEvent) => void;
 }
