@@ -110,10 +110,13 @@ export class ImageTool extends BaseDesignTool {
         height *= scale;
       }
 
-      // Position image at grid center (0,0) by default
-      // Grid coordinates: center image around origin
-      const x = -width / 2;
-      const y = -height / 2;
+      // Validate canvas dimensions and provide fallbacks
+      const canvasWidth = store.doc.canvas.width || 800;
+      const canvasHeight = store.doc.canvas.height || 600;
+      
+      // Ensure we have valid positioning values
+      const x = isNaN(canvasWidth) ? 100 : Math.max(0, (canvasWidth - width) / 2);
+      const y = isNaN(canvasHeight) ? 100 : Math.max(0, (canvasHeight - height) / 2);
 
       const imageNode: ImageNode = {
         id: generateId(),

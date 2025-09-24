@@ -27,15 +27,14 @@ export const ProfessionalStudioCanvas = () => {
     brushOpacity
   } = useStudioStore();
 
-  // Grid-centered coordinate transformation using getSmartPointer
+  // TODO(lovable): removed legacy coord math; now using getSmartPointer()
+  // Professional coordinate transformation using transform-safe helpers
   const getRelativePointerPosition = useCallback(() => {
     const stage = stageRef.current;
     if (!stage) return { x: 0, y: 0 };
     
-    // Use grid-centered coordinates with canvas config
-    const canvasConfig = { width: doc.canvas.width || 800, height: doc.canvas.height || 600 };
-    return getSmartPointer(stage, canvasConfig) || { x: 0, y: 0 };
-  }, [doc.canvas.width, doc.canvas.height]);
+    return getSmartPointer(stage) || { x: 0, y: 0 };
+  }, []);
 
   // Load garment template with 100% fidelity
   useEffect(() => {
@@ -83,14 +82,13 @@ export const ProfessionalStudioCanvas = () => {
     };
   }, []);
 
-  // Enhanced brush drawing logic using grid-centered coordinates
+  // Enhanced brush drawing logic using store settings
   const handleBrushDraw = useCallback((e: any) => {
     const stage = stageRef.current;
     if (!stage) return;
     
-    // Use grid-centered coordinates for brush drawing
-    const canvasConfig = { width: doc.canvas.width || 800, height: doc.canvas.height || 600 };
-    const pos = getSmartPointer(stage, canvasConfig);
+    // TODO(lovable): removed legacy coord math; now using getSmartPointer()
+    const pos = getSmartPointer(stage);
     if (!pos) return;
 
     if (isDrawing && currentStroke) {
@@ -192,14 +190,12 @@ export const ProfessionalStudioCanvas = () => {
     
     const commonProps = {
       id: layer.id,
-      // Node positions are already in grid coordinates
       x: layer.x,
       y: layer.y,
       rotation: layer.rotation || 0,
       opacity: layer.opacity || 1, // Individual layer opacity, not global
       draggable: activeTool === 'select' && !layer.locked,
       onDragEnd: (e: any) => {
-        // Store positions in grid coordinates
         updateNode(layer.id, {
           x: e.target.x(),
           y: e.target.y()
@@ -275,19 +271,19 @@ export const ProfessionalStudioCanvas = () => {
       height={stageSize.height}
       scaleX={zoom}
       scaleY={zoom}
-      x={panOffset.x + stageSize.width / 2}
-      y={panOffset.y + stageSize.height / 2}
+      x={panOffset.x}
+      y={panOffset.y}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
     >
       <Layer>
-        {/* Garment template centered on grid origin */}
+        {/* Garment template at 100% opacity - maintain template fidelity */}
         {garmentImage && (
           <KonvaImage 
             image={garmentImage} 
-            x={-(doc.canvas.width * 0.8) / 2}
-            y={-(doc.canvas.height * 0.8) / 2}
+            x={50}
+            y={50}
             width={doc.canvas.width * 0.8}
             height={doc.canvas.height * 0.8}
             opacity={1.0} 

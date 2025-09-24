@@ -61,7 +61,6 @@ interface StudioState {
   setTitle: (title: string) => void;
   initializeFromGarment: (garmentType: string, garmentColor: string) => void;
   updateGarmentColor: (colorId: string) => void;
-  centerDesignOnGrid: () => void;
   // Phase 1 additions
   switchPrintSurface: (surfaceId: string) => void;
   toggleSurfaceVisibility: (surfaceId: string) => void;
@@ -596,46 +595,6 @@ export const useStudioStore = create<StudioState>((set, get) => ({
     if (settings.type !== undefined) state.brushType = settings.type;
     if (settings.isEraser !== undefined) state.isEraser = settings.isEraser;
   })),
-
-  centerDesignOnGrid: () => {
-    set(produce((state: StudioState) => {
-      // Calculate bounding box of all nodes
-      if (state.doc.nodes.length > 0) {
-        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-        
-        state.doc.nodes.forEach(node => {
-          // Use existing grid coordinates
-          const nodeX = node.x;
-          const nodeY = node.y;
-          const nodeRight = nodeX + (node.width || 0);
-          const nodeBottom = nodeY + (node.height || 0);
-          
-          minX = Math.min(minX, nodeX);
-          minY = Math.min(minY, nodeY);
-          maxX = Math.max(maxX, nodeRight);
-          maxY = Math.max(maxY, nodeBottom);
-        });
-        
-        // Calculate design center
-        const designCenterX = (minX + maxX) / 2;
-        const designCenterY = (minY + maxY) / 2;
-        
-        // Calculate offset to center on grid origin (0,0)
-        const offsetX = -designCenterX;
-        const offsetY = -designCenterY;
-        
-        // Apply offset to all nodes to center them at grid origin
-        state.doc.nodes.forEach(node => {
-          node.x += offsetX;
-          node.y += offsetY;
-        });
-      }
-      
-      // Reset view to show grid center in viewport center
-      state.panOffset = { x: 0, y: 0 };
-      state.zoom = 1;
-    }));
-  },
 }));
 
 // Debounced autosave with change detection

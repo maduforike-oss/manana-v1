@@ -76,7 +76,6 @@ export class ShapeTool extends BaseDesignTool {
   }
 
   private handlePointerDown(e: PointerEvent, coords: CanvasCoordinates): void {
-    // Use grid-centered coordinates for shape placement
     this.createShapeNode(coords.world);
   }
 

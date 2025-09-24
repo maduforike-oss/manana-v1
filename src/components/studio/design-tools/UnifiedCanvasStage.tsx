@@ -96,19 +96,19 @@ export const UnifiedCanvasStage = () => {
     loadGarmentBackground();
   }, [doc.canvas.garmentType]);
 
-  // Grid-centered coordinate conversion using getSmartPointer
+  // TODO(lovable): removed legacy coord math; now using getSmartPointer()
+  // Convert coordinates between different spaces
   const getCoordinates = useCallback((e: any): CanvasCoordinates => {
     const stage = e.target.getStage();
-    const canvasConfig = { width: doc.canvas.width || 800, height: doc.canvas.height || 600 };
-    const smartPointer = getSmartPointerFromEvent(stage, e, canvasConfig);
+    const smartPointer = getSmartPointerFromEvent(stage, e);
     if (!smartPointer) return { screen: {x:0,y:0}, canvas: {x:0,y:0}, world: {x:0,y:0} };
     
     return {
       screen: { x: smartPointer.x, y: smartPointer.y },
       canvas: { x: smartPointer.x, y: smartPointer.y },
-      world: { x: smartPointer.x, y: smartPointer.y } // Grid-centered coordinates
+      world: { x: smartPointer.x, y: smartPointer.y } // Already in world coords
     };
-  }, [doc.canvas.width, doc.canvas.height]);
+  }, []);
 
   // Grid rendering
   const renderGrid = () => {
@@ -512,8 +512,8 @@ export const UnifiedCanvasStage = () => {
           height={stageSize.height}
           scaleX={zoom}
           scaleY={zoom}
-          x={panOffset.x + stageSize.width / 2}
-          y={panOffset.y + stageSize.height / 2}
+          x={panOffset.x}
+          y={panOffset.y}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
