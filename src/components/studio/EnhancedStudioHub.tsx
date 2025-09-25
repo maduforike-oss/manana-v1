@@ -10,6 +10,7 @@ import { useStudioStore } from '../../lib/studio/store';
 import { AIDesignCreator } from './AIDesignCreator';
 import { listDesigns, deleteDesign } from '@/lib/api/designs';
 import type { DesignDocument } from '@/lib/api/designs';
+import { DesignGrid, DesignCardData } from '@/components/design/DesignGrid';
 import { useAuth } from '@/lib/auth-context';
 import { 
   Plus, 

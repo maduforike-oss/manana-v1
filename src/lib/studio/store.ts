@@ -71,6 +71,7 @@ interface StudioState {
   getCanvasElement: () => HTMLCanvasElement | null;
   // Phase 2 additions
   loadStudioFromAppDesign: (design: any) => Promise<void>;
+  loadDesignFromSupabase: (designId: string) => Promise<any>;
   // Live drawing methods
   startLiveStroke: (x: number, y: number) => void;
   extendLiveStroke: (x: number, y: number) => void;
@@ -516,6 +517,48 @@ export const useStudioStore = create<StudioState>((set, get) => ({
         reject(error);
       }
     });
+  },
+
+  loadDesignFromSupabase: async (designId: string) => {
+    try {
+      const { loadDesign } = await import('@/lib/api/designs');
+      const design = await loadDesign(designId);
+      
+      set(
+        produce((state) => {
+          // Load design data
+          if (design.design_data) {
+            if (design.design_data.nodes) {
+              state.doc.nodes = design.design_data.nodes;
+            }
+            if (design.design_data.selectedIds) {
+              state.doc.selectedIds = design.design_data.selectedIds;
+            }
+          }
+          
+          // Load canvas config
+          if (design.canvas_config) {
+            Object.assign(state.doc.canvas, design.canvas_config);
+          }
+          
+          // Set title and id
+          state.doc.title = design.title;
+          state.doc.id = design.id;
+          
+          // Clear and rebuild history
+          state.history = [];
+          state.historyIndex = -1;
+        })
+      );
+      
+      // Save snapshot for undo/redo
+      get().saveSnapshot();
+      
+      return design;
+    } catch (error) {
+      console.error('Failed to load design from Supabase:', error);
+      throw error;
+    }
   },
 
   // Brush stroke persistence

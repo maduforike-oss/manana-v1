@@ -2,12 +2,13 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useStudioStore } from '@/lib/studio/store';
 import { toast } from 'sonner';
+import { generateAndUploadThumbnail } from '@/lib/studio/thumbnailService';
 
 export const useSupabaseDesignPersistence = () => {
   const [saving, setSaving] = useState(false);
   const { doc } = useStudioStore();
 
-  const saveToSupabase = useCallback(async (title?: string) => {
+  const saveToSupabase = useCallback(async (title?: string, canvas?: HTMLCanvasElement) => {
     if (!doc) return null;
 
     try {
@@ -16,6 +17,18 @@ export const useSupabaseDesignPersistence = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         throw new Error('User not authenticated');
+      }
+
+      // Generate thumbnail if canvas is provided
+      let thumbnailUrl: string | null = null;
+      if (canvas) {
+        try {
+          const designId = localStorage.getItem(`studio-design-id-${doc.id}`) || crypto.randomUUID();
+          thumbnailUrl = await generateAndUploadThumbnail(canvas, doc, user.id, designId);
+        } catch (thumbnailError) {
+          console.warn('Failed to generate thumbnail:', thumbnailError);
+          // Continue saving without thumbnail
+        }
       }
 
       // Prepare design data
@@ -28,7 +41,7 @@ export const useSupabaseDesignPersistence = () => {
           nodes: doc.nodes,
           selectedIds: doc.selectedIds,
         },
-        thumbnail_url: null, // TODO: Generate thumbnail
+        thumbnail_url: thumbnailUrl,
       };
 
       // Check if this is an update or new design
@@ -79,7 +92,7 @@ export const useSupabaseDesignPersistence = () => {
     }
   }, [doc]);
 
-  const autoSave = useCallback(async () => {
+  const autoSave = useCallback(async (canvas?: HTMLCanvasElement) => {
     if (!doc) return;
     
     try {
@@ -90,7 +103,7 @@ export const useSupabaseDesignPersistence = () => {
       }));
 
       // Then save to Supabase (for persistence)
-      await saveToSupabase();
+      await saveToSupabase(undefined, canvas);
     } catch (error) {
       // Silent fail for autosave - don't show error toast
       console.warn('Auto-save failed:', error);

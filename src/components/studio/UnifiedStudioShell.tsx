@@ -35,7 +35,8 @@ export const UnifiedStudioShell = () => {
     doc, 
     zoom, 
     panOffset, 
-    loadStudioFromAppDesign, 
+    loadStudioFromAppDesign,
+    loadDesignFromSupabase, 
     toggleGrid, 
     toggleRulers, 
     updateCanvas 
@@ -47,6 +48,27 @@ export const UnifiedStudioShell = () => {
   const [activeRightTab, setActiveRightTab] = useState('design');
   const [isLoading, setIsLoading] = useState(false);
   const [autoSaveStatus, setAutoSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved');
+
+  // URL parameter support for loading designs
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const designId = urlParams.get('design');
+    
+    if (designId && !currentDesign) {
+      setIsLoading(true);
+      loadDesignFromSupabase(designId)
+        .then(() => {
+          toast.success('Design loaded successfully');
+        })
+        .catch((error) => {
+          console.error('Failed to load design:', error);
+          toast.error('Failed to load design');
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    }
+  }, [loadDesignFromSupabase, currentDesign]);
 
   // Sync studio state with app store
   useStudioSync();
