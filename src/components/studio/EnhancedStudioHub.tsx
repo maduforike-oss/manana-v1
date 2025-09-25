@@ -8,8 +8,8 @@ import { Logo } from '@/components/brand/Logo';
 import { useAppStore } from '@/store/useAppStore';
 import { useStudioStore } from '../../lib/studio/store';
 import { AIDesignCreator } from './AIDesignCreator';
-import { listDesigns, deleteDesign } from '@/lib/api/designs';
-import type { DesignDocument } from '@/lib/api/designs';
+import { useDesignManagement } from '@/hooks/useDesignManagement';
+import type { DesignDocument } from '@/hooks/useDesignManagement';
 import { DesignGrid, DesignCardData } from '@/components/design/DesignGrid';
 import { useAuth } from '@/lib/auth-context';
 import { 
@@ -53,29 +53,15 @@ import { toast } from 'sonner';
 
 export const EnhancedStudioHub = () => {
   const [showAICreator, setShowAICreator] = useState(false);
-  const [designs, setDesigns] = useState<DesignDocument[]>([]);
-  const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [designToDelete, setDesignToDelete] = useState<string | null>(null);
   const { user } = useAppStore();
   const { user: authUser } = useAuth();
+  const { designs, loading, listDesigns, deleteDesign } = useDesignManagement();
 
   useEffect(() => {
-    loadDesigns();
-  }, []);
-
-  const loadDesigns = async () => {
-    try {
-      setLoading(true);
-      const designsList = await listDesigns();
-      setDesigns(designsList);
-    } catch (error) {
-      console.error('Failed to load designs:', error);
-      toast.error('Failed to load designs');
-    } finally {
-      setLoading(false);
-    }
-  };
+    listDesigns();
+  }, [listDesigns]);
 
   const handleNewDesign = () => {
     setShowAICreator(true);
@@ -87,17 +73,9 @@ export const EnhancedStudioHub = () => {
   };
 
   const handleDeleteDesign = async (designId: string) => {
-    try {
-      await deleteDesign(designId);
-      setDesigns(prev => prev.filter(d => d.id !== designId));
-      toast.success('Design deleted successfully');
-    } catch (error) {
-      console.error('Failed to delete design:', error);
-      toast.error('Failed to delete design');
-    } finally {
-      setDeleteDialogOpen(false);
-      setDesignToDelete(null);
-    }
+    await deleteDesign(designId);
+    setDeleteDialogOpen(false);
+    setDesignToDelete(null);
   };
 
   const openDeleteDialog = (designId: string) => {
