@@ -4,20 +4,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useStudioStore } from '@/lib/studio/store';
-import { useAppStore } from '@/store/useAppStore';
-import { saveDesign } from '@/lib/api/designs';
+import { useSupabaseDesignPersistence } from '@/hooks/useSupabaseDesignPersistence';
 import { useToast } from '@/hooks/use-toast';
 
 interface DesignSaveDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  canvas?: HTMLCanvasElement | null;
 }
 
-export const DesignSaveDialog: React.FC<DesignSaveDialogProps> = ({ open, onOpenChange }) => {
+export const DesignSaveDialog: React.FC<DesignSaveDialogProps> = ({ open, onOpenChange, canvas }) => {
   const [title, setTitle] = useState('');
-  const [saving, setSaving] = useState(false);
   const { doc } = useStudioStore();
-  const { selectedGarment } = useAppStore();
+  const { saving, saveToSupabase } = useSupabaseDesignPersistence();
   const { toast } = useToast();
 
   const handleSave = async () => {
@@ -30,28 +29,23 @@ export const DesignSaveDialog: React.FC<DesignSaveDialogProps> = ({ open, onOpen
       return;
     }
 
-    setSaving(true);
     try {
-      await saveDesign({
-        title: title.trim(),
-        garment_type: selectedGarment || 'T-Shirt',
-        garment_slug: selectedGarment || 'tshirt',
-        canvas_config: {
-          width: doc.canvas.width,
-          height: doc.canvas.height,
-          dpi: doc.canvas.dpi,
-          background: doc.canvas.background,
-        },
-        design_data: doc,
-      });
-
-      toast({
-        title: "Design Saved",
-        description: "Your design has been saved successfully",
-      });
-
-      onOpenChange(false);
-      setTitle('');
+      const result = await saveToSupabase(title.trim(), canvas || undefined);
+      
+      if (result) {
+        toast({
+          title: "Design Saved",
+          description: "Your design has been saved successfully",
+        });
+        onOpenChange(false);
+        setTitle('');
+      } else {
+        toast({
+          title: "Save Failed",
+          description: "Failed to save design. Please try again.",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       console.error('Save error:', error);
       toast({
@@ -59,8 +53,6 @@ export const DesignSaveDialog: React.FC<DesignSaveDialogProps> = ({ open, onOpen
         description: error instanceof Error ? error.message : "Failed to save design",
         variant: "destructive",
       });
-    } finally {
-      setSaving(false);
     }
   };
 

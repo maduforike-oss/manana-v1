@@ -161,7 +161,8 @@ export const TopBar = () => {
 
       <DesignSaveDialog 
         open={saveDialogOpen} 
-        onOpenChange={setSaveDialogOpen} 
+        onOpenChange={setSaveDialogOpen}
+        canvas={getCanvasElement()}
       />
     </div>
   );
