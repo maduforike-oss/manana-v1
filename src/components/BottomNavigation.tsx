@@ -3,8 +3,7 @@ import { useCartStore } from '@/store/useCartStore';
 import { cn } from '@/lib/utils';
 import { ShoppingCart, Users, Palette, User, Store } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 
 const tabs = [
@@ -51,16 +50,22 @@ export const BottomNavigation = () => {
             const Icon = tab.icon;
             const showBadge = tab.id === 'orders' && count > 0;
 
+            const getTabPath = (tabId: string) => {
+              switch (tabId) {
+                case 'market':
+                  return '/';
+                case 'studio':
+                  return '/studio';
+                default:
+                  return `/${tabId}`;
+              }
+            };
+
             return (
-              <button
+              <Link
                 key={tab.id}
-                onClick={() => {
-                  if (tab.id === 'studio') {
-                    window.location.href = '/studio';
-                  } else {
-                    setActiveTab(tab.id);
-                  }
-                }}
+                to={getTabPath(tab.id)}
+                onClick={() => setActiveTab(tab.id)}
                 className={cn(
                   "flex flex-col items-center gap-0.5 sm:gap-1 px-2 sm:px-3 py-2 rounded-xl transition-all duration-200 min-w-[56px] sm:min-w-[60px] min-h-[48px] sm:min-h-[50px] relative group touch:min-w-[60px] touch:min-h-[52px]",
                   "hover:bg-muted/20 active:scale-95 focus:outline-none focus-visible:outline-none focus-visible:ring-0",
@@ -101,7 +106,7 @@ export const BottomNavigation = () => {
                 )}>
                   {tab.label}
                 </span>
-              </button>
+              </Link>
             );
           })}
         </div>

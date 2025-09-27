@@ -109,6 +109,21 @@ const App = () => {
                   <Index />
                 </AppLayout>
               } />
+              <Route path="/market" element={
+                <AppLayout>
+                  <Index />
+                </AppLayout>
+              } />
+              <Route path="/community" element={
+                <AppLayout>
+                  <Index />
+                </AppLayout>
+              } />
+              <Route path="/orders" element={
+                <AppLayout>
+                  <Index />
+                </AppLayout>
+              } />
               <Route path="/studio" element={
                 <AppLayout>
                   <RequireAuth><UnifiedStudioShell /></RequireAuth>
@@ -156,7 +171,7 @@ const App = () => {
               } />
               <Route path="/profile" element={
                 <AppLayout>
-                  <RequireAuth><ProfileHub /></RequireAuth>
+                  <Index />
                 </AppLayout>
               } />
               <Route path="/profile/edit" element={

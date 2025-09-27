@@ -1,12 +1,12 @@
 import { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppStore } from '@/store/useAppStore';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import { UnifiedStudioShell } from '@/components/studio/UnifiedStudioShell';
 import { ImprovedMarketPage } from '@/components/pages/ImprovedMarketPage';
 import { ImprovedCommunityPage } from '@/components/pages/ImprovedCommunityPage';
 import { OrdersPage } from '@/components/pages/OrdersPage';
-import Profile from '@/pages/Profile';
+import ProfileHub from '@/pages/ProfileHub';
 import { DesktopSidebar } from '@/components/DesktopSidebar';
 import { SkipToContent } from '@/components/SkipToContent';
 import { OnboardingWalkthrough } from '@/components/OnboardingWalkthrough';
@@ -19,6 +19,7 @@ const Index = () => {
   const { activeTab } = useAppStore();
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const scrollPositions = useRef<Record<string, number>>({});
   const mainContentRef = useRef<HTMLDivElement>(null);
   const { announcer, announce } = useAccessibilityAnnouncer();
@@ -79,19 +80,20 @@ const Index = () => {
   }
 
   const renderPage = () => {
-    switch (activeTab) {
-      case 'market':
-        return <ImprovedMarketPage />;
-      case 'community':
-        return <ImprovedCommunityPage />;
-      case 'studio':
-        return <UnifiedStudioShell />;
-      case 'orders':
-        return <OrdersPage />;
-      case 'profile':
-        return <Profile />;
-      default:
-        return <ImprovedMarketPage />;
+    const path = location.pathname;
+    
+    // Route-based rendering
+    if (path.startsWith('/studio')) {
+      return <UnifiedStudioShell />;
+    } else if (path.startsWith('/profile')) {
+      return <ProfileHub />;
+    } else if (path.startsWith('/orders')) {
+      return <OrdersPage />;
+    } else if (path.startsWith('/community')) {
+      return <ImprovedCommunityPage />;
+    } else {
+      // Default to market for root and /market
+      return <ImprovedMarketPage />;
     }
   };
 
