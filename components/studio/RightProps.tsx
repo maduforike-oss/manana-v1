@@ -4,6 +4,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { EnhancedLayersPanel } from './EnhancedLayersPanel';
 import { PropertiesPanel } from './PropertiesPanel';
 import { CanvasPanel } from './CanvasPanel';
+import { PrintExportPanel } from './panels/PrintExportPanel';
+import { ColorSpotPanel } from './panels/ColorSpotPanel';
 
 interface RightPropsProps {
   collapsed?: boolean;
@@ -30,24 +32,36 @@ export const RightProps = ({
       >
         <div className="relative">
           {/* Enhanced Tab List */}
-          <TabsList className="grid w-full grid-cols-3 m-3 glass-panel neon-border bg-studio-surface/50">
+          <TabsList className="grid w-full grid-cols-5 m-3 glass-panel neon-border bg-studio-surface/50">
             <TabsTrigger 
               value="properties" 
-              className="studio-tool data-[state=active]:studio-tool data-[state=active]:active"
+              className="studio-tool data-[state=active]:studio-tool data-[state=active]:active text-xs"
             >
               Style
             </TabsTrigger>
             <TabsTrigger 
               value="layers"
-              className="studio-tool data-[state=active]:studio-tool data-[state=active]:active"
+              className="studio-tool data-[state=active]:studio-tool data-[state=active]:active text-xs"
             >
               Layers
             </TabsTrigger>
             <TabsTrigger 
               value="canvas"
-              className="studio-tool data-[state=active]:studio-tool data-[state=active]:active"
+              className="studio-tool data-[state=active]:studio-tool data-[state=active]:active text-xs"
             >
               Canvas
+            </TabsTrigger>
+            <TabsTrigger 
+              value="print"
+              className="studio-tool data-[state=active]:studio-tool data-[state=active]:active text-xs"
+            >
+              Print
+            </TabsTrigger>
+            <TabsTrigger 
+              value="colors"
+              className="studio-tool data-[state=active]:studio-tool data-[state=active]:active text-xs"
+            >
+              Colors
             </TabsTrigger>
           </TabsList>
           
@@ -77,6 +91,24 @@ export const RightProps = ({
         >
           <div className="p-3">
             <CanvasPanel />
+          </div>
+        </TabsContent>
+
+        <TabsContent 
+          value="print" 
+          className="flex-1 overflow-hidden animate-in fade-in-50 duration-300 slide-in-from-right-4"
+        >
+          <div className="p-3">
+            <PrintExportPanel />
+          </div>
+        </TabsContent>
+
+        <TabsContent 
+          value="colors" 
+          className="flex-1 overflow-hidden animate-in fade-in-50 duration-300 slide-in-from-right-4"
+        >
+          <div className="p-3">
+            <ColorSpotPanel />
           </div>
         </TabsContent>
       </Tabs>

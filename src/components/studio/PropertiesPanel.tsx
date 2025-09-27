@@ -48,9 +48,9 @@ export const PropertiesPanel = () => {
             <SelectTrigger className="mt-1">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-card/95 backdrop-blur-md border-border/50 z-50">
               {GOOGLE_FONTS.map(font => (
-                <SelectItem key={font} value={font}>{font}</SelectItem>
+                <SelectItem key={font} value={font} className="focus:bg-accent/80">{font}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -74,13 +74,13 @@ export const PropertiesPanel = () => {
             <SelectTrigger className="mt-1">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="300">Light</SelectItem>
-              <SelectItem value="400">Regular</SelectItem>
-              <SelectItem value="500">Medium</SelectItem>
-              <SelectItem value="600">Semi Bold</SelectItem>
-              <SelectItem value="700">Bold</SelectItem>
-              <SelectItem value="800">Extra Bold</SelectItem>
+            <SelectContent className="bg-card/95 backdrop-blur-md border-border/50 z-50">
+              <SelectItem value="300" className="focus:bg-accent/80">Light</SelectItem>
+              <SelectItem value="400" className="focus:bg-accent/80">Regular</SelectItem>
+              <SelectItem value="500" className="focus:bg-accent/80">Medium</SelectItem>
+              <SelectItem value="600" className="focus:bg-accent/80">Semi Bold</SelectItem>
+              <SelectItem value="700" className="focus:bg-accent/80">Bold</SelectItem>
+              <SelectItem value="800" className="focus:bg-accent/80">Extra Bold</SelectItem>
             </SelectContent>
           </Select>
         </div>

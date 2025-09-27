@@ -105,14 +105,14 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({ className }) => {
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="150">
+            <SelectContent className="bg-card/95 backdrop-blur-md border-border/50 z-50">
+              <SelectItem value="150" className="focus:bg-accent/80">
                 <div className="flex items-center justify-between w-full">
                   <span>150 DPI</span>
                   <Badge variant="outline">Web</Badge>
                 </div>
               </SelectItem>
-              <SelectItem value="300">
+              <SelectItem value="300" className="focus:bg-accent/80">
                 <div className="flex items-center justify-between w-full">
                   <span>300 DPI</span>
                   <Badge variant="outline">Print</Badge>
