@@ -27,9 +27,9 @@ export const CanvasPanel = () => {
             <SelectTrigger className="bg-background border-border/50 text-foreground">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-card/95 backdrop-blur-md border-border/50 z-50">
+            <SelectContent className="bg-card border-border/50">
               {Object.keys(CANVAS_PRESETS).map(preset => (
-                <SelectItem key={preset} value={preset} className="text-foreground focus:bg-accent/80">
+                <SelectItem key={preset} value={preset} className="text-foreground hover:bg-accent/80">
                   {preset}
                 </SelectItem>
               ))}
@@ -80,11 +80,11 @@ export const CanvasPanel = () => {
             <SelectTrigger className="bg-background border-border/50 text-foreground">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-card/95 backdrop-blur-md border-border/50 z-50">
-              <SelectItem value="150" className="text-foreground focus:bg-accent/80">
+            <SelectContent className="bg-card border-border/50">
+              <SelectItem value="150" className="text-foreground hover:bg-accent/80">
                 150 DPI (Web)
               </SelectItem>
-              <SelectItem value="300" className="text-foreground focus:bg-accent/80">
+              <SelectItem value="300" className="text-foreground hover:bg-accent/80">
                 300 DPI (Print)
               </SelectItem>
             </SelectContent>

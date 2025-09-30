@@ -216,56 +216,6 @@ export type Database = {
         }
         Relationships: []
       }
-      design_exports: {
-        Row: {
-          color_profile: string | null
-          created_at: string | null
-          design_id: string | null
-          dpi: number | null
-          format: string | null
-          height_px: number | null
-          id: string
-          preset_id: string | null
-          storage_path: string | null
-          user_id: string | null
-          width_px: number | null
-        }
-        Insert: {
-          color_profile?: string | null
-          created_at?: string | null
-          design_id?: string | null
-          dpi?: number | null
-          format?: string | null
-          height_px?: number | null
-          id?: string
-          preset_id?: string | null
-          storage_path?: string | null
-          user_id?: string | null
-          width_px?: number | null
-        }
-        Update: {
-          color_profile?: string | null
-          created_at?: string | null
-          design_id?: string | null
-          dpi?: number | null
-          format?: string | null
-          height_px?: number | null
-          id?: string
-          preset_id?: string | null
-          storage_path?: string | null
-          user_id?: string | null
-          width_px?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "design_exports_preset_id_fkey"
-            columns: ["preset_id"]
-            isOneToOne: false
-            referencedRelation: "print_presets"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       favorites: {
         Row: {
           created_at: string
@@ -371,30 +321,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      garment_print_zones: {
-        Row: {
-          garment_key: string
-          mask_path: string | null
-          printable_rect: Json
-          side: string
-          updated_at: string | null
-        }
-        Insert: {
-          garment_key: string
-          mask_path?: string | null
-          printable_rect?: Json
-          side: string
-          updated_at?: string | null
-        }
-        Update: {
-          garment_key?: string
-          mask_path?: string | null
-          printable_rect?: Json
-          side?: string
-          updated_at?: string | null
-        }
-        Relationships: []
       }
       garment_template_images: {
         Row: {
@@ -824,39 +750,6 @@ export type Database = {
           new_price?: number
           old_price?: number | null
           product_id?: string
-        }
-        Relationships: []
-      }
-      print_presets: {
-        Row: {
-          bleed_in: number | null
-          created_at: string | null
-          created_by: string | null
-          dpi: number | null
-          height_in: number
-          id: string
-          name: string
-          width_in: number
-        }
-        Insert: {
-          bleed_in?: number | null
-          created_at?: string | null
-          created_by?: string | null
-          dpi?: number | null
-          height_in: number
-          id?: string
-          name: string
-          width_in: number
-        }
-        Update: {
-          bleed_in?: number | null
-          created_at?: string | null
-          created_by?: string | null
-          dpi?: number | null
-          height_in?: number
-          id?: string
-          name?: string
-          width_in?: number
         }
         Relationships: []
       }
