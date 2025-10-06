@@ -30,7 +30,8 @@ import {
   Trash2,
   MoreHorizontal,
   FolderOpen,
-  ArrowRight
+  ArrowRight,
+  RefreshCw
 } from 'lucide-react';
 
 import {
@@ -50,11 +51,14 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export const EnhancedStudioHub = () => {
   const [showAICreator, setShowAICreator] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [designToDelete, setDesignToDelete] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
   const { user } = useAppStore();
   const { user: authUser } = useAuth();
   const { designs, loading, listDesigns, deleteDesign } = useDesignManagement();
@@ -85,6 +89,33 @@ export const EnhancedStudioHub = () => {
 
   const handleViewAllDesigns = () => {
     window.location.href = '/studio/designs';
+  };
+
+  const handlePrintifySync = async () => {
+    setSyncing(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('printify-sync', {
+        method: 'POST'
+      });
+
+      if (error) {
+        toast.error('Failed to sync Printify catalog', {
+          description: error.message
+        });
+        return;
+      }
+
+      setLastSyncTime(new Date());
+      toast.success('Printify catalog synced successfully', {
+        description: `Synced ${data.synced} products (${data.errors} errors)`
+      });
+    } catch (err) {
+      toast.error('An error occurred during sync');
+      console.error('Sync error:', err);
+    } finally {
+      setSyncing(false);
+    }
   };
 
   const currentMonth = new Date().getMonth();
@@ -278,6 +309,46 @@ export const EnhancedStudioHub = () => {
                   className="group-hover:bg-primary group-hover:text-primary-foreground"
                 >
                   Start <ArrowRight className="w-4 h-4 ml-1" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Sync Printify Catalog */}
+          <Card className="group hover:shadow-lg transition-all duration-300">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center">
+                    <RefreshCw className="w-6 h-6 text-secondary" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="font-semibold text-lg">Sync Printify Catalog</h3>
+                    <p className="text-sm text-muted-foreground">Update available products from Printify</p>
+                    {lastSyncTime && (
+                      <Badge variant="secondary" className="text-xs">
+                        Last synced: {lastSyncTime.toLocaleTimeString()}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                <Button 
+                  onClick={handlePrintifySync}
+                  variant="ghost"
+                  size="sm"
+                  disabled={syncing}
+                  className="group-hover:bg-secondary group-hover:text-secondary-foreground"
+                >
+                  {syncing ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
+                      Syncing...
+                    </>
+                  ) : (
+                    <>
+                      Sync Now <ArrowRight className="w-4 h-4 ml-1" />
+                    </>
+                  )}
                 </Button>
               </div>
             </CardContent>
