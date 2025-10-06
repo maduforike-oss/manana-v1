@@ -216,6 +216,56 @@ export type Database = {
         }
         Relationships: []
       }
+      design_exports: {
+        Row: {
+          color_profile: string | null
+          created_at: string | null
+          design_id: string | null
+          dpi: number | null
+          format: string | null
+          height_px: number | null
+          id: string
+          preset_id: string | null
+          storage_path: string | null
+          user_id: string | null
+          width_px: number | null
+        }
+        Insert: {
+          color_profile?: string | null
+          created_at?: string | null
+          design_id?: string | null
+          dpi?: number | null
+          format?: string | null
+          height_px?: number | null
+          id?: string
+          preset_id?: string | null
+          storage_path?: string | null
+          user_id?: string | null
+          width_px?: number | null
+        }
+        Update: {
+          color_profile?: string | null
+          created_at?: string | null
+          design_id?: string | null
+          dpi?: number | null
+          format?: string | null
+          height_px?: number | null
+          id?: string
+          preset_id?: string | null
+          storage_path?: string | null
+          user_id?: string | null
+          width_px?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "design_exports_preset_id_fkey"
+            columns: ["preset_id"]
+            isOneToOne: false
+            referencedRelation: "print_presets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       favorites: {
         Row: {
           created_at: string
@@ -322,6 +372,30 @@ export type Database = {
           },
         ]
       }
+      garment_print_zones: {
+        Row: {
+          garment_key: string
+          mask_path: string | null
+          printable_rect: Json
+          side: string
+          updated_at: string | null
+        }
+        Insert: {
+          garment_key: string
+          mask_path?: string | null
+          printable_rect?: Json
+          side: string
+          updated_at?: string | null
+        }
+        Update: {
+          garment_key?: string
+          mask_path?: string | null
+          printable_rect?: Json
+          side?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       garment_template_images: {
         Row: {
           category_id: string
@@ -419,26 +493,116 @@ export type Database = {
       garments: {
         Row: {
           active: boolean
+          category_id: string | null
           created_at: string
+          default_dpi: number | null
+          export_height_px: number | null
+          export_width_px: number | null
           id: string
           name: string
           slug: string
         }
         Insert: {
           active?: boolean
+          category_id?: string | null
           created_at?: string
+          default_dpi?: number | null
+          export_height_px?: number | null
+          export_width_px?: number | null
           id?: string
           name: string
           slug: string
         }
         Update: {
           active?: boolean
+          category_id?: string | null
           created_at?: string
+          default_dpi?: number | null
+          export_height_px?: number | null
+          export_width_px?: number | null
           id?: string
           name?: string
           slug?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "garments_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "garment_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      generated_images: {
+        Row: {
+          color_id: string
+          created_at: string
+          error_message: string | null
+          file_name: string
+          garment_id: string
+          id: string
+          prompt: string | null
+          provider: string | null
+          public_url: string | null
+          status: string
+          storage_path: string | null
+          updated_at: string
+          view_id: string
+        }
+        Insert: {
+          color_id: string
+          created_at?: string
+          error_message?: string | null
+          file_name: string
+          garment_id: string
+          id?: string
+          prompt?: string | null
+          provider?: string | null
+          public_url?: string | null
+          status?: string
+          storage_path?: string | null
+          updated_at?: string
+          view_id: string
+        }
+        Update: {
+          color_id?: string
+          created_at?: string
+          error_message?: string | null
+          file_name?: string
+          garment_id?: string
+          id?: string
+          prompt?: string | null
+          provider?: string | null
+          public_url?: string | null
+          status?: string
+          storage_path?: string | null
+          updated_at?: string
+          view_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_images_color_id_fkey"
+            columns: ["color_id"]
+            isOneToOne: false
+            referencedRelation: "garment_colors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generated_images_garment_id_fkey"
+            columns: ["garment_id"]
+            isOneToOne: false
+            referencedRelation: "garments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generated_images_view_id_fkey"
+            columns: ["view_id"]
+            isOneToOne: false
+            referencedRelation: "garment_views"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       inventory_movements: {
         Row: {
@@ -750,6 +914,175 @@ export type Database = {
           new_price?: number
           old_price?: number | null
           product_id?: string
+        }
+        Relationships: []
+      }
+      print_presets: {
+        Row: {
+          bleed_in: number | null
+          created_at: string | null
+          created_by: string | null
+          dpi: number | null
+          height_in: number
+          id: string
+          name: string
+          width_in: number
+        }
+        Insert: {
+          bleed_in?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          dpi?: number | null
+          height_in: number
+          id?: string
+          name: string
+          width_in: number
+        }
+        Update: {
+          bleed_in?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          dpi?: number | null
+          height_in?: number
+          id?: string
+          name?: string
+          width_in?: number
+        }
+        Relationships: []
+      }
+      printify_design_files: {
+        Row: {
+          created_at: string | null
+          design_id: string | null
+          dpi: number | null
+          file_name: string
+          file_url: string | null
+          height_px: number
+          id: string
+          printify_image_id: string
+          uploaded_at: string | null
+          user_id: string | null
+          width_px: number
+        }
+        Insert: {
+          created_at?: string | null
+          design_id?: string | null
+          dpi?: number | null
+          file_name: string
+          file_url?: string | null
+          height_px: number
+          id?: string
+          printify_image_id: string
+          uploaded_at?: string | null
+          user_id?: string | null
+          width_px: number
+        }
+        Update: {
+          created_at?: string | null
+          design_id?: string | null
+          dpi?: number | null
+          file_name?: string
+          file_url?: string | null
+          height_px?: number
+          id?: string
+          printify_image_id?: string
+          uploaded_at?: string | null
+          user_id?: string | null
+          width_px?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "printify_design_files_design_id_fkey"
+            columns: ["design_id"]
+            isOneToOne: false
+            referencedRelation: "design_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      printify_garment_mapping: {
+        Row: {
+          created_at: string | null
+          garment_id: string | null
+          id: string
+          print_provider_id: number
+          printify_blueprint_id: string
+          zone_mapping: Json
+        }
+        Insert: {
+          created_at?: string | null
+          garment_id?: string | null
+          id?: string
+          print_provider_id: number
+          printify_blueprint_id: string
+          zone_mapping?: Json
+        }
+        Update: {
+          created_at?: string | null
+          garment_id?: string | null
+          id?: string
+          print_provider_id?: number
+          printify_blueprint_id?: string
+          zone_mapping?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "printify_garment_mapping_garment_id_fkey"
+            columns: ["garment_id"]
+            isOneToOne: false
+            referencedRelation: "garments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      printify_products: {
+        Row: {
+          blueprint_id: string
+          brand: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          images: Json | null
+          is_active: boolean | null
+          model: string | null
+          print_areas: Json
+          synced_at: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+          variants: Json
+        }
+        Insert: {
+          blueprint_id: string
+          brand?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          images?: Json | null
+          is_active?: boolean | null
+          model?: string | null
+          print_areas?: Json
+          synced_at?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+          variants?: Json
+        }
+        Update: {
+          blueprint_id?: string
+          brand?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          images?: Json | null
+          is_active?: boolean | null
+          model?: string | null
+          print_areas?: Json
+          synced_at?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+          variants?: Json
         }
         Relationships: []
       }
